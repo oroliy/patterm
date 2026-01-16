@@ -185,7 +185,18 @@
         });
         
         ipcRenderer.on('serial:error', (event, error) => {
-            appendData(error, 'error');
+            appendData(`Error: ${error.message}`, 'error');
+        });
+
+        ipcRenderer.on('serial:connected', (event, connected) => {
+            isConnected = connected;
+            sendBtn.disabled = !connected;
+            inputField.disabled = !connected;
+        });
+
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            tabId = urlParams.get('tabId');
         });
         
         window.addEventListener('load', () => {

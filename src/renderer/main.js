@@ -50,12 +50,6 @@ async function connect() {
         await ipcRenderer.invoke('serial:open', config);
         isConnected = true;
         updateUIState();
-        if (activeTabId) {
-            const tab = tabs.get(activeTabId);
-            if (tab && tab.view) {
-                tab.view.webContents.send('setConnected', true);
-            }
-        }
     } catch (error) {
         alert(`Failed to connect: ${error.message}`);
     }
@@ -66,11 +60,6 @@ async function disconnect() {
         await ipcRenderer.invoke('serial:close');
         isConnected = false;
         updateUIState();
-        tabs.forEach(tab => {
-            if (tab.view) {
-                tab.view.webContents.send('setConnected', false);
-            }
-        });
     } catch (error) {
         alert(`Failed to disconnect: ${error.message}`);
     }
@@ -119,8 +108,7 @@ async function createNewTab() {
         
         tabs.set(tabId, {
             element: tab,
-            title: result.title,
-            view: null
+            title: result.title
         });
         
         tabsContainer.appendChild(tab);
@@ -222,26 +210,8 @@ tabsContainer.addEventListener('click', (e) => {
     }
 });
 
-ipcRenderer.on('serial:data', (event, data) => {
-    tabs.forEach(tab => {
-        if (tab.view) {
-            tab.view.webContents.send('receivedData', data);
-        }
-    });
-});
-
 ipcRenderer.on('serial:error', (event, error) => {
     alert(`Serial Error: ${error}`);
-});
-
-ipcRenderer.on('tab:viewReady', (event, tabId) => {
-    const tab = tabs.get(tabId);
-    if (tab) {
-        tab.view = event.sender;
-        if (isConnected) {
-            tab.view.webContents.send('setConnected', true);
-        }
-    }
 });
 
 window.addEventListener('load', () => {

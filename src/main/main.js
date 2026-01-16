@@ -28,11 +28,19 @@ function setupIpcHandlers() {
     });
 
     ipcMain.handle('serial:open', async (event, config) => {
-        return serialService.open(config);
+        const result = serialService.open(config);
+        BrowserWindow.getAllWindows().forEach(window => {
+            window.webContents.send('serial:connected', true);
+        });
+        return result;
     });
 
     ipcMain.handle('serial:close', async () => {
-        return serialService.close();
+        const result = serialService.close();
+        BrowserWindow.getAllWindows().forEach(window => {
+            window.webContents.send('serial:connected', false);
+        });
+        return result;
     });
 
     ipcMain.handle('serial:write', async (event, data) => {
