@@ -1,4 +1,4 @@
-const { ipcRenderer, remote } = require('electron');
+const { ipcRenderer } = require('electron');
 
 const tabNameInput = document.getElementById('tabName');
 const portSelect = document.getElementById('portSelect');
@@ -15,15 +15,6 @@ const tabNameError = document.getElementById('tabNameError');
 const generalError = document.getElementById('generalError');
 const generalErrorText = document.getElementById('generalErrorText');
 const generalErrorClose = document.getElementById('generalErrorClose');
-
-let currentWindow = null;
-
-function getCurrentWindow() {
-    if (!currentWindow) {
-        currentWindow = remote.getCurrentWindow();
-    }
-    return currentWindow;
-}
 
 async function loadPorts() {
     hideError();
@@ -95,7 +86,7 @@ async function handleConnect() {
         const result = await ipcRenderer.invoke('connection:create', config, tabName);
 
         if (result.success) {
-            getCurrentWindow().close();
+            window.close();
         } else {
             hideLoading();
             showError(`Failed to connect: ${result.error || 'Unknown error'}`);
@@ -107,7 +98,7 @@ async function handleConnect() {
 }
 
 function handleCancel() {
-    getCurrentWindow().close();
+    window.close();
 }
 
 refreshPortsBtn.addEventListener('click', async () => {

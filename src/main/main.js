@@ -238,6 +238,7 @@ function setupMenu() {
                             height: 300,
                             parent: BrowserWindow.getFocusedWindow(),
                             modal: true,
+                            autoHideMenuBar: true,
                             webPreferences: {
                                 nodeIntegration: true,
                                 contextIsolation: false
