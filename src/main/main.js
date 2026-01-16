@@ -1,21 +1,22 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
 const WindowManager = require('./window-manager');
-const SerialService = require('../services/serial-service');
+const SerialServiceManager = require('../services/serial-service-manager');
 
 let windowManager;
-let serialService;
+let serialServiceManager;
 
 function createWindow() {
     windowManager = new WindowManager();
-    serialService = new SerialService();
+    serialServiceManager = new SerialServiceManager();
 
     const mainWindow = windowManager.createMainWindow();
-    
+
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-    
+
     mainWindow.on('closed', () => {
         windowManager.closeAll();
+        serialServiceManager.closeAll();
     });
 
     setupIpcHandlers();
@@ -24,47 +25,66 @@ function createWindow() {
 
 function setupIpcHandlers() {
     ipcMain.handle('serial:listPorts', async () => {
-        return serialService.listPorts();
+        return serialServiceManager.listPorts();
     });
 
-    ipcMain.handle('serial:open', async (event, config) => {
-        const result = serialService.open(config);
-        BrowserWindow.getAllWindows().forEach(window => {
-            window.webContents.send('serial:connected', true);
-        });
+    ipcMain.handle('connection:create', async (event, config, tabName) => {
+        try {
+            const tabId = ++windowManager.tabCounter;
+            const result = await serialServiceManager.openConnection(tabId, config, tabName);
+
+            const tab = windowManager.createNewTab();
+            tab.tabId = tabId;
+
+            const tabData = windowManager.getTab(tab.id);
+            if (tabData) {
+                tabData.id = tabId;
+                tabData.title = result.tabName;
+            }
+
+            serialServiceManager.onData(tabId, (data) => {
+                const tabInfo = windowManager.getTab(tabId);
+                if (tabInfo && tabInfo.view) {
+                    tabInfo.view.webContents.send('serial:data', data);
+                }
+            });
+
+            serialServiceManager.onError(tabId, (error) => {
+                const tabInfo = windowManager.getTab(tabId);
+                if (tabInfo && tabInfo.view) {
+                    tabInfo.view.webContents.send('serial:error', error);
+                }
+            });
+
+            const tabInfo = windowManager.getTab(tabId);
+            if (tabInfo && tabInfo.view) {
+                tabInfo.view.webContents.send('serial:connected', true);
+            }
+
+            return {
+                success: true,
+                tabId: tabId,
+                tabInfo: result
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    });
+
+    ipcMain.handle('serial:close', async (event, tabId) => {
+        const result = await serialServiceManager.closeConnection(tabId);
         return result;
     });
 
-    ipcMain.handle('serial:close', async () => {
-        const result = serialService.close();
-        BrowserWindow.getAllWindows().forEach(window => {
-            window.webContents.send('serial:connected', false);
-        });
-        return result;
+    ipcMain.handle('serial:write', async (event, tabId, data) => {
+        return serialServiceManager.write(tabId, data);
     });
 
-    ipcMain.handle('serial:write', async (event, data) => {
-        return serialService.write(data);
-    });
-
-    ipcMain.handle('serial:setConfig', async (event, config) => {
-        return serialService.setConfig(config);
-    });
-
-    ipcMain.handle('serial:getConfig', async () => {
-        return serialService.getConfig();
-    });
-
-    serialService.on('data', (data) => {
-        BrowserWindow.getAllWindows().forEach(window => {
-            window.webContents.send('serial:data', data);
-        });
-    });
-
-    serialService.on('error', (error) => {
-        BrowserWindow.getAllWindows().forEach(window => {
-            window.webContents.send('serial:error', error);
-        });
+    ipcMain.handle('serial:getConfig', async (event, tabId) => {
+        return serialServiceManager.getConfig(tabId);
     });
 
     ipcMain.handle('window:newTab', async () => {
@@ -72,7 +92,9 @@ function setupIpcHandlers() {
     });
 
     ipcMain.handle('window:closeTab', async (event, tabId) => {
-        return windowManager.closeTab(tabId);
+        const result = windowManager.closeTab(tabId);
+        await serialServiceManager.closeConnection(tabId);
+        return result;
     });
 
     ipcMain.handle('window:switchTab', async (event, tabId) => {
@@ -83,12 +105,29 @@ function setupIpcHandlers() {
         return windowManager.resize();
     });
 
-    ipcMain.handle('log:start', async (event, filePath, mode) => {
-        return serialService.startLogging(filePath, mode);
+    ipcMain.handle('window:showConnectionDialog', async () => {
+        return showConnectionDialog();
     });
 
-    ipcMain.handle('log:stop', async () => {
-        return serialService.stopLogging();
+    ipcMain.handle('window:updateTabTitle', async (event, tabId, title) => {
+        serialServiceManager.updateTabName(tabId, title);
+        return windowManager.updateTabTitle(tabId, title);
+    });
+
+    ipcMain.handle('log:start', async (event, tabId, filePath, mode) => {
+        const tabData = serialServiceManager.getService(tabId);
+        if (!tabData) {
+            throw new Error('Service not found for tab');
+        }
+        return tabData.service.startLogging(filePath, mode);
+    });
+
+    ipcMain.handle('log:stop', async (event, tabId) => {
+        const tabData = serialServiceManager.getService(tabId);
+        if (!tabData) {
+            throw new Error('Service not found for tab');
+        }
+        return tabData.service.stopLogging();
     });
 
     ipcMain.handle('app:getVersion', async () => {
@@ -101,15 +140,42 @@ function setupIpcHandlers() {
     });
 }
 
+function showConnectionDialog() {
+    return new Promise((resolve) => {
+        const dialogWindow = new BrowserWindow({
+            width: 500,
+            height: 450,
+            resizable: false,
+            modal: true,
+            parent: BrowserWindow.getFocusedWindow(),
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false
+            },
+            show: false
+        });
+
+        dialogWindow.once('ready-to-show', () => {
+            dialogWindow.show();
+        });
+
+        dialogWindow.loadFile(path.join(__dirname, '../renderer/connection-dialog.html'));
+
+        dialogWindow.on('closed', () => {
+            resolve();
+        });
+    });
+}
+
 function setupMenu() {
     const template = [
         {
             label: 'File',
             submenu: [
                 {
-                    label: 'New Window',
+                    label: 'New Connection',
                     accelerator: 'CmdOrCtrl+N',
-                    click: () => windowManager.createNewTab()
+                    click: () => showConnectionDialog()
                 },
                 {
                     label: 'Close Window',

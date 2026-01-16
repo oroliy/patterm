@@ -234,6 +234,21 @@ body {
     flex: 1;
 }
 
+.tab-status {
+    font-size: 12px;
+    margin-right: 4px;
+    min-width: 14px;
+    text-align: center;
+}
+
+.tab-status.connected {
+    color: #4caf50;
+}
+
+.tab-status.disconnected {
+    color: #999;
+}
+
 .tab-close {
     background: none;
     border: none;

@@ -131,15 +131,15 @@
     
     <script>
         const { ipcRenderer } = require('electron');
-        
+
         let tabId = null;
         let isConnected = false;
-        
+
         const terminal = document.getElementById('terminal');
         const inputField = document.getElementById('inputField');
         const sendBtn = document.getElementById('sendBtn');
         const clearBtn = document.getElementById('clearBtn');
-        
+
         function appendData(data, type) {
             const line = document.createElement('div');
             line.className = type + '-data';
@@ -147,71 +147,91 @@
             terminal.appendChild(line);
             terminal.scrollTop = terminal.scrollHeight;
         }
-        
+
         function appendText(text) {
             terminal.textContent += text;
             terminal.scrollTop = terminal.scrollHeight;
         }
-        
+
         function clearTerminal() {
             terminal.textContent = '';
         }
-        
+
         inputField.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 sendData();
             }
         });
-        
+
         sendBtn.addEventListener('click', sendData);
-        
+
         async function sendData() {
             const data = inputField.value;
             if (data.trim() === '' || !isConnected) return;
-            
+
             try {
-                await ipcRenderer.invoke('serial:write', data);
+                await ipcRenderer.invoke('serial:write', tabId, data);
                 appendData(`TX: ${data}`, 'tx');
                 inputField.value = '';
             } catch (error) {
                 appendData(`Error: ${error.message}`, 'error');
             }
         }
-        
+
         clearBtn.addEventListener('click', clearTerminal);
-        
+
         ipcRenderer.on('serial:data', (event, data) => {
             appendText(data);
         });
-        
+
         ipcRenderer.on('serial:error', (event, error) => {
-            appendData(`Error: ${error.message}`, 'error');
+            appendData(`Error: ${error}`, 'error');
         });
 
         ipcRenderer.on('serial:connected', (event, connected) => {
             isConnected = connected;
             sendBtn.disabled = !connected;
             inputField.disabled = !connected;
+            updateConnectionStatus(connected);
         });
+
+        function updateConnectionStatus(connected) {
+            const statusIndicator = document.createElement('div');
+            statusIndicator.className = 'connection-status';
+            statusIndicator.textContent = connected ? 'Connected' : 'Disconnected';
+            statusIndicator.style.color = connected ? '#4caf50' : '#f44336';
+            statusIndicator.style.fontSize = '12px';
+            statusIndicator.style.padding = '5px 10px';
+            statusIndicator.style.background = connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
+            statusIndicator.style.borderRadius = '3px';
+            statusIndicator.style.marginBottom = '10px';
+
+            const existingStatus = terminal.querySelector('.connection-status');
+            if (existingStatus) {
+                existingStatus.replaceWith(statusIndicator);
+            } else {
+                terminal.insertBefore(statusIndicator, terminal.firstChild);
+            }
+        }
 
         window.addEventListener('load', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            tabId = urlParams.get('tabId');
+            tabId = parseInt(urlParams.get('tabId')) || null;
+
+            if (tabId) {
+                updateConnectionStatus(false);
+            }
         });
-        
-        window.addEventListener('load', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            tabId = urlParams.get('tabId');
-        });
-        
+
         window.addEventListener('message', (event) => {
             const { type, data } = event.data;
-            
+
             switch (type) {
                 case 'setConnected':
                     isConnected = data;
                     sendBtn.disabled = !data;
                     inputField.disabled = !data;
+                    updateConnectionStatus(data);
                     break;
                 case 'receivedData':
                     appendData(`RX: ${data}`, 'rx');

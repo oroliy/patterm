@@ -6,6 +6,8 @@ class WindowManager {
         this.tabs = new Map();
         this.activeTabId = null;
         this.tabCounter = 0;
+        this.toolbarHeight = 0;
+        this.tabsHeight = 0;
     }
 
     createMainWindow() {
@@ -24,10 +26,15 @@ class WindowManager {
 
         this.mainWindow.once('ready-to-show', () => {
             this.mainWindow.show();
+            setTimeout(() => this.updateLayoutMetrics(), 100);
         });
 
         this.mainWindow.on('closed', () => {
             this.closeAll();
+        });
+
+        this.mainWindow.on('resize', () => {
+            this.resize();
         });
 
         return this.mainWindow;
@@ -42,9 +49,16 @@ class WindowManager {
             }
         });
 
-        view.setBounds({ x: 0, y: 80, width: this.mainWindow.getBounds().width, height: this.mainWindow.getBounds().height - 80 });
+        const bounds = this.mainWindow.getBounds();
+        const yOffset = this.toolbarHeight + this.tabsHeight;
+        view.setBounds({
+            x: 0,
+            y: yOffset,
+            width: bounds.width,
+            height: bounds.height - yOffset
+        });
         view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
-        
+
         this.tabs.set(tabId, {
             id: tabId,
             view: view,
@@ -95,7 +109,13 @@ class WindowManager {
         this.activeTabId = tabId;
 
         const bounds = this.mainWindow.getBounds();
-        tab.view.setBounds({ x: 0, y: 80, width: bounds.width, height: bounds.height - 80 });
+        const yOffset = this.toolbarHeight + this.tabsHeight;
+        tab.view.setBounds({
+            x: 0,
+            y: yOffset,
+            width: bounds.width,
+            height: bounds.height - yOffset
+        });
 
         return true;
     }
@@ -135,11 +155,40 @@ class WindowManager {
     resize() {
         if (!this.mainWindow || !this.activeTabId) return;
 
+        this.updateLayoutMetrics();
+
         const bounds = this.mainWindow.getBounds();
         const activeTab = this.tabs.get(this.activeTabId);
         if (activeTab) {
-            activeTab.view.setBounds({ x: 0, y: 80, width: bounds.width, height: bounds.height - 80 });
+            const yOffset = this.toolbarHeight + this.tabsHeight;
+            activeTab.view.setBounds({
+                x: 0,
+                y: yOffset,
+                width: bounds.width,
+                height: bounds.height - yOffset
+            });
         }
+    }
+
+    updateLayoutMetrics() {
+        if (!this.mainWindow || !this.mainWindow.webContents) return;
+
+        const bounds = this.mainWindow.getBounds();
+        const toolbarHeight = this.mainWindow.webContents.executeJavaScript(`
+            const toolbar = document.querySelector('.toolbar');
+            const tabsContainer = document.querySelector('.tabs-container');
+            return {
+                toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
+                tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
+            };
+        `).then(result => {
+            this.toolbarHeight = result.toolbarHeight;
+            this.tabsHeight = result.tabsHeight;
+        }).catch(err => {
+            console.error('Failed to get layout metrics:', err);
+            this.toolbarHeight = 50;
+            this.tabsHeight = 40;
+        });
     }
 }
 

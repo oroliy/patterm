@@ -4,21 +4,32 @@ A professional serial terminal application built with Electron, featuring multi-
 
 ## Features
 
-- **Multi-Window Tabs**: Open and manage multiple serial connections in separate tabs
+- **Multi-Tab Management**: Open and manage multiple serial connections in independent tabs
+  - Each tab has its own serial connection, terminal, and input field
+  - Automatic tab creation with connection dialog
+  - Custom tab names with port display
+  - Connection status indicators (● for connected, ○ for disconnected)
+  - Tab switching with dedicated BrowserView management
 - **Complete UART Configuration**:
   - Baud rates: 110 to 921600
   - Data bits: 5, 6, 7, 8
   - Stop bits: 1, 1.5, 2
   - Parity: None, Odd, Even, Mark, Space
   - Flow control: RTS/CTS, XON/XOFF
+- **Connection Dialog**: Intuitive modal for creating new connections
+  - Port selection with manufacturer info
+  - Custom tab naming
+  - All serial parameters in one place
+  - Port refresh functionality
 - **Real-Time Serial I/O**: Send and receive data with minimal latency
-- **File Logging**: 
+- **File Logging**:
   - Manual logging (start/stop on demand)
   - Auto logging (continuous)
   - Timestamped entries
+  - Per-tab logging support
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Keyboard Shortcuts**:
-  - `Ctrl/Cmd + N` - New window/tab
+  - `Ctrl/Cmd + N` - New connection
   - `Ctrl/Cmd + W` - Close window
 
 ## Installation
@@ -50,14 +61,19 @@ npm start
 
 ### Basic Workflow
 
-1. **Launch the application** with `npm start`
-2. **Select a serial port** from the dropdown in the toolbar
-3. **Configure settings** (baud rate, data bits, etc.) if needed
-4. **Click "Connect"** to open the serial port
-5. **Send data** by typing in the input field and pressing Enter
-6. **View received data** in the terminal window
-7. **Add more tabs** with `Ctrl/Cmd + N` for additional connections
-8. **Enable logging** to save serial data to a file
+1. **Launch application** with `npm start`
+2. **Click "New Connection"** (or press `Ctrl/Cmd + N`) to open connection dialog
+3. **Configure connection settings**:
+   - Optional: Enter custom tab name
+   - Select serial port from dropdown
+   - Configure baud rate, data bits, stop bits, parity
+   - Click "Connect" to create tab and open serial port
+4. **Send data** by typing in the input field and pressing Enter (in the tab)
+5. **View received data** in the terminal window (per tab)
+6. **Create more connections** with `Ctrl/Cmd + N` for additional serial ports
+7. **Switch between tabs** to manage different connections
+8. **Enable logging** to save serial data to a file (per tab)
+9. **Close tab** to disconnect serial port and remove tab
 
 ## Development
 
@@ -68,13 +84,18 @@ patterm/
 ├── src/
 │   ├── main/           # Electron main process
 │   │   ├── main.js     # Application entry point
-│   │   └── window-manager.js  # Multi-window management
+│   │   └── window-manager.js  # Multi-window and tab management
 │   ├── renderer/       # UI/frontend code
 │   │   ├── index.html  # Main window HTML
+│   │   ├── main.js     # Main window JavaScript
 │   │   ├── tab.html    # Tab content HTML
-│   │   └── about.html  # About dialog HTML
+│   │   ├── connection-dialog.html  # Connection dialog HTML
+│   │   ├── connection-dialog.js    # Connection dialog logic
+│   │   ├── about.html  # About dialog HTML
+│   │   └── styles.css  # Global CSS styles
 │   ├── services/       # Business logic
-│   │   └── serial-service.js  # Serial port handling
+│   │   ├── serial-service.js  # Single serial port handling
+│   │   └── serial-service-manager.js  # Multi-connection management
 │   └── public/         # Static assets
 ├── .github/workflows/  # CI/CD configuration
 ├── package.json

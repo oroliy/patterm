@@ -2,119 +2,58 @@ const { ipcRenderer } = require('electron');
 
 let tabs = new Map();
 let activeTabId = null;
-let isConnected = false;
 
-const portSelect = document.getElementById('portSelect');
-const baudRate = document.getElementById('baudRate');
-const dataBits = document.getElementById('dataBits');
-const stopBits = document.getElementById('stopBits');
-const parity = document.getElementById('parity');
-const connectBtn = document.getElementById('connectBtn');
-const disconnectBtn = document.getElementById('disconnectBtn');
 const newTabBtn = document.getElementById('newTabBtn');
-const refreshPortsBtn = document.getElementById('refreshPortsBtn');
 const loggingBtn = document.getElementById('loggingBtn');
 const tabsContainer = document.getElementById('tabs');
 const tabContent = document.getElementById('tabContent');
 
-async function loadPorts() {
+async function showConnectionDialog() {
     try {
-        const ports = await ipcRenderer.invoke('serial:listPorts');
-        portSelect.innerHTML = '<option value="">Select Port...</option>';
-        ports.forEach(port => {
-            const option = document.createElement('option');
-            option.value = port.path;
-            option.textContent = `${port.path} (${port.manufacturer || 'Unknown'})`;
-            portSelect.appendChild(option);
-        });
+        await ipcRenderer.invoke('window:showConnectionDialog');
     } catch (error) {
-        console.error('Failed to load ports:', error);
+        console.error('Failed to show connection dialog:', error);
     }
 }
 
-async function connect() {
-    const config = {
-        path: portSelect.value,
-        baudRate: parseInt(baudRate.value),
-        dataBits: parseInt(dataBits.value),
-        stopBits: parseFloat(stopBits.value),
-        parity: parity.value
-    };
+function addTab(tabId, tabName, connected) {
+    const tab = document.createElement('div');
+    tab.className = 'tab';
+    tab.dataset.tabId = tabId;
 
-    if (!config.path) {
-        alert('Please select a port');
-        return;
-    }
+    const statusIcon = connected ? '●' : '○';
+    tab.innerHTML = `
+        <span class="tab-status">${statusIcon}</span>
+        <span class="tab-title">${tabName}</span>
+        <button class="tab-close" data-tab-id="${tabId}">×</button>
+    `;
 
-    try {
-        await ipcRenderer.invoke('serial:open', config);
-        isConnected = true;
-        updateUIState();
-    } catch (error) {
-        alert(`Failed to connect: ${error.message}`);
-    }
+    tab.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('tab-close')) {
+            switchTab(tabId);
+        }
+    });
+
+    tabs.set(tabId, {
+        element: tab,
+        title: tabName,
+        connected: connected
+    });
+
+    tabsContainer.appendChild(tab);
+    switchTab(tabId);
 }
 
-async function disconnect() {
-    try {
-        await ipcRenderer.invoke('serial:close');
-        isConnected = false;
-        updateUIState();
-    } catch (error) {
-        alert(`Failed to disconnect: ${error.message}`);
-    }
-}
+function updateTabStatus(tabId, connected) {
+    const tab = tabs.get(tabId);
+    if (!tab) return;
 
-function updateUIState() {
-    if (isConnected) {
-        connectBtn.style.display = 'none';
-        disconnectBtn.style.display = 'inline-block';
-        portSelect.disabled = true;
-        baudRate.disabled = true;
-        dataBits.disabled = true;
-        stopBits.disabled = true;
-        parity.disabled = true;
-        loggingBtn.disabled = false;
-    } else {
-        connectBtn.style.display = 'inline-block';
-        disconnectBtn.style.display = 'none';
-        portSelect.disabled = false;
-        baudRate.disabled = false;
-        dataBits.disabled = false;
-        stopBits.disabled = false;
-        parity.disabled = false;
-        loggingBtn.disabled = true;
-    }
-}
-
-async function createNewTab() {
-    try {
-        const result = await ipcRenderer.invoke('window:newTab');
-        const tabId = result.id;
-        
-        const tab = document.createElement('div');
-        tab.className = 'tab';
-        tab.dataset.tabId = tabId;
-        tab.innerHTML = `
-            <span class="tab-title">${result.title}</span>
-            <button class="tab-close" data-tab-id="${tabId}">×</button>
-        `;
-        
-        tab.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('tab-close')) {
-                switchTab(tabId);
-            }
-        });
-        
-        tabs.set(tabId, {
-            element: tab,
-            title: result.title
-        });
-        
-        tabsContainer.appendChild(tab);
-        switchTab(tabId);
-    } catch (error) {
-        alert(`Failed to create tab: ${error.message}`);
+    tab.connected = connected;
+    const statusIcon = connected ? '●' : '○';
+    const statusElement = tab.element.querySelector('.tab-status');
+    if (statusElement) {
+        statusElement.textContent = statusIcon;
+        statusElement.style.color = connected ? '#4caf50' : '#999';
     }
 }
 
@@ -125,14 +64,15 @@ async function closeTab(tabId) {
         if (tab) {
             tab.element.remove();
             tabs.delete(tabId);
-            
+
             if (activeTabId === tabId) {
                 const remainingTabs = Array.from(tabs.keys());
                 if (remainingTabs.length > 0) {
                     switchTab(remainingTabs[0]);
                 } else {
                     activeTabId = null;
-                    tabContent.innerHTML = '<div class="empty-state">No tabs open. Click "New Tab" to start.</div>';
+                    tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
+                    loggingBtn.disabled = true;
                 }
             }
         }
@@ -143,23 +83,28 @@ async function closeTab(tabId) {
 
 function switchTab(tabId) {
     if (activeTabId === tabId) return;
-    
+
     const tab = tabs.get(tabId);
     if (!tab) return;
-    
+
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.element.classList.add('active');
-    
+
     ipcRenderer.invoke('window:switchTab', tabId);
     activeTabId = tabId;
-    
+
     tabContent.innerHTML = '';
 }
 
 async function startLogging() {
+    if (!activeTabId) {
+        alert('Please select a tab first');
+        return;
+    }
+
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const fileName = `patterm-log-${timestamp}.txt`;
-    
+
     const filePath = await ipcRenderer.invoke('dialog:saveFile', {
         defaultPath: fileName,
         filters: [
@@ -167,13 +112,12 @@ async function startLogging() {
             { name: 'All Files', extensions: ['*'] }
         ]
     });
-    
+
     if (filePath) {
         try {
-            await ipcRenderer.invoke('log:start', filePath, 'continuous');
+            await ipcRenderer.invoke('log:start', activeTabId, filePath, 'continuous');
             loggingBtn.textContent = 'Stop Log';
             loggingBtn.classList.add('btn-warning');
-            alert('Logging started');
         } catch (error) {
             alert(`Failed to start logging: ${error.message}`);
         }
@@ -181,20 +125,19 @@ async function startLogging() {
 }
 
 async function stopLogging() {
+    if (!activeTabId) return;
+
     try {
-        await ipcRenderer.invoke('log:stop');
+        await ipcRenderer.invoke('log:stop', activeTabId);
         loggingBtn.textContent = 'Log';
         loggingBtn.classList.remove('btn-warning');
-        alert('Logging stopped');
     } catch (error) {
         alert(`Failed to stop logging: ${error.message}`);
     }
 }
 
-connectBtn.addEventListener('click', connect);
-disconnectBtn.addEventListener('click', disconnect);
-newTabBtn.addEventListener('click', createNewTab);
-refreshPortsBtn.addEventListener('click', loadPorts);
+newTabBtn.addEventListener('click', showConnectionDialog);
+
 loggingBtn.addEventListener('click', () => {
     if (loggingBtn.textContent === 'Log') {
         startLogging();
@@ -210,16 +153,31 @@ tabsContainer.addEventListener('click', (e) => {
     }
 });
 
+ipcRenderer.on('tab:created', (event, tabData) => {
+    addTab(tabData.tabId, tabData.tabName, tabData.connected);
+});
+
+ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {
+    updateTabStatus(tabId, connected);
+});
+
 ipcRenderer.on('serial:error', (event, error) => {
-    alert(`Serial Error: ${error}`);
+    console.error('Serial Error:', error);
 });
 
 window.addEventListener('load', () => {
-    loadPorts();
+    tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
     updateUIState();
-    tabContent.innerHTML = '<div class="empty-state">No tabs open. Click "New Tab" to start.</div>';
 });
 
 window.addEventListener('resize', () => {
     ipcRenderer.invoke('window:resize');
 });
+
+function updateUIState() {
+    if (activeTabId && tabs.get(activeTabId)?.connected) {
+        loggingBtn.disabled = false;
+    } else {
+        loggingBtn.disabled = true;
+    }
+}
