@@ -40,8 +40,8 @@ class WindowManager {
         return this.mainWindow;
     }
 
-    createNewTab() {
-        const tabId = ++this.tabCounter;
+    createNewTab(tabId = null, title = null) {
+        const actualTabId = tabId || ++this.tabCounter;
         const view = new BrowserView({
             webPreferences: {
                 nodeIntegration: true,
@@ -57,21 +57,21 @@ class WindowManager {
             width: bounds.width,
             height: bounds.height - yOffset
         });
-        view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
+        view.webContents.loadFile(require('path').join(__dirname, `../renderer/tab.html?tabId=${actualTabId}`));
 
-        this.tabs.set(tabId, {
-            id: tabId,
+        this.tabs.set(actualTabId, {
+            id: actualTabId,
             view: view,
-            title: `Port ${tabId}`
+            title: title || `Port ${actualTabId}`
         });
 
         if (!this.activeTabId) {
-            this.switchTab(tabId);
+            this.switchTab(actualTabId);
         }
 
         return {
-            id: tabId,
-            title: `Port ${tabId}`
+            id: actualTabId,
+            title: title || `Port ${actualTabId}`
         };
     }
 

@@ -154,7 +154,7 @@ tabsContainer.addEventListener('click', (e) => {
 });
 
 ipcRenderer.on('tab:created', (event, tabData) => {
-    addTab(tabData.tabId, tabData.tabName, tabData.connected);
+    addTab(tabData.id, tabData.tabName, tabData.connected);
 });
 
 ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {

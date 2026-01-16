@@ -33,14 +33,7 @@ function setupIpcHandlers() {
             const tabId = ++windowManager.tabCounter;
             const result = await serialServiceManager.openConnection(tabId, config, tabName);
 
-            const tab = windowManager.createNewTab();
-            tab.tabId = tabId;
-
-            const tabData = windowManager.getTab(tab.id);
-            if (tabData) {
-                tabData.id = tabId;
-                tabData.title = result.tabName;
-            }
+            const tab = windowManager.createNewTab(tabId, result.tabName);
 
             serialServiceManager.onData(tabId, (data) => {
                 const tabInfo = windowManager.getTab(tabId);
@@ -59,6 +52,15 @@ function setupIpcHandlers() {
             const tabInfo = windowManager.getTab(tabId);
             if (tabInfo && tabInfo.view) {
                 tabInfo.view.webContents.send('serial:connected', true);
+            }
+
+            const mainWindow = BrowserWindow.getAllWindows()[0];
+            if (mainWindow) {
+                mainWindow.webContents.send('tab:created', {
+                    id: tabId,
+                    tabName: result.tabName,
+                    connected: true
+                });
             }
 
             return {
@@ -87,8 +89,8 @@ function setupIpcHandlers() {
         return serialServiceManager.getConfig(tabId);
     });
 
-    ipcMain.handle('window:newTab', async () => {
-        return windowManager.createNewTab();
+    ipcMain.handle('window:newTab', async (event, tabId, title) => {
+        return windowManager.createNewTab(tabId, title);
     });
 
     ipcMain.handle('window:closeTab', async (event, tabId) => {
@@ -144,10 +146,11 @@ function showConnectionDialog() {
     return new Promise((resolve) => {
         const dialogWindow = new BrowserWindow({
             width: 500,
-            height: 450,
+            height: 550,
             resizable: false,
             modal: true,
             parent: BrowserWindow.getFocusedWindow(),
+            autoHideMenuBar: true,
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false
