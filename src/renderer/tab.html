@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Tab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .terminal {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .terminal::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .terminal::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+        
+        .terminal::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+        
+        .terminal::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+        
+        .rx-data {
+            color: #4ec9b0;
+        }
+        
+        .tx-data {
+            color: #ce9178;
+        }
+        
+        .error-data {
+            color: #f14c4c;
+        }
+        
+        .input-bar {
+            display: flex;
+            padding: 10px;
+            background-color: #2d2d2d;
+            border-top: 1px solid #3e3e3e;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: #1e1e1e;
+            border: 1px solid #3e3e3e;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .input-field:focus {
+            border-color: #007acc;
+        }
+        
+        .send-btn {
+            margin-left: 10px;
+            padding: 8px 20px;
+            background-color: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .send-btn:hover {
+            background-color: #0098ff;
+        }
+        
+        .send-btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        
+        .clear-btn {
+            margin-left: 10px;
+            padding: 8px 15px;
+            background-color: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        .clear-btn:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal" class="terminal"></div>
+    <div class="input-bar">
+        <input type="text" id="inputField" class="input-field" placeholder="Type and press Enter to send..." />
+        <button id="sendBtn" class="send-btn">Send</button>
+        <button id="clearBtn" class="clear-btn">Clear</button>
+    </div>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        let tabId = null;
+        let isConnected = false;
+        
+        const terminal = document.getElementById('terminal');
+        const inputField = document.getElementById('inputField');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        function appendData(data, type) {
+            const line = document.createElement('div');
+            line.className = type + '-data';
+            line.textContent = data;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function appendText(text) {
+            terminal.textContent += text;
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function clearTerminal() {
+            terminal.textContent = '';
+        }
+        
+        inputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendData();
+            }
+        });
+        
+        sendBtn.addEventListener('click', sendData);
+        
+        async function sendData() {
+            const data = inputField.value;
+            if (data.trim() === '' || !isConnected) return;
+            
+            try {
+                await ipcRenderer.invoke('serial:write', data);
+                appendData(`TX: ${data}`, 'tx');
+                inputField.value = '';
+            } catch (error) {
+                appendData(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        clearBtn.addEventListener('click', clearTerminal);
+        
+        ipcRenderer.on('serial:data', (event, data) => {
+            appendText(data);
+        });
+        
+        ipcRenderer.on('serial:error', (event, error) => {
+            appendData(error, 'error');
+        });
+        
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            tabId = urlParams.get('tabId');
+        });
+        
+        window.addEventListener('message', (event) => {
+            const { type, data } = event.data;
+            
+            switch (type) {
+                case 'setConnected':
+                    isConnected = data;
+                    sendBtn.disabled = !data;
+                    inputField.disabled = !data;
+                    break;
+                case 'receivedData':
+                    appendData(`RX: ${data}`, 'rx');
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
