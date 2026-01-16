@@ -55,15 +55,16 @@ jobs:
     - name: Build Electron app
       run: npm run build
 
+    - name: Build distribution
+      run: npm run dist
+      env:
+        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: patterm-${{ matrix.os }}
-        path: |
-          dist/*.exe
-          dist/*.dmg
-          dist/*.AppImage
-          dist/*.deb
+        path: dist/
         retention-days: 7
         if-no-files-found: ignore
 
@@ -111,7 +112,9 @@ jobs:
         ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Build for release
-      run: npm run build
+      run: npm run dist
+      env:
+        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Extract version from commit message
       id: extract_version
@@ -124,11 +127,7 @@ jobs:
       with:
         tag_name: v${{ steps.extract_version.outputs.version }}
         name: Release v${{ steps.extract_version.outputs.version }}
-        files: |
-          dist/*.exe
-          dist/*.dmg
-          dist/*.AppImage
-          dist/*.deb
+        files: dist/
         draft: false
         prerelease: false
       env:
