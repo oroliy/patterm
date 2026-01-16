@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2024-01-16
+
+### Added
+- Debug Console window for real-time application logging
+- Color-coded log levels (info, warn, error, debug) in debug console
+- Selectable and copyable log entries in debug console
+- Debug Console menu item with Ctrl/Cmd+Shift+D shortcut
+- Detailed debug logging for connection and tab creation processes
+
+### Fixed
+- Increased input bar padding from 10px to 15px 20px for better spacing
+- Increased connection dialog height from 450px to 550px to fit all content
+- Fixed tab creation to only happen after successful connection
+- Fixed tab ID consistency between window manager and serial service manager
+- Fixed tab:created event to use correct tabId property
+- Removed deprecated remote module from connection dialog
+- Replaced alert() with selectable in-page error messages
+
+### Changed
+- Upgraded Electron from 28.1.0 to 40.0.0
+- Improved error message display in connection dialog
+- Enhanced debug output for troubleshooting connection issues
+
 ## [1.1.0] - 2024-01-16
 
 ### Added

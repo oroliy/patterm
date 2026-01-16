@@ -21,16 +21,23 @@ A professional serial terminal application built with Electron, featuring multi-
   - Custom tab naming
   - All serial parameters in one place
   - Port refresh functionality
-- **Real-Time Serial I/O**: Send and receive data with minimal latency
-- **File Logging**:
+ - **Real-Time Serial I/O**: Send and receive data with minimal latency
+ - **Debug Console**:
+   - Real-time logging of application events
+   - Color-coded log levels (info, warn, error, debug)
+   - Selectable and copyable log entries
+   - Timestamp for each log entry
+   - Clear logs with Ctrl/Cmd + L
+ - **File Logging**:
   - Manual logging (start/stop on demand)
   - Auto logging (continuous)
   - Timestamped entries
   - Per-tab logging support
 - **Cross-Platform**: Windows, macOS, and Linux support
 - **Keyboard Shortcuts**:
-  - `Ctrl/Cmd + N` - New connection
-  - `Ctrl/Cmd + W` - Close window
+   - `Ctrl/Cmd + N` - New connection
+   - `Ctrl/Cmd + W` - Close window
+   - `Ctrl/Cmd + Shift + D` - Toggle debug console
 
 ## Installation
 
