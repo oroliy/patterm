@@ -140,6 +140,14 @@
         const sendBtn = document.getElementById('sendBtn');
         const clearBtn = document.getElementById('clearBtn');
 
+        async function debugLog(message, level = 'info') {
+            try {
+                await ipcRenderer.invoke('debug:log', `[Tab] ${message}`, level);
+            } catch (error) {
+                console.error('[Tab] Failed to log to debug window:', error);
+            }
+        }
+
         function appendData(data, type) {
             const line = document.createElement('div');
             line.className = type + '-data';
@@ -169,29 +177,39 @@
             const data = inputField.value;
             if (data.trim() === '' || !isConnected) return;
 
+            await debugLog(`Sending data: ${data}`, 'info');
             try {
                 await ipcRenderer.invoke('serial:write', tabId, data);
                 appendData(`TX: ${data}`, 'tx');
                 inputField.value = '';
             } catch (error) {
+                await debugLog(`Send failed: ${error.message}`, 'error');
                 appendData(`Error: ${error.message}`, 'error');
             }
         }
 
         clearBtn.addEventListener('click', clearTerminal);
 
+        ipcRenderer.on('tab:init', async (event, data) => {
+            tabId = data.tabId;
+            await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
+            updateConnectionStatus(false);
+        });
+
         ipcRenderer.on('serial:data', (event, data) => {
             appendText(data);
         });
 
-        ipcRenderer.on('serial:error', (event, error) => {
+        ipcRenderer.on('serial:error', async (event, error) => {
+            await debugLog(`Serial error: ${error}`, 'error');
             appendData(`Error: ${error}`, 'error');
         });
 
-        ipcRenderer.on('serial:connected', (event, connected) => {
+        ipcRenderer.on('serial:connected', async (event, connected) => {
             isConnected = connected;
             sendBtn.disabled = !connected;
             inputField.disabled = !connected;
+            await debugLog(`Connection status changed: ${connected}`, 'info');
             updateConnectionStatus(connected);
         });
 
@@ -215,12 +233,7 @@
         }
 
         window.addEventListener('load', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            tabId = parseInt(urlParams.get('tabId')) || null;
-
-            if (tabId) {
-                updateConnectionStatus(false);
-            }
+            debugLog('Tab window loaded', 'info');
         });
 
         window.addEventListener('message', (event) => {

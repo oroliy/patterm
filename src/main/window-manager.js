@@ -67,7 +67,14 @@ class WindowManager {
             width: bounds.width,
             height: bounds.height - yOffset
         });
-        view.webContents.loadFile(require('path').join(__dirname, `../renderer/tab.html?tabId=${actualTabId}`));
+        view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
+
+        view.webContents.on('did-finish-load', () => {
+            view.webContents.send('tab:init', { tabId: actualTabId });
+            if (this.debugWindow) {
+                this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
+            }
+        });
 
         this.tabs.set(actualTabId, {
             id: actualTabId,
