@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
 const WindowManager = require('./window-manager');
 const SerialService = require('../services/serial-service');
@@ -81,6 +81,11 @@ function setupIpcHandlers() {
 
     ipcMain.handle('app:getVersion', async () => {
         return app.getVersion();
+    });
+
+    ipcMain.handle('dialog:saveFile', async (event, options) => {
+        const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), options);
+        return result.filePath;
     });
 }
 
