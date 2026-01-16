@@ -14,15 +14,21 @@ npm run dist:win      # Build for Windows
 npm run dist:mac      # Build for macOS
 npm run dist:linux    # Build for Linux
 
-# Linting & Testing (add these to package.json if missing)
-npm run lint          # Run ESLint
-npm test              # Run Jest tests
-npm run test:watch    # Watch mode for tests
-npm run test:coverage # Coverage report
+# Linting & Testing
+# npm run lint          # Run linter (placeholder - no ESLint configured yet)
+# npm test              # Run tests (placeholder - no Jest configured yet)
+# npm run test:watch    # Watch mode for tests
+# npm run test:coverage # Coverage report
 
-# Run single test (once Jest is configured)
-npm test -- --testNamePattern="testName"
-npm test -- path/to/test.js
+# Run single test (once test framework is configured)
+# npm test -- --testNamePattern="testName"
+# npm test -- path/to/test.js
+
+# Virtual Serial Port Testing
+# bash scripts/create-virtual-port.sh /tmp/ttyV0    # Create virtual port
+# bash scripts/quick-virtual-serial.sh         # Quick echo server
+# python3 scripts/virtual-serial.py            # Python-based virtual port
+# See scripts/README.md for detailed testing guide
 ```
 
 ## Code Style Guidelines
@@ -91,12 +97,25 @@ npm test -- path/to/test.js
 ```
 src/
 ├── main/           # Electron main process
-│   ├── main.js     # Entry point
-│   └── window-manager.js
-├── renderer/       # UI code (TODO: implement)
+│   ├── main.js     # Application entry point
+│   ├── window-manager.js  # Multi-window and tab management
+│   └── debug-window.js     # Debug console management
+├── renderer/       # UI/frontend code
+│   ├── index.html  # Main window HTML
+│   ├── main.js     # Main window JavaScript
+│   ├── tab.html    # Tab content HTML
+│   ├── connection-dialog.html  # Connection dialog HTML
+│   ├── connection-dialog.js    # Connection dialog logic
+│   ├── debug-window.html     # Debug console HTML
+│   ├── about.html  # About dialog HTML
+│   └── styles.css  # Global CSS styles
 ├── services/       # Business logic
-│   └── serial-service.js
-└── public/         # Static assets
+│   ├── serial-service.js  # Single serial port handling
+│   └── serial-service-manager.js  # Multi-connection management
+└── scripts/        # Testing and utility scripts
+    ├── create-virtual-port.sh    # Virtual port creation
+    ├── quick-virtual-serial.sh     # Quick echo server
+    └── virtual-serial.py        # Python virtual serial
 ```
 
 ### NO Comments Policy
@@ -126,11 +145,20 @@ src/
 
 ### GitHub Actions CI/CD
 - Runs on push to master and PRs
-- Tests: ubuntu-latest, macos-latest, windows-latest
-- Node versions: 18.x, 20.x
+- Platforms: Ubuntu, macOS, Windows
+- Node version: 20.x
+- Actions: Install, lint, build, test (lint and test are placeholders)
 - Uses ELECTRON_MIRROR for faster downloads in China
-- Artifacts uploaded for 7 days
-- Auto-release on tagged commits
+- Artifacts: Build artifacts retained for 7 days
+- Releases: Automatic on tagged commits
+
+### Virtual Serial Port Testing
+- Use `scripts/create-virtual-port.sh /tmp/ttyV0` to create virtual port
+- Connect Patterm to `/tmp/ttyV0`
+- Send test data via `telnet localhost 12345` or `nc localhost 12345`
+- Always keep Debug Console open (Ctrl+Shift+D) when testing
+- See scripts/README.md for detailed testing guide
+- Clean up with `killall socat` after testing
 
 ## Important Notes
 - node_modules/ is gitignored - use npm ci to install

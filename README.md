@@ -130,6 +130,46 @@ npm run dist:linux  # Linux only
 
 ### Testing
 
+### Virtual Serial Port Testing
+
+For testing without physical serial hardware, create virtual serial ports:
+
+```bash
+# Method 1: Create virtual port with socat (Recommended)
+bash scripts/create-virtual-port.sh /tmp/ttyV0
+
+# Then connect Patterm to /tmp/ttyV0
+
+# Send test data via TCP:
+telnet localhost 12345
+# or
+echo "Hello Patterm!" | nc localhost 12345
+```
+
+### Quick Test Script
+
+```bash
+# Create virtual port and start echo server
+bash scripts/quick-virtual-serial.sh
+
+# Connect Patterm to the displayed port (e.g., /dev/pts/0)
+# All sent data will be echoed back
+```
+
+### Python Virtual Serial Port
+
+```bash
+# Install required package
+sudo apt install python3-ptyprocess
+
+# Run interactive virtual serial port
+python3 scripts/virtual-serial.py
+
+# Use commands: 1, 2, q, or type any text
+```
+
+### Unit Tests
+
 ```bash
 # Run all tests
 npm test

@@ -132,6 +132,46 @@ npm run dist:linux  # 仅 Linux
 
 ### 测试
 
+### 虚拟串口测试
+
+无需物理串口硬件，可以创建虚拟串口进行测试：
+
+```bash
+# 方法 1：使用 socat 创建虚拟端口（推荐）
+bash scripts/create-virtual-port.sh /tmp/ttyV0
+
+# 然后在 Patterm 中连接 /tmp/ttyV0
+
+# 通过 TCP 发送测试数据：
+telnet localhost 12345
+# 或
+echo "你好 Patterm！" | nc localhost 12345
+```
+
+### 快速测试脚本
+
+```bash
+# 创建虚拟端口并启动回显服务器
+bash scripts/quick-virtual-serial.sh
+
+# 在 Patterm 中连接显示的端口（如 /dev/pts/0）
+# 所有发送的数据都会被回显
+```
+
+### Python 虚拟串口
+
+```bash
+# 安装所需包
+sudo apt install python3-ptyprocess
+
+# 运行交互式虚拟串口
+python3 scripts/virtual-serial.py
+
+# 使用命令：1、2、q 或直接输入任何文本
+```
+
+### 单元测试
+
 ```bash
 # 运行所有测试
 npm test
