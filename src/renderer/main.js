@@ -8,15 +8,26 @@ const loggingBtn = document.getElementById('loggingBtn');
 const tabsContainer = document.getElementById('tabs');
 const tabContent = document.getElementById('tabContent');
 
+async function debugLog(message, level = 'info') {
+    try {
+        await ipcRenderer.invoke('debug:log', message, level);
+    } catch (error) {
+        console.error('[Renderer] Failed to log to debug window:', error);
+    }
+}
+
 async function showConnectionDialog() {
+    await debugLog('showConnectionDialog called', 'info');
     try {
         await ipcRenderer.invoke('window:showConnectionDialog');
     } catch (error) {
-        console.error('Failed to show connection dialog:', error);
+        await debugLog(`Failed to show connection dialog: ${error.message}`, 'error');
     }
 }
 
 function addTab(tabId, tabName, connected) {
+    debugLog(`addTab called with tabId=${tabId}, tabName=${tabName}, connected=${connected}`, 'info');
+
     const tab = document.createElement('div');
     tab.className = 'tab';
     tab.dataset.tabId = tabId;
@@ -41,6 +52,10 @@ function addTab(tabId, tabName, connected) {
     });
 
     tabsContainer.appendChild(tab);
+
+    debugLog(`Tab element appended to container, children count: ${tabsContainer.children.length}`, 'info');
+    debugLog(`Tab element dimensions: ${tab.offsetWidth}x${tab.offsetHeight}`, 'debug');
+
     switchTab(tabId);
 }
 
@@ -82,10 +97,15 @@ async function closeTab(tabId) {
 }
 
 function switchTab(tabId) {
+    debugLog(`switchTab called with tabId=${tabId}, activeTabId=${activeTabId}`, 'info');
+
     if (activeTabId === tabId) return;
 
     const tab = tabs.get(tabId);
-    if (!tab) return;
+    if (!tab) {
+        debugLog(`Tab ${tabId} not found in tabs map`, 'warn');
+        return;
+    }
 
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.element.classList.add('active');
@@ -94,6 +114,7 @@ function switchTab(tabId) {
     activeTabId = tabId;
 
     tabContent.innerHTML = '';
+    debugLog(`Switched to tab ${tabId}`, 'info');
 }
 
 async function startLogging() {
@@ -149,11 +170,13 @@ loggingBtn.addEventListener('click', () => {
 tabsContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('tab-close')) {
         const tabId = parseInt(e.target.dataset.tabId);
+        debugLog(`Closing tab ${tabId}`, 'info');
         closeTab(tabId);
     }
 });
 
 ipcRenderer.on('tab:created', (event, tabData) => {
+    debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
     addTab(tabData.id, tabData.tabName, tabData.connected);
 });
 
@@ -162,10 +185,11 @@ ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {
 });
 
 ipcRenderer.on('serial:error', (event, error) => {
-    console.error('Serial Error:', error);
+    debugLog(`Serial Error: ${error}`, 'error');
 });
 
 window.addEventListener('load', () => {
+    debugLog('Main window loaded', 'info');
     tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
     updateUIState();
 });

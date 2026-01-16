@@ -190,7 +190,7 @@ class WindowManager {
         if (!this.mainWindow || !this.mainWindow.webContents) return;
 
         const bounds = this.mainWindow.getBounds();
-        const toolbarHeight = this.mainWindow.webContents.executeJavaScript(`
+        this.mainWindow.webContents.executeJavaScript(`
             const toolbar = document.querySelector('.toolbar');
             const tabsContainer = document.querySelector('.tabs-container');
             return {
@@ -201,7 +201,9 @@ class WindowManager {
             this.toolbarHeight = result.toolbarHeight;
             this.tabsHeight = result.tabsHeight;
         }).catch(err => {
-            console.error('Failed to get layout metrics:', err);
+            if (this.debugWindow) {
+                this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
+            }
             this.toolbarHeight = 50;
             this.tabsHeight = 40;
         });
