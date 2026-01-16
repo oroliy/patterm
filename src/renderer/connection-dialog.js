@@ -12,6 +12,9 @@ const connectBtn = document.getElementById('connectBtn');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const portError = document.getElementById('portError');
 const tabNameError = document.getElementById('tabNameError');
+const generalError = document.getElementById('generalError');
+const generalErrorText = document.getElementById('generalErrorText');
+const generalErrorClose = document.getElementById('generalErrorClose');
 
 let currentWindow = null;
 
@@ -23,6 +26,7 @@ function getCurrentWindow() {
 }
 
 async function loadPorts() {
+    hideError();
     try {
         const ports = await ipcRenderer.invoke('serial:listPorts');
         portSelect.innerHTML = '<option value="">Select Port...</option>';
@@ -39,7 +43,13 @@ async function loadPorts() {
 }
 
 function showError(message) {
-    alert(message);
+    generalErrorText.textContent = message;
+    generalError.classList.add('show');
+}
+
+function hideError() {
+    generalError.classList.remove('show');
+    generalErrorText.textContent = '';
 }
 
 function showLoading() {
@@ -64,6 +74,7 @@ function validateForm() {
 }
 
 async function handleConnect() {
+    hideError();
     if (!validateForm()) {
         return;
     }
@@ -104,6 +115,8 @@ refreshPortsBtn.addEventListener('click', async () => {
     await loadPorts();
     hideLoading();
 });
+
+generalErrorClose.addEventListener('click', hideError);
 
 cancelBtn.addEventListener('click', handleCancel);
 connectBtn.addEventListener('click', handleConnect);
