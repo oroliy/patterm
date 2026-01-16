@@ -2,12 +2,15 @@ const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
 const WindowManager = require('./window-manager');
 const SerialServiceManager = require('../services/serial-service-manager');
+const DebugWindow = require('./debug-window');
 
 let windowManager;
 let serialServiceManager;
+let debugWindow;
 
 function createWindow() {
-    windowManager = new WindowManager();
+    debugWindow = new DebugWindow();
+    windowManager = new WindowManager(debugWindow);
     serialServiceManager = new SerialServiceManager();
 
     const mainWindow = windowManager.createMainWindow();
@@ -17,6 +20,7 @@ function createWindow() {
     mainWindow.on('closed', () => {
         windowManager.closeAll();
         serialServiceManager.closeAll();
+        debugWindow.close();
     });
 
     setupIpcHandlers();
@@ -30,10 +34,16 @@ function setupIpcHandlers() {
 
     ipcMain.handle('connection:create', async (event, config, tabName) => {
         try {
+            debugWindow.log(`connection:create called with config: ${JSON.stringify(config)}, tabName: ${tabName}`, 'info');
+
             const tabId = ++windowManager.tabCounter;
+            debugWindow.log(`Generated tabId: ${tabId}`, 'info');
+
             const result = await serialServiceManager.openConnection(tabId, config, tabName);
+            debugWindow.log(`Serial connection opened: ${JSON.stringify(result)}`, 'info');
 
             const tab = windowManager.createNewTab(tabId, result.tabName);
+            debugWindow.log(`Tab created: ${JSON.stringify(tab)}`, 'info');
 
             serialServiceManager.onData(tabId, (data) => {
                 const tabInfo = windowManager.getTab(tabId);
@@ -50,12 +60,18 @@ function setupIpcHandlers() {
             });
 
             const tabInfo = windowManager.getTab(tabId);
+            debugWindow.log(`Tab info from manager: ${JSON.stringify(tabInfo)}`, 'info');
+
             if (tabInfo && tabInfo.view) {
+                debugWindow.log(`Sending serial:connected event to tab ${tabId}`, 'info');
                 tabInfo.view.webContents.send('serial:connected', true);
             }
 
             const mainWindow = BrowserWindow.getAllWindows()[0];
+            debugWindow.log(`Main window: ${mainWindow ? 'found' : 'not found'}`, 'info');
+
             if (mainWindow) {
+                debugWindow.log(`Sending tab:created event to main window`, 'info');
                 mainWindow.webContents.send('tab:created', {
                     id: tabId,
                     tabName: result.tabName,
@@ -69,6 +85,7 @@ function setupIpcHandlers() {
                 tabInfo: result
             };
         } catch (error) {
+            debugWindow.error(`connection:create failed: ${error.message}`, 'error');
             return {
                 success: false,
                 error: error.message
@@ -139,6 +156,15 @@ function setupIpcHandlers() {
     ipcMain.handle('dialog:saveFile', async (event, options) => {
         const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), options);
         return result.filePath;
+    });
+
+    ipcMain.handle('debug:toggle', async () => {
+        debugWindow.toggle();
+        debugWindow.flush();
+    });
+
+    ipcMain.handle('debug:log', async (event, message, level) => {
+        debugWindow.log(message, level);
     });
 }
 
@@ -230,6 +256,15 @@ function setupMenu() {
         {
             label: 'Help',
             submenu: [
+                {
+                    label: 'Debug Console',
+                    accelerator: 'CmdOrCtrl+Shift+D',
+                    click: () => {
+                        debugWindow.toggle();
+                        debugWindow.flush();
+                    }
+                },
+                { type: 'separator' },
                 {
                     label: 'About',
                     click: () => {

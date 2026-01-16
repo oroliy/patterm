@@ -1,13 +1,14 @@
 const { BrowserWindow, BrowserView } = require('electron');
 
 class WindowManager {
-    constructor() {
+    constructor(debugWindow) {
         this.mainWindow = null;
         this.tabs = new Map();
         this.activeTabId = null;
         this.tabCounter = 0;
         this.toolbarHeight = 0;
         this.tabsHeight = 0;
+        this.debugWindow = debugWindow;
     }
 
     createMainWindow() {
@@ -41,6 +42,10 @@ class WindowManager {
     }
 
     createNewTab(tabId = null, title = null) {
+        if (this.debugWindow) {
+            this.debugWindow.log(`createNewTab called with tabId=${tabId}, title=${title}`, 'info');
+        }
+
         const actualTabId = tabId || ++this.tabCounter;
         const view = new BrowserView({
             webPreferences: {
@@ -51,6 +56,11 @@ class WindowManager {
 
         const bounds = this.mainWindow.getBounds();
         const yOffset = this.toolbarHeight + this.tabsHeight;
+
+        if (this.debugWindow) {
+            this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${bounds.height - yOffset}`, 'debug');
+        }
+
         view.setBounds({
             x: 0,
             y: yOffset,
@@ -69,10 +79,16 @@ class WindowManager {
             this.switchTab(actualTabId);
         }
 
-        return {
+        const result = {
             id: actualTabId,
             title: title || `Port ${actualTabId}`
         };
+
+        if (this.debugWindow) {
+            this.debugWindow.log(`Tab created and stored: ${JSON.stringify(result)}`, 'info');
+        }
+
+        return result;
     }
 
     closeTab(tabId) {

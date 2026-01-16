@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: #2d2d2d;
+            border-bottom: 1px solid #3e3e3e;
+            gap: 8px;
+        }
+
+        .toolbar-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #007acc;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #3e3e3e;
+            border-radius: 3px;
+            background-color: #3e3e3e;
+            color: #d4d4d4;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #4e4e4e;
+        }
+
+        .btn-primary {
+            background-color: #007acc;
+            border-color: #007acc;
+        }
+
+        .btn-primary:hover {
+            background-color: #0098ff;
+        }
+
+        .console-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .console-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .console-container::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .console-container::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+
+        .console-container::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .log-entry.error {
+            color: #f14c4c;
+        }
+
+        .log-entry.warn {
+            color: #ff9800;
+        }
+
+        .log-entry.info {
+            color: #4ec9b0;
+        }
+
+        .log-entry.debug {
+            color: #808080;
+        }
+
+        .log-timestamp {
+            color: #888;
+            min-width: 180px;
+            user-select: text;
+        }
+
+        .log-level {
+            min-width: 60px;
+            font-weight: 600;
+        }
+
+        .log-message {
+            flex: 1;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            user-select: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <span class="toolbar-title">Debug Console</span>
+        <div style="display: flex; gap: 8px;">
+            <button id="clearBtn" class="btn">Clear</button>
+            <button id="closeBtn" class="btn">Close</button>
+        </div>
+    </div>
+
+    <div class="console-container" id="consoleContainer"></div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const consoleContainer = document.getElementById('consoleContainer');
+        const clearBtn = document.getElementById('clearBtn');
+        const closeBtn = document.getElementById('closeBtn');
+
+        function addLogEntry(data) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${data.level}`;
+
+            const timestamp = new Date(data.timestamp).toLocaleString();
+            entry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level">${data.level.toUpperCase()}</span>
+                <span class="log-message">${escapeHtml(data.message)}</span>
+            `;
+
+            consoleContainer.appendChild(entry);
+            consoleContainer.scrollTop = consoleContainer.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        ipcRenderer.on('debug:log', (event, data) => {
+            addLogEntry(data);
+        });
+
+        ipcRenderer.on('debug:clear', () => {
+            consoleContainer.innerHTML = '';
+        });
+
+        clearBtn.addEventListener('click', () => {
+            consoleContainer.innerHTML = '';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            window.close();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.close();
+            }
+            if (e.key === 'l' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                consoleContainer.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>
