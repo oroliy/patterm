@@ -47,15 +47,15 @@ function setupIpcHandlers() {
         return serialService.getConfig();
     });
 
-    ipcMain.on('serial:data', (event, callbackId) => {
-        serialService.on('data', (data) => {
-            event.reply('serial:data:' + callbackId, data);
+    serialService.on('data', (data) => {
+        BrowserWindow.getAllWindows().forEach(window => {
+            window.webContents.send('serial:data', data);
         });
     });
 
-    ipcMain.on('serial:error', (event, callbackId) => {
-        serialService.on('error', (error) => {
-            event.reply('serial:error:' + callbackId, error);
+    serialService.on('error', (error) => {
+        BrowserWindow.getAllWindows().forEach(window => {
+            window.webContents.send('serial:error', error);
         });
     });
 
@@ -69,6 +69,10 @@ function setupIpcHandlers() {
 
     ipcMain.handle('window:switchTab', async (event, tabId) => {
         return windowManager.switchTab(tabId);
+    });
+
+    ipcMain.handle('window:resize', async () => {
+        return windowManager.resize();
     });
 
     ipcMain.handle('log:start', async (event, filePath, mode) => {
