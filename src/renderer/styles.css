@@ -263,33 +263,37 @@ body {
 }
 
 .tab-close {
-    opacity: 0.5;
-    padding: 2px 6px;
-    margin-left: 4px;
-    border-radius: 4px;
+    opacity: 0.4;
+    padding: 0;
+    margin-left: 6px;
+    border-radius: 0;
+    border: none;
+    background: none;
     transition: var(--transition-fast);
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1;
-    min-width: 20px;
+    min-width: 16px;
     text-align: center;
+    color: var(--text-muted);
+    cursor: pointer;
 }
 
 .tab:hover .tab-close {
-    opacity: 1;
-}
-
-.tab.active .tab-close {
     opacity: 0.7;
 }
 
+.tab.active .tab-close {
+    opacity: 0.5;
+}
+
 .tab.active:hover .tab-close {
-    opacity: 1;
+    opacity: 0.8;
 }
 
 .tab-close:hover {
-    background: var(--accent-danger);
-    color: white;
-    transform: scale(1.1);
+    opacity: 1;
+    color: var(--accent-danger);
+    transform: none;
 }
 
 /* Tab Content Environment */

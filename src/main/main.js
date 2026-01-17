@@ -67,6 +67,10 @@ function setupIpcHandlers() {
             if (tabInfo && tabInfo.view) {
                 debugWindow.log(`Sending serial:connected event to tab ${tabId}`, 'info');
                 tabInfo.view.webContents.send('serial:connected', true);
+                tabInfo.view.webContents.send('serial:portInfo', {
+                    path: config.path,
+                    baudRate: config.baudRate
+                });
 
                 tabInfo.view.webContents.on('ipc-message', (event, channel, ...args) => {
                     if (channel === 'tab:scrollStateChanged') {

@@ -61,12 +61,96 @@
             color: #f14c4c;
         }
 
+        .status-bar {
+            display: flex;
+            align-items: center;
+            padding: 4px 12px;
+            background-color: #252526;
+            border-top: 1px solid #3e3e3e;
+            font-size: 11px;
+            color: #858585;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .status-bar-section {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-bar-section::before {
+            content: '|';
+            color: #3e3e3e;
+        }
+
+        .status-bar-section:first-child::before {
+            content: none;
+        }
+
+        .status-label {
+            color: #858585;
+        }
+
+        .status-value {
+            color: #cccccc;
+        }
+
+        .status-indicator-mini {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator-mini.connected {
+            background-color: #4ec9b0;
+            box-shadow: 0 0 4px #4ec9b0;
+        }
+
+        .status-indicator-mini.disconnected {
+            background-color: #858585;
+        }
+
+        .rx-tx-indicator {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rx-badge, .tx-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .rx-badge {
+            background-color: rgba(78, 201, 176, 0.2);
+            color: #4ec9b0;
+        }
+
+        .tx-badge {
+            background-color: rgba(206, 145, 120, 0.2);
+            color: #ce9178;
+        }
+
+        .rx-badge.active, .tx-badge.active {
+            animation: pulse 0.5s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
         .input-bar {
             display: flex;
-            padding: 15px 20px 20px 20px;
+            padding: 10px 15px;
             background-color: #2d2d2d;
             border-top: 1px solid #3e3e3e;
             gap: 10px;
+            align-items: center;
         }
 
         .input-field {
@@ -83,6 +167,11 @@
 
         .input-field:focus {
             border-color: #007acc;
+        }
+
+        .input-field:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         .send-btn {
@@ -119,6 +208,23 @@
         .clear-btn:hover {
             background-color: #666;
         }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #858585;
+            flex-shrink: 0;
+        }
+
+        .status-dot.connected {
+            background-color: #4ec9b0;
+            box-shadow: 0 0 6px #4ec9b0;
+        }
+
+        .status-dot.disconnected {
+            background-color: #858585;
+        }
     </style>
     <link rel="stylesheet" href="styles.css">
     <script src="theme-manager.js"></script>
@@ -128,10 +234,35 @@
     <div class="terminal-container">
         <div id="terminal" class="terminal-display"></div>
 
+        <div class="status-bar" id="status-bar">
+            <div class="status-bar-section">
+                <span class="status-indicator-mini disconnected" id="status-indicator-mini"></span>
+                <span class="status-value" id="port-name">Not Connected</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Duration:</span>
+                <span class="status-value" id="connection-duration">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Created:</span>
+                <span class="status-value" id="created-time">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Current:</span>
+                <span class="status-value" id="current-time">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <div class="rx-tx-indicator">
+                    <span class="rx-badge" id="rx-badge">RX</span>
+                    <span class="tx-badge" id="tx-badge">TX</span>
+                </div>
+            </div>
+        </div>
+
         <div class="input-bar">
-            <div class="status-indicator disconnected" id="status-dot"></div>
-            <input type="text" id="command-input" class="input-field" placeholder="Type command..." autocomplete="off">
-            <button id="send-btn" class="btn btn-primary btn-icon">➤</button>
+            <div class="status-dot disconnected" id="status-dot"></div>
+            <input type="text" id="command-input" class="input-field" placeholder="Type command..." autocomplete="off" disabled>
+            <button id="send-btn" class="btn btn-primary btn-icon" disabled>➤</button>
             <button id="clear-btn" class="btn">Clear</button>
         </div>
     </div>
@@ -139,9 +270,7 @@
     <script>
         const { ipcRenderer } = require('electron');
 
-        // Initialize theme
         ipcRenderer.invoke('theme:get').then(originalTheme => {
-            // For tabs, we get the current choice and let system handle the effective theme
             const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
             let effectiveTheme = originalTheme;
             if (originalTheme === 'system') {
@@ -150,20 +279,28 @@
             document.documentElement.setAttribute('data-theme', effectiveTheme);
         });
 
-        // Listen for theme updates from main window
         ipcRenderer.on('theme:update', (event, effectiveTheme) => {
-            // Just apply the effective theme, don't store it
             document.documentElement.setAttribute('data-theme', effectiveTheme);
         });
 
         let tabId = null;
         let isConnected = false;
+        let connectionStartTime = null;
+        let durationUpdateInterval = null;
+        let timeUpdateInterval = null;
 
         const terminal = document.getElementById('terminal');
         const serialInput = document.getElementById('command-input');
         const sendBtn = document.getElementById('send-btn');
         const clearBtn = document.getElementById('clear-btn');
         const statusDot = document.getElementById('status-dot');
+        const statusIndicatorMini = document.getElementById('status-indicator-mini');
+        const portNameEl = document.getElementById('port-name');
+        const durationEl = document.getElementById('connection-duration');
+        const createdTimeEl = document.getElementById('created-time');
+        const currentTimeEl = document.getElementById('current-time');
+        const rxBadge = document.getElementById('rx-badge');
+        const txBadge = document.getElementById('tx-badge');
 
         let autoScroll = true;
 
@@ -175,15 +312,80 @@
             }
         }
 
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function formatDuration(startTime) {
+            const now = Date.now();
+            const diff = Math.floor((now - startTime) / 1000);
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateDuration() {
+            if (connectionStartTime && isConnected) {
+                durationEl.textContent = formatDuration(connectionStartTime);
+            } else {
+                durationEl.textContent = '--:--:--';
+            }
+        }
+
+        function updateCurrentTime() {
+            currentTimeEl.textContent = formatTime(new Date());
+        }
+
+        function startDurationTimer() {
+            stopDurationTimer();
+            durationUpdateInterval = setInterval(updateDuration, 1000);
+        }
+
+        function stopDurationTimer() {
+            if (durationUpdateInterval) {
+                clearInterval(durationUpdateInterval);
+                durationUpdateInterval = null;
+            }
+        }
+
+        function startTimeTimer() {
+            stopTimeTimer();
+            timeUpdateInterval = setInterval(updateCurrentTime, 1000);
+            updateCurrentTime();
+        }
+
+        function stopTimeTimer() {
+            if (timeUpdateInterval) {
+                clearInterval(timeUpdateInterval);
+                timeUpdateInterval = null;
+            }
+        }
+
+        function triggerRxIndicator() {
+            rxBadge.classList.add('active');
+            setTimeout(() => rxBadge.classList.remove('active'), 500);
+        }
+
+        function triggerTxIndicator() {
+            txBadge.classList.add('active');
+            setTimeout(() => txBadge.classList.remove('active'), 500);
+        }
+
         function appendData(data, type) {
             const line = document.createElement('div');
-            line.className = type + '-data'; // You might want to update these classes in css or keep them generic
-            // For now, let's just use simple text colors via inline styles or keep the old classes if valid
-            // ideally we map type to new css classes.
-            // type assumes 'rx', 'tx', 'error'.
-            if (type === 'rx') line.style.color = 'var(--text-primary)'; // Or specific color
-            if (type === 'tx') line.style.color = 'var(--text-secondary)';
-            if (type === 'error') line.style.color = 'var(--accent-danger)';
+            line.className = type + '-data';
+            if (type === 'rx') {
+                line.style.color = 'var(--text-primary)';
+                triggerRxIndicator();
+            }
+            if (type === 'tx') {
+                line.style.color = 'var(--text-secondary)';
+                triggerTxIndicator();
+            }
+            if (type === 'error') {
+                line.style.color = 'var(--accent-danger)';
+            }
 
             line.textContent = data;
             line.style.whiteSpace = 'pre-wrap';
@@ -232,6 +434,8 @@
         ipcRenderer.on('tab:init', async (event, data) => {
             tabId = data.tabId;
             await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
+            createdTimeEl.textContent = formatTime(new Date());
+            startTimeTimer();
         });
 
         ipcRenderer.on('serial:data', (event, data) => {
@@ -249,6 +453,19 @@
             serialInput.disabled = !connected;
             await debugLog(`Connection status changed: ${connected}`, 'info');
             updateConnectionStatus(connected);
+
+            if (connected) {
+                connectionStartTime = Date.now();
+                startDurationTimer();
+            } else {
+                stopDurationTimer();
+            }
+        });
+
+        ipcRenderer.on('serial:portInfo', (event, portInfo) => {
+            if (portInfo && portInfo.path) {
+                portNameEl.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+            }
         });
 
         ipcRenderer.on('tab:toggleScroll', () => {
@@ -258,13 +475,22 @@
         });
 
         function updateConnectionStatus(connected) {
+            const statusClass = connected ? 'connected' : 'disconnected';
             if (statusDot) {
-                statusDot.className = `status-indicator ${connected ? 'connected' : 'disconnected'}`;
+                statusDot.className = `status-dot ${statusClass}`;
+            }
+            if (statusIndicatorMini) {
+                statusIndicatorMini.className = `status-indicator-mini ${statusClass}`;
             }
         }
 
         window.addEventListener('load', () => {
             debugLog('Tab window loaded', 'info');
+        });
+
+        window.addEventListener('beforeunload', () => {
+            stopDurationTimer();
+            stopTimeTimer();
         });
     </script>
 </body>

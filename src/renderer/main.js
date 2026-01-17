@@ -76,8 +76,15 @@ function updateTabStatus(tabId, connected) {
 
 async function closeTab(tabId) {
     try {
-        await ipcRenderer.invoke('window:closeTab', tabId);
         const tab = tabs.get(tabId);
+        if (tab && tab.connected) {
+            const confirmed = confirm('The connection is still active. Do you want to close this tab and disconnect?');
+            if (!confirmed) {
+                return;
+            }
+        }
+
+        await ipcRenderer.invoke('window:closeTab', tabId);
         if (tab) {
             tab.element.remove();
             tabs.delete(tabId);
