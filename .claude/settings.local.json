@@ -21,7 +21,9 @@
       "Bash(npm test)",
       "Bash(gh release view:*)",
       "Bash(gh release delete:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)"
     ]
   },
   "outputStyle": "default"
