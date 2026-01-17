@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
             background-color: #1e1e1e;
@@ -20,7 +21,7 @@
             flex-direction: column;
             overflow: hidden;
         }
-        
+
         .terminal {
             flex: 1;
             overflow-y: auto;
@@ -30,36 +31,36 @@
             white-space: pre-wrap;
             word-wrap: break-word;
         }
-        
+
         .terminal::-webkit-scrollbar {
             width: 10px;
         }
-        
+
         .terminal::-webkit-scrollbar-track {
             background: #2d2d2d;
         }
-        
+
         .terminal::-webkit-scrollbar-thumb {
             background: #555;
             border-radius: 5px;
         }
-        
+
         .terminal::-webkit-scrollbar-thumb:hover {
             background: #777;
         }
-        
+
         .rx-data {
             color: #4ec9b0;
         }
-        
+
         .tx-data {
             color: #ce9178;
         }
-        
+
         .error-data {
             color: #f14c4c;
         }
-        
+
         .input-bar {
             display: flex;
             padding: 15px 20px 20px 20px;
@@ -67,7 +68,7 @@
             border-top: 1px solid #3e3e3e;
             gap: 10px;
         }
-        
+
         .input-field {
             flex: 1;
             padding: 8px 12px;
@@ -79,11 +80,11 @@
             font-size: 14px;
             outline: none;
         }
-        
+
         .input-field:focus {
             border-color: #007acc;
         }
-        
+
         .send-btn {
             padding: 8px 20px;
             background-color: #007acc;
@@ -114,20 +115,26 @@
             font-size: 14px;
             transition: background-color 0.2s;
         }
-        
+
         .clear-btn:hover {
             background-color: #666;
         }
     </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <div id="terminal" class="terminal"></div>
-    <div class="input-bar">
-        <input type="text" id="inputField" class="input-field" placeholder="Type and press Enter to send..." />
-        <button id="sendBtn" class="send-btn">Send</button>
-        <button id="clearBtn" class="clear-btn">Clear</button>
+    <div class="terminal-container">
+        <div id="terminal" class="terminal-display"></div>
+
+        <div class="input-bar glass-panel">
+            <span class="status-indicator disconnected" id="status-dot"></span>
+            <input type="text" id="serialInput" class="input-field" placeholder="Type command..." autocomplete="off">
+            <button id="sendBtn" class="btn btn-primary">Send</button>
+            <button id="clearBtn" class="btn">Clear</button>
+        </div>
     </div>
-    
+
     <script>
         const { ipcRenderer } = require('electron');
 
@@ -135,9 +142,10 @@
         let isConnected = false;
 
         const terminal = document.getElementById('terminal');
-        const inputField = document.getElementById('inputField');
+        const serialInput = document.getElementById('serialInput');
         const sendBtn = document.getElementById('sendBtn');
         const clearBtn = document.getElementById('clearBtn');
+        const statusDot = document.getElementById('status-dot');
 
         let autoScroll = true;
 
@@ -151,9 +159,17 @@
 
         function appendData(data, type) {
             const line = document.createElement('div');
-            line.className = type + '-data';
+            line.className = type + '-data'; // You might want to update these classes in css or keep them generic
+            // For now, let's just use simple text colors via inline styles or keep the old classes if valid
+            // ideally we map type to new css classes.
+            // type assumes 'rx', 'tx', 'error'.
+            if (type === 'rx') line.style.color = 'var(--text-primary)'; // Or specific color
+            if (type === 'tx') line.style.color = 'var(--text-secondary)';
+            if (type === 'error') line.style.color = 'var(--accent-danger)';
+
             line.textContent = data;
             line.style.whiteSpace = 'pre-wrap';
+            line.style.fontFamily = "'JetBrains Mono', monospace";
             terminal.appendChild(line);
             if (autoScroll) {
                 terminal.scrollTop = terminal.scrollHeight;
@@ -161,14 +177,7 @@
         }
 
         function appendText(text) {
-            const line = document.createElement('div');
-            line.className = 'rx-data';
-            line.textContent = text;
-            line.style.whiteSpace = 'pre-wrap';
-            terminal.appendChild(line);
-            if (autoScroll) {
-                terminal.scrollTop = terminal.scrollHeight;
-            }
+            appendData(text, 'rx');
         }
 
         function clearTerminal() {
@@ -177,7 +186,7 @@
             }
         }
 
-        inputField.addEventListener('keydown', (e) => {
+        serialInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 sendData();
             }
@@ -186,14 +195,14 @@
         sendBtn.addEventListener('click', sendData);
 
         async function sendData() {
-            const data = inputField.value;
+            const data = serialInput.value;
             if (data.trim() === '' || !isConnected) return;
 
             await debugLog(`Sending data: ${data}`, 'info');
             try {
                 await ipcRenderer.invoke('serial:write', tabId, data);
-                appendData(`TX: ${data}`, 'tx');
-                inputField.value = '';
+                appendData(`> ${data}`, 'tx');
+                serialInput.value = '';
             } catch (error) {
                 await debugLog(`Send failed: ${error.message}`, 'error');
                 appendData(`Error: ${error.message}`, 'error');
@@ -219,7 +228,7 @@
         ipcRenderer.on('serial:connected', async (event, connected) => {
             isConnected = connected;
             sendBtn.disabled = !connected;
-            inputField.disabled = !connected;
+            serialInput.disabled = !connected;
             await debugLog(`Connection status changed: ${connected}`, 'info');
             updateConnectionStatus(connected);
         });
@@ -231,43 +240,15 @@
         });
 
         function updateConnectionStatus(connected) {
-            const statusIndicator = document.createElement('div');
-            statusIndicator.className = 'connection-status';
-            statusIndicator.textContent = connected ? 'Connected' : 'Disconnected';
-            statusIndicator.style.color = connected ? '#4caf50' : '#f44336';
-            statusIndicator.style.fontSize = '12px';
-            statusIndicator.style.padding = '5px 10px';
-            statusIndicator.style.background = connected ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
-            statusIndicator.style.borderRadius = '3px';
-            statusIndicator.style.marginBottom = '10px';
-
-            const existingStatus = terminal.querySelector('.connection-status');
-            if (existingStatus) {
-                existingStatus.replaceWith(statusIndicator);
-            } else {
-                terminal.insertBefore(statusIndicator, terminal.firstChild);
+            if (statusDot) {
+                statusDot.className = `status-indicator ${connected ? 'connected' : 'disconnected'}`;
             }
         }
 
         window.addEventListener('load', () => {
             debugLog('Tab window loaded', 'info');
         });
-
-        window.addEventListener('message', (event) => {
-            const { type, data } = event.data;
-
-            switch (type) {
-                case 'setConnected':
-                    isConnected = data;
-                    sendBtn.disabled = !data;
-                    inputField.disabled = !data;
-                    updateConnectionStatus(data);
-                    break;
-                case 'receivedData':
-                    appendData(`RX: ${data}`, 'rx');
-                    break;
-            }
-        });
     </script>
 </body>
+
 </html>

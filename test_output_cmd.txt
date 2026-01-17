@@ -1,0 +1,60 @@
+FAIL tests/serial-service-manager.test.js
+  SerialServiceManager
+    Constructor
+      √ should initialize with empty services map (4 ms)
+    getService
+      √ should return null for non-existent tab
+      √ should return service data for existing tab (1 ms)
+    getConfig
+      √ should return null for non-existent tab (1 ms)
+      √ should return config for existing tab (1 ms)
+    getTabInfo
+      √ should return null for non-existent tab
+      √ should return tab info for existing tab (1 ms)
+    getAllTabInfos
+      √ should return empty array when no tabs exist
+      √ should return info for all tabs
+    isConnected
+      √ should return false for non-existent tab
+      √ should return connection status for existing tab (1 ms)
+    updateTabName
+      √ should return false for non-existent tab (1 ms)
+      √ should update tab name for existing tab
+    write
+      √ should throw error for non-existent tab (18 ms)
+      √ should write data to service
+    onData and offData
+      √ should do nothing for non-existent tab (1 ms)
+      √ should register data listener (1 ms)
+      √ should unregister data listener
+    onError and offError
+      √ should register error listener (1 ms)
+      √ should unregister error listener (1 ms)
+    closeConnection
+      √ should return false for non-existent tab (1 ms)
+      × should close connection and remove service (2 ms)
+    closeAll
+      √ should close all services and clear map
+
+  ● SerialServiceManager › closeConnection › should close connection and remove service
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: true
+
+    [0m [90m 262 |[39m
+     [90m 263 |[39m             expect([36mawait[39m manager[33m.[39mcloseConnection([32m'test-tab'[39m))[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 264 |[39m             expect(manager[33m.[39mservices[33m.[39mhas([32m'test-tab'[39m))[33m.[39mtoBe([36mfalse[39m)[33m;[39m
+     [90m     |[39m                                                      [31m[1m^[22m[39m
+     [90m 265 |[39m             expect(mockService[33m.[39mclose)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m 266 |[39m         })[33m;[39m
+     [90m 267 |[39m     })[33m;[39m[0m
+
+      at Object.toBe (tests/serial-service-manager.test.js:264:54)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 22 passed, 23 total
+Snapshots:   0 total
+Time:        0.752 s, estimated 1 s
+Ran all test suites matching /tests\\serial-service-manager.test.js/i.

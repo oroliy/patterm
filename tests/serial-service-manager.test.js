@@ -250,6 +250,29 @@ describe('SerialServiceManager', () => {
             expect(await manager.closeConnection('non-existent')).toBe(false);
         });
 
+        test('should close connection but keep service provided', async () => {
+            const mockService = {
+                isOpen: jest.fn().mockReturnValue(true),
+                close: jest.fn().mockResolvedValue(true)
+            };
+            manager.services.set('test-tab', {
+                id: 'test-tab',
+                service: mockService,
+                connected: true
+            });
+
+            expect(await manager.closeConnection('test-tab')).toBe(true);
+            expect(manager.services.has('test-tab')).toBe(true);
+            expect(manager.services.get('test-tab').connected).toBe(false);
+            expect(mockService.close).toHaveBeenCalled();
+        });
+    });
+
+    describe('removeConnection', () => {
+        test('should return false for non-existent tab', async () => {
+            expect(await manager.removeConnection('non-existent')).toBe(false);
+        });
+
         test('should close connection and remove service', async () => {
             const mockService = {
                 isOpen: jest.fn().mockReturnValue(true),
@@ -260,7 +283,7 @@ describe('SerialServiceManager', () => {
                 service: mockService
             });
 
-            expect(await manager.closeConnection('test-tab')).toBe(true);
+            expect(await manager.removeConnection('test-tab')).toBe(true);
             expect(manager.services.has('test-tab')).toBe(false);
             expect(mockService.close).toHaveBeenCalled();
         });

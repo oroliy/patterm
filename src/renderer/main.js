@@ -3,12 +3,12 @@ const { ipcRenderer } = require('electron');
 let tabs = new Map();
 let activeTabId = null;
 
-const newTabBtn = document.getElementById('newTabBtn');
-const loggingBtn = document.getElementById('loggingBtn');
-const disconnectBtn = document.getElementById('disconnectBtn');
-const scrollBtn = document.getElementById('scrollBtn');
-const tabsContainer = document.getElementById('tabs');
-const tabContent = document.getElementById('tabContent');
+const newTabBtn = document.getElementById('new-connection-btn');
+const loggingBtn = document.getElementById('log-btn');
+const disconnectBtn = document.getElementById('disconnect-btn');
+const scrollBtn = document.getElementById('auto-scroll-btn');
+const tabsContainer = document.getElementById('tabs-container');
+const tabContent = document.getElementById('tab-content');
 
 async function debugLog(message, level = 'info') {
     try {

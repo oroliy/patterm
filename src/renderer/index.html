@@ -1,31 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patterm - Serial Terminal</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
         <div class="toolbar">
             <div class="toolbar-left">
-                <button id="newTabBtn" class="btn btn-primary">+ New Connection</button>
-                <button id="disconnectBtn" class="btn btn-danger" disabled>Disconnect</button>
-                <button id="scrollBtn" class="btn btn-secondary" disabled>Auto Scroll</button>
+                <button id="new-connection-btn" class="btn btn-primary">
+                    <span class="icon">+</span> New Connection
+                </button>
+                <div class="separator" style="opacity: 0.2"></div>
+                <button id="disconnect-btn" class="btn btn-danger" disabled>
+                    Disconnect
+                </button>
             </div>
+
+            <div class="toolbar-center">
+                <button id="auto-scroll-btn" class="btn active">
+                    Auto Scroll
+                </button>
+            </div>
+
             <div class="toolbar-right">
-                <button id="loggingBtn" class="btn btn-secondary" disabled>Log</button>
+                <button id="log-btn" class="btn">
+                    Log
+                </button>
             </div>
         </div>
-        
-        <div class="tabs-container">
-            <div id="tabs" class="tabs"></div>
+
+        <div id="tabs-container" class="tabs-container">
+            <!-- Tabs will be dynamically added here -->
         </div>
-        
-        <div id="tabContent" class="tab-content"></div>
+
+        <div id="tab-content" class="tab-content">
+            <div class="empty-state">
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2">⚡</div>
+                    <p>Create a new connection to start</p>
+                </div>
+            </div>
+        </div>
     </div>
-    
+
     <script src="main.js"></script>
 </body>
+
 </html>
