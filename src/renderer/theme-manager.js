@@ -1,68 +1,72 @@
-const { ipcRenderer } = require('electron');
+(function () {
+    const { ipcRenderer } = require('electron');
 
-class ThemeManager {
-    constructor() {
-        this.currentTheme = localStorage.getItem('theme') || 'system';
-        this.systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    class ThemeManager {
+        constructor() {
+            this.currentTheme = localStorage.getItem('theme') || 'system';
+            this.systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+            this.ipcRenderer = ipcRenderer;
 
-        this.init();
-    }
+            this.init();
+        }
 
-    init() {
-        this.applyTheme(this.currentTheme);
+        init() {
+            this.applyTheme(this.currentTheme);
 
-        // Listen for system changes
-        this.systemDarkMode.addEventListener('change', (e) => {
-            if (this.currentTheme === 'system') {
-                this.applyTheme('system');
+            // Listen for system changes
+            this.systemDarkMode.addEventListener('change', (e) => {
+                if (this.currentTheme === 'system') {
+                    this.applyTheme('system');
+                }
+            });
+
+            // Expose to window for UI interaction
+            window.themeManager = this;
+
+            // Listen for Menu commands
+            this.ipcRenderer.on('theme:set', (event, theme) => {
+                this.setTheme(theme);
+            });
+        }
+
+        setTheme(theme) {
+            this.currentTheme = theme;
+            localStorage.setItem('theme', theme);
+            this.applyTheme(theme);
+        }
+
+        applyTheme(theme) {
+            let effectiveTheme = theme;
+
+            if (theme === 'system') {
+                effectiveTheme = this.systemDarkMode.matches ? 'dark' : 'light';
             }
-        });
 
-        // Expose to window for UI interaction
-        window.themeManager = this;
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
 
-        // Listen for Menu commands
-        ipcRenderer.on('theme:set', (event, theme) => {
-            this.setTheme(theme);
-        });
-    }
+            // Notify main process to sync other windows/views
+            // Pass original theme choice (not effective) for nativeTheme sync
+            try {
+                this.ipcRenderer.invoke('theme:changed', theme, effectiveTheme);
+            } catch (e) {
+                console.warn('IPC unavailable (likely in test mode)');
+            }
 
-    setTheme(theme) {
-        this.currentTheme = theme;
-        localStorage.setItem('theme', theme);
-        this.applyTheme(theme);
-    }
-
-    applyTheme(theme) {
-        let effectiveTheme = theme;
-
-        if (theme === 'system') {
-            effectiveTheme = this.systemDarkMode.matches ? 'dark' : 'light';
+            console.log(`Theme set to: ${theme} (Effective: ${effectiveTheme})`);
         }
 
-        document.documentElement.setAttribute('data-theme', effectiveTheme);
-
-        // Notify main process to sync other windows/views
-        // Pass original theme choice (not effective) for nativeTheme sync
-        try {
-            ipcRenderer.invoke('theme:changed', theme, effectiveTheme);
-        } catch (e) {
-            console.warn('IPC unavailable (likely in test mode)');
+        getCurrentTheme() {
+            return this.currentTheme;
         }
-
-        console.log(`Theme set to: ${theme} (Effective: ${effectiveTheme})`);
     }
 
-    getCurrentTheme() {
-        return this.currentTheme;
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+        new ThemeManager();
+    });
+
+    if (typeof module !== 'undefined') {
+        module.exports = ThemeManager;
     }
-}
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-    new ThemeManager();
-});
-
-if (typeof module !== 'undefined') {
-    module.exports = ThemeManager;
-}
+})(); // End of IIFE
