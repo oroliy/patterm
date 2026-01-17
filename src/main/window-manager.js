@@ -156,11 +156,14 @@ class WindowManager {
         return true;
     }
 
-    switchTab(tabId) {
+    async switchTab(tabId) {
         const tab = this.tabs.get(tabId);
         if (!tab) {
             return false;
         }
+
+        // Ensure layout metrics are up-to-date
+        await this.updateLayoutMetrics();
 
         if (this.activeTabId && this.activeTabId !== tabId) {
             const prevTab = this.tabs.get(this.activeTabId);
@@ -173,7 +176,7 @@ class WindowManager {
         const yOffset = this.toolbarHeight + this.tabsHeight;
 
         if (this.debugWindow) {
-            this.debugWindow.log(`switchTab bounds: x=0, y=${yOffset}, w=${bounds.width}, h=${bounds.height - yOffset}`, 'info');
+            this.debugWindow.log(`switchTab bounds: x=0, y=${yOffset}, w=${bounds.width}, h=${bounds.height - yOffset - this.statusBarHeight}`, 'info');
             this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}, statusBarHeight=${this.statusBarHeight}`, 'info');
         }
 

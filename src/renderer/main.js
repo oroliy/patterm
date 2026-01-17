@@ -332,14 +332,19 @@ function updateStatusBar() {
         return;
     }
 
+    // Hide/show status bar sections based on whether there's an active tab
+    const sections = document.querySelectorAll('.status-bar-section[data-section]');
+    sections.forEach(section => {
+        if (activeTabId) {
+            section.style.display = 'flex';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+
     if (!activeTabId) {
         mainStatusIndicator.className = 'status-indicator-mini disconnected';
         mainPortName.textContent = '';
-        mainDuration.textContent = '';
-        mainCreatedTime.textContent = '';
-        mainCurrentTime.textContent = '';
-        mainRxRate.textContent = '';
-        mainTxRate.textContent = '';
         return;
     }
 
