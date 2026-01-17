@@ -23,7 +23,8 @@
       "Bash(gh release delete:*)",
       "Bash(git check-ignore:*)",
       "Bash(curl:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(tree:*)"
     ]
   },
   "outputStyle": "default"

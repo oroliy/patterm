@@ -22,6 +22,7 @@ npm run dist:mac      # Build for macOS (DMG)
 npm run dist:linux    # Build for Linux (AppImage + deb)
 
 # Virtual Serial Port Testing (essential for development without hardware)
+npm run test:e2e       # One-click E2E test with virtual serial port
 bash scripts/create-virtual-port.sh /tmp/ttyV0    # Socat-based virtual port
 bash scripts/quick-virtual-serial.sh              # Simple echo server
 python3 scripts/virtual-serial.py                 # Python-based emulator
