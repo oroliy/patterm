@@ -101,7 +101,7 @@ create_virtual_port() {
         sleep 1
     fi
 
-    socat -d -d -p 12345 pty,link=$PORT_PATH,raw,echo=0,waitslave >/dev/null 2>&1 &
+    socat -d -d pty,link=$PORT_PATH,raw,echo=0,waitslave TCP-LISTEN:12345,fork,reuseaddr >/dev/null 2>&1 &
     SOCAT_PID=$!
 
     sleep 2
