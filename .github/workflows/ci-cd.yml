@@ -119,7 +119,7 @@ jobs:
     - name: Merge artifacts into dist directory
       run: |
         mkdir -p dist
-        find artifacts -type f -exec cp {} dist/ \;
+        find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" \) -exec cp {} dist/ \;
         ls -la dist/
 
     - name: Extract version from tag or commit message
