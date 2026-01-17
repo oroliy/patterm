@@ -48,9 +48,9 @@
     --bg-tertiary: #e2e8f0;
 
     /* Glassmorphism */
-    --glass-surface: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(0, 0, 0, 0.08);
-    --glass-highlight: rgba(0, 0, 0, 0.03);
+    --glass-surface: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --glass-highlight: rgba(0, 0, 0, 0.05);
 
     /* Accents (Darker for light background) */
     --accent-primary: #2563eb;
@@ -62,8 +62,8 @@
     --text-muted: #94a3b8;
 
     /* Component Specific - Light Mode Overrides */
-    --bg-terminal: rgba(255, 255, 255, 0.6);
-    --bg-toolbar-active: rgba(255, 255, 255, 0.9);
+    --bg-terminal: rgba(255, 255, 255, 0.8);
+    --bg-toolbar-active: rgba(255, 255, 255, 0.95);
 }
 
 * {
@@ -204,11 +204,12 @@ body {
 
 /* Tabs */
 .tabs-container {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--bg-secondary);
     padding: var(--spacing-xs) var(--spacing-xs) 0;
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     gap: 2px;
+    min-height: 40px;
 }
 
 .tab {
