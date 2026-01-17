@@ -47,6 +47,7 @@
   "build": {
     "appId": "com.patterm.app",
     "productName": "Patterm",
+    "icon": "assets/icon.png",
     "directories": {
       "output": "dist"
     },
