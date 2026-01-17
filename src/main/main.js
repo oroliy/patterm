@@ -70,7 +70,7 @@ function setupIpcHandlers() {
 
                 tabInfo.view.webContents.on('ipc-message', (event, channel, ...args) => {
                     if (channel === 'tab:scrollStateChanged') {
-                        const mainWindow = BrowserWindow.getAllWindows()[0];
+                        const mainWindow = windowManager.getMainWindow();
                         if (mainWindow) {
                             mainWindow.webContents.send('tab:scrollStateChanged', ...args);
                         }
@@ -78,7 +78,7 @@ function setupIpcHandlers() {
                 });
             }
 
-            const mainWindow = BrowserWindow.getAllWindows()[0];
+            const mainWindow = windowManager.getMainWindow();
             debugWindow.log(`Main window: ${mainWindow ? 'found' : 'not found'}`, 'info');
 
             if (mainWindow) {

@@ -12,6 +12,10 @@ class WindowManager {
         this.debugWindow = debugWindow;
     }
 
+    getMainWindow() {
+        return this.mainWindow;
+    }
+
     createMainWindow() {
         this.mainWindow = new BrowserWindow({
             width: 1200,
