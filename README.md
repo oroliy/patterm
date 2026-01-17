@@ -4,12 +4,12 @@
 
 **A professional serial terminal application built with Electron**
 
-![GitHub Release](https://img.shields.io/github/v/release/oroliy/patterm)
-![GitHub License](https://img.shields.io/github/license/oroliy/patterm)
-![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm)
-![GitHub Stars](https://img.shields.io/github/stars/oroliy/patterm)
-![Node.js Version](https://img.shields.io/node/v/node)
-![Electron Version](https://img.shields.io/github/package-json/dependency-version/oroliy/patterm/dev/electron)
+[![GitHub Release](https://img.shields.io/github/v/release/oroliy/patterm?include_prereleases)](https://github.com/oroliy/patterm/releases/latest)
+[![GitHub License](https://img.shields.io/github/license/oroliy/patterm)](https://github.com/oroliy/patterm/blob/master/LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm)](https://github.com/oroliy/patterm/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/oroliy/patterm?style=social)](https://github.com/oroliy/patterm/stargazers)
+[![Node.js](https://img.shields.io/badge/node-18%20%7C%2020-339933?logo=node.js)](https://nodejs.org)
+[![Electron](https://img.shields.io/badge/electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org)
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage) • [Development](#development) • [Contributing](#contributing)
 
