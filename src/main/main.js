@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog, nativeTheme } = require('electron');
 const path = require('path');
 const WindowManager = require('./window-manager');
 const SerialServiceManager = require('../services/serial-service-manager');
@@ -219,6 +219,7 @@ function setupIpcHandlers() {
 
     ipcMain.handle('theme:changed', async (event, theme) => {
         currentTheme = theme;
+        nativeTheme.themeSource = theme; // Sync native window/menu theme
         windowManager.broadcastToTabs('theme:update', theme);
         return true;
     });
@@ -298,6 +299,30 @@ function setupMenu() {
                 { role: 'reload' },
                 { role: 'forceReload' },
                 { role: 'toggleDevTools' },
+                { type: 'separator' },
+                {
+                    label: 'Theme',
+                    submenu: [
+                        {
+                            label: 'System',
+                            click: (item, focusedWindow) => {
+                                if (focusedWindow) focusedWindow.webContents.send('theme:set', 'system');
+                            }
+                        },
+                        {
+                            label: 'Light',
+                            click: (item, focusedWindow) => {
+                                if (focusedWindow) focusedWindow.webContents.send('theme:set', 'light');
+                            }
+                        },
+                        {
+                            label: 'Dark',
+                            click: (item, focusedWindow) => {
+                                if (focusedWindow) focusedWindow.webContents.send('theme:set', 'dark');
+                            }
+                        }
+                    ]
+                },
                 { type: 'separator' },
                 { role: 'resetZoom' },
                 { role: 'zoomIn' },

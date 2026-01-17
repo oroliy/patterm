@@ -20,6 +20,11 @@ class ThemeManager {
 
         // Expose to window for UI interaction
         window.themeManager = this;
+
+        // Listen for Menu commands
+        ipcRenderer.on('theme:set', (event, theme) => {
+            this.setTheme(theme);
+        });
     }
 
     setTheme(theme) {
@@ -57,4 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
     new ThemeManager();
 });
 
-module.exports = ThemeManager;
+if (typeof module !== 'undefined') {
+    module.exports = ThemeManager;
+}

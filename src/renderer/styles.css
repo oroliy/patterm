@@ -32,6 +32,10 @@
     --radius-md: 12px;
     --radius-lg: 20px;
 
+    /* Component Specific */
+    --bg-terminal: rgba(0, 0, 0, 0.3);
+    --bg-toolbar-active: rgba(15, 23, 42, 0.8);
+
     /* Transitions */
     --transition-fast: 0.15s ease;
     --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -56,6 +60,10 @@
     --text-primary: #1e293b;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
+
+    /* Component Specific - Light Mode Overrides */
+    --bg-terminal: rgba(255, 255, 255, 0.6);
+    --bg-toolbar-active: rgba(255, 255, 255, 0.9);
 }
 
 * {
@@ -117,8 +125,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    justify-content: space-between;
     padding: var(--spacing-sm) var(--spacing-md);
-    background: rgba(15, 23, 42, 0.8);
+    background: var(--bg-toolbar-active);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--glass-border);
     gap: var(--spacing-md);
@@ -286,7 +295,7 @@ body {
 
 .terminal-display {
     flex: 1;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--bg-terminal);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
