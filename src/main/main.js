@@ -217,10 +217,10 @@ function setupIpcHandlers() {
         debugWindow.log(message, level);
     });
 
-    ipcMain.handle('theme:changed', async (event, theme) => {
-        currentTheme = theme;
-        nativeTheme.themeSource = theme; // Sync native window/menu theme
-        windowManager.broadcastToTabs('theme:update', theme);
+    ipcMain.handle('theme:changed', async (event, originalTheme, effectiveTheme) => {
+        currentTheme = originalTheme;
+        nativeTheme.themeSource = originalTheme; // Use original ('system', 'light', or 'dark')
+        windowManager.broadcastToTabs('theme:update', effectiveTheme); // Send effective theme to tabs
         return true;
     });
 

@@ -43,8 +43,9 @@ class ThemeManager {
         document.documentElement.setAttribute('data-theme', effectiveTheme);
 
         // Notify main process to sync other windows/views
+        // Pass original theme choice (not effective) for nativeTheme sync
         try {
-            ipcRenderer.invoke('theme:changed', effectiveTheme);
+            ipcRenderer.invoke('theme:changed', theme, effectiveTheme);
         } catch (e) {
             console.warn('IPC unavailable (likely in test mode)');
         }

@@ -3,12 +3,7 @@ const { ipcRenderer } = require('electron');
 let tabs = new Map();
 let activeTabId = null;
 
-const newTabBtn = document.getElementById('new-connection-btn');
-const loggingBtn = document.getElementById('log-btn');
-const disconnectBtn = document.getElementById('disconnect-btn');
-const scrollBtn = document.getElementById('auto-scroll-btn');
-const tabsContainer = document.getElementById('tabs-container');
-const tabContent = document.getElementById('tab-content');
+let newTabBtn, loggingBtn, disconnectBtn, scrollBtn, tabsContainer, tabContent;
 
 async function debugLog(message, level = 'info') {
     try {
@@ -164,45 +159,59 @@ async function stopLogging() {
     }
 }
 
-newTabBtn.addEventListener('click', showConnectionDialog);
+// Initialize DOM elements and event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    newTabBtn = document.getElementById('new-connection-btn');
+    loggingBtn = document.getElementById('log-btn');
+    disconnectBtn = document.getElementById('disconnect-btn');
+    scrollBtn = document.getElementById('auto-scroll-btn');
+    tabsContainer = document.getElementById('tabs-container');
+    tabContent = document.getElementById('tab-content');
 
-loggingBtn.addEventListener('click', () => {
-    if (loggingBtn.textContent === 'Log') {
-        startLogging();
-    } else {
-        stopLogging();
-    }
-});
+    newTabBtn.addEventListener('click', showConnectionDialog);
 
-disconnectBtn.addEventListener('click', async () => {
-    if (!activeTabId) return;
-    try {
-        const tab = tabs.get(activeTabId);
-        if (tab && tab.connected) {
-            await ipcRenderer.invoke('serial:disconnect', activeTabId);
+    loggingBtn.addEventListener('click', () => {
+        if (loggingBtn.textContent === 'Log') {
+            startLogging();
         } else {
-            await ipcRenderer.invoke('serial:reconnect', activeTabId);
+            stopLogging();
         }
-    } catch (error) {
-        debugLog(`Disconnect/reconnect failed: ${error.message}`, 'error');
-    }
-});
+    });
 
-scrollBtn.addEventListener('click', async () => {
-    if (!activeTabId) return;
-    try {
-        await ipcRenderer.invoke('tab:toggleScroll', activeTabId);
-    } catch (error) {
-        debugLog(`Toggle scroll failed: ${error.message}`, 'error');
-    }
-});
+    disconnectBtn.addEventListener('click', async () => {
+        if (!activeTabId) return;
+        try {
+            const tab = tabs.get(activeTabId);
+            if (tab && tab.connected) {
+                await ipcRenderer.invoke('serial:disconnect', activeTabId);
+            } else {
+                await ipcRenderer.invoke('serial:reconnect', activeTabId);
+            }
+        } catch (error) {
+            debugLog(`Disconnect/reconnect failed: ${error.message}`, 'error');
+        }
+    });
 
-tabsContainer.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tab-close')) {
-        const tabId = parseInt(e.target.dataset.tabId);
-        debugLog(`Closing tab ${tabId}`, 'info');
-        closeTab(tabId);
-    }
+    scrollBtn.addEventListener('click', async () => {
+        if (!activeTabId) return;
+        try {
+            await ipcRenderer.invoke('tab:toggleScroll', activeTabId);
+        } catch (error) {
+            debugLog(`Toggle scroll failed: ${error.message}`, 'error');
+        }
+    });
+
+    tabsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-close')) {
+            const tabId = parseInt(e.target.dataset.tabId);
+            debugLog(`Closing tab ${tabId}`, 'info');
+            closeTab(tabId);
+        }
+    });
+
+    // Initialize UI
+    tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
+    updateUIState();
 });
 
 ipcRenderer.on('tab:created', (event, tabData) => {
@@ -236,8 +245,6 @@ ipcRenderer.on('serial:error', (event, error) => {
 
 window.addEventListener('load', () => {
     debugLog('Main window loaded', 'info');
-    tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
-    updateUIState();
 });
 
 window.addEventListener('resize', () => {
