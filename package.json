@@ -24,7 +24,10 @@
     "rs232",
     "com-port"
   ],
-  "author": "Patterm Team",
+  "author": {
+    "name": "Patterm Team",
+    "email": "oroliy@users.noreply.github.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",
