@@ -7,6 +7,7 @@ const DebugWindow = require('./debug-window');
 let windowManager;
 let serialServiceManager;
 let debugWindow;
+let currentTheme = 'system';
 
 function createWindow() {
     debugWindow = new DebugWindow();
@@ -214,6 +215,16 @@ function setupIpcHandlers() {
 
     ipcMain.handle('debug:log', async (event, message, level) => {
         debugWindow.log(message, level);
+    });
+
+    ipcMain.handle('theme:changed', async (event, theme) => {
+        currentTheme = theme;
+        windowManager.broadcastToTabs('theme:update', theme);
+        return true;
+    });
+
+    ipcMain.handle('theme:get', async () => {
+        return currentTheme;
     });
 }
 

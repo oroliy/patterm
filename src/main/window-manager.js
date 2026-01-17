@@ -235,6 +235,15 @@ class WindowManager {
             this.tabsHeight = 40;
         }
     }
+    broadcastToTabs(channel, ...args) {
+        for (const tab of this.tabs.values()) {
+            try {
+                tab.view.webContents.send(channel, ...args);
+            } catch (error) {
+                console.error(`Failed to send to tab ${tab.id}:`, error);
+            }
+        }
+    }
 }
 
 module.exports = WindowManager;

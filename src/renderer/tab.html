@@ -121,30 +121,44 @@
         }
     </style>
     <link rel="stylesheet" href="styles.css">
+    <script src="theme-manager.js"></script>
 </head>
 
 <body>
     <div class="terminal-container">
         <div id="terminal" class="terminal-display"></div>
 
-        <div class="input-bar glass-panel">
-            <span class="status-indicator disconnected" id="status-dot"></span>
-            <input type="text" id="serialInput" class="input-field" placeholder="Type command..." autocomplete="off">
-            <button id="sendBtn" class="btn btn-primary">Send</button>
-            <button id="clearBtn" class="btn">Clear</button>
+        <div class="input-bar">
+            <div class="status-indicator disconnected" id="status-dot"></div>
+            <input type="text" id="command-input" class="input-field" placeholder="Type command..." autocomplete="off">
+            <button id="send-btn" class="btn btn-primary btn-icon">➤</button>
+            <button id="clear-btn" class="btn">Clear</button>
         </div>
     </div>
 
     <script>
         const { ipcRenderer } = require('electron');
 
+        // Initialize theme
+        ipcRenderer.invoke('theme:get').then(theme => {
+            if (window.themeManager) {
+                window.themeManager.setTheme(theme);
+            }
+        });
+
+        ipcRenderer.on('theme:update', (event, theme) => {
+            if (window.themeManager) {
+                window.themeManager.setTheme(theme);
+            }
+        });
+
         let tabId = null;
         let isConnected = false;
 
         const terminal = document.getElementById('terminal');
-        const serialInput = document.getElementById('serialInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const clearBtn = document.getElementById('clearBtn');
+        const serialInput = document.getElementById('command-input');
+        const sendBtn = document.getElementById('send-btn');
+        const clearBtn = document.getElementById('clear-btn');
         const statusDot = document.getElementById('status-dot');
 
         let autoScroll = true;
