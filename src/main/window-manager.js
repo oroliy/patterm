@@ -1,4 +1,5 @@
 const { BrowserWindow, BrowserView } = require('electron');
+const path = require('path');
 
 class WindowManager {
     constructor(debugWindow) {
@@ -17,6 +18,7 @@ class WindowManager {
             height: 800,
             minWidth: 800,
             minHeight: 600,
+            icon: path.join(__dirname, '../../assets/icon.png'),
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
