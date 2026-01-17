@@ -5,6 +5,8 @@ let activeTabId = null;
 
 const newTabBtn = document.getElementById('newTabBtn');
 const loggingBtn = document.getElementById('loggingBtn');
+const disconnectBtn = document.getElementById('disconnectBtn');
+const scrollBtn = document.getElementById('scrollBtn');
 const tabsContainer = document.getElementById('tabs');
 const tabContent = document.getElementById('tabContent');
 
@@ -33,8 +35,9 @@ function addTab(tabId, tabName, connected) {
     tab.dataset.tabId = tabId;
 
     const statusIcon = connected ? '●' : '○';
+    const statusColor = connected ? '#4caf50' : '#999';
     tab.innerHTML = `
-        <span class="tab-status">${statusIcon}</span>
+        <span class="tab-status" style="color: ${statusColor}">${statusIcon}</span>
         <span class="tab-title">${tabName}</span>
         <button class="tab-close" data-tab-id="${tabId}">×</button>
     `;
@@ -114,6 +117,7 @@ function switchTab(tabId) {
     activeTabId = tabId;
 
     tabContent.innerHTML = '';
+    updateUIState();
     debugLog(`Switched to tab ${tabId}`, 'info');
 }
 
@@ -167,6 +171,29 @@ loggingBtn.addEventListener('click', () => {
     }
 });
 
+disconnectBtn.addEventListener('click', async () => {
+    if (!activeTabId) return;
+    try {
+        const tab = tabs.get(activeTabId);
+        if (tab && tab.connected) {
+            await ipcRenderer.invoke('serial:disconnect', activeTabId);
+        } else {
+            await ipcRenderer.invoke('serial:reconnect', activeTabId);
+        }
+    } catch (error) {
+        debugLog(`Disconnect/reconnect failed: ${error.message}`, 'error');
+    }
+});
+
+scrollBtn.addEventListener('click', async () => {
+    if (!activeTabId) return;
+    try {
+        await ipcRenderer.invoke('tab:toggleScroll', activeTabId);
+    } catch (error) {
+        debugLog(`Toggle scroll failed: ${error.message}`, 'error');
+    }
+});
+
 tabsContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('tab-close')) {
         const tabId = parseInt(e.target.dataset.tabId);
@@ -182,6 +209,22 @@ ipcRenderer.on('tab:created', (event, tabData) => {
 
 ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {
     updateTabStatus(tabId, connected);
+    if (tabId === activeTabId) {
+        updateUIState();
+    }
+});
+
+ipcRenderer.on('tab:scrollStateChanged', (event, tabId, autoScroll) => {
+    if (tabId === activeTabId) {
+        scrollBtn.textContent = autoScroll ? 'Auto Scroll' : 'Hold Scroll';
+        if (autoScroll) {
+            scrollBtn.classList.add('btn-success');
+            scrollBtn.classList.remove('btn-secondary');
+        } else {
+            scrollBtn.classList.remove('btn-success');
+            scrollBtn.classList.add('btn-secondary');
+        }
+    }
 });
 
 ipcRenderer.on('serial:error', (event, error) => {
@@ -199,9 +242,20 @@ window.addEventListener('resize', () => {
 });
 
 function updateUIState() {
-    if (activeTabId && tabs.get(activeTabId)?.connected) {
-        loggingBtn.disabled = false;
-    } else {
-        loggingBtn.disabled = true;
+    const tab = activeTabId ? tabs.get(activeTabId) : null;
+    const connected = tab?.connected || false;
+
+    loggingBtn.disabled = !connected;
+    disconnectBtn.disabled = !activeTabId;
+    scrollBtn.disabled = !activeTabId;
+
+    if (activeTabId && connected) {
+        disconnectBtn.textContent = 'Disconnect';
+        disconnectBtn.classList.remove('btn-success');
+        disconnectBtn.classList.add('btn-danger');
+    } else if (activeTabId) {
+        disconnectBtn.textContent = 'Reconnect';
+        disconnectBtn.classList.remove('btn-danger');
+        disconnectBtn.classList.add('btn-success');
     }
 }

@@ -15,7 +15,7 @@ PORT_PATH="$1"
 echo "Creating virtual serial port at: $PORT_PATH"
 echo ""
 
-socat -d -d -p 12345 pty,link=$PORT_PATH,raw,echo=0,waitslave &
+socat -d -d pty,link=$PORT_PATH,raw,echo=0,waitslave TCP-LISTEN:12345,fork,reuseaddr &
 SOCAT_PID=$!
 
 sleep 2

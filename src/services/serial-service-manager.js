@@ -33,6 +33,16 @@ class SerialServiceManager {
         return tabData;
     }
 
+    async closeService(tabId) {
+        const tabData = this.services.get(tabId);
+        if (!tabData) return;
+
+        if (tabData.service && tabData.service.isOpen()) {
+            await tabData.service.close();
+        }
+        this.services.delete(tabId);
+    }
+
     getService(tabId) {
         return this.services.get(tabId);
     }
@@ -48,6 +58,18 @@ class SerialServiceManager {
     }
 
     async closeConnection(tabId) {
+        const tabData = this.services.get(tabId);
+        if (!tabData) return false;
+
+        if (tabData.service && tabData.service.isOpen()) {
+            await tabData.service.close();
+        }
+
+        tabData.connected = false;
+        return true;
+    }
+
+    async removeConnection(tabId) {
         const tabData = this.services.get(tabId);
         if (!tabData) return false;
 

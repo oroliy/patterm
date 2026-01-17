@@ -42,7 +42,7 @@ function setupIpcHandlers() {
             const result = await serialServiceManager.openConnection(tabId, config, tabName);
             debugWindow.log(`Serial connection opened: ${JSON.stringify(result)}`, 'info');
 
-            const tab = windowManager.createNewTab(tabId, result.tabName);
+            const tab = await windowManager.createNewTab(tabId, result.tabName);
             debugWindow.log(`Tab created: ${JSON.stringify(tab)}`, 'info');
 
             serialServiceManager.onData(tabId, (data) => {
@@ -60,11 +60,21 @@ function setupIpcHandlers() {
             });
 
             const tabInfo = windowManager.getTab(tabId);
+
             debugWindow.log(`Tab info from manager: ${JSON.stringify(tabInfo)}`, 'info');
 
             if (tabInfo && tabInfo.view) {
                 debugWindow.log(`Sending serial:connected event to tab ${tabId}`, 'info');
                 tabInfo.view.webContents.send('serial:connected', true);
+
+                tabInfo.view.webContents.on('ipc-message', (event, channel, ...args) => {
+                    if (channel === 'tab:scrollStateChanged') {
+                        const mainWindow = BrowserWindow.getAllWindows()[0];
+                        if (mainWindow) {
+                            mainWindow.webContents.send('tab:scrollStateChanged', ...args);
+                        }
+                    }
+                });
             }
 
             const mainWindow = BrowserWindow.getAllWindows()[0];
@@ -102,6 +112,36 @@ function setupIpcHandlers() {
         return serialServiceManager.write(tabId, data);
     });
 
+    ipcMain.handle('serial:disconnect', async (event, tabId) => {
+        const result = await serialServiceManager.closeConnection(tabId);
+        const tabInfo = windowManager.getTab(tabId);
+        if (tabInfo && tabInfo.view) {
+            tabInfo.view.webContents.send('serial:connected', false);
+        }
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (mainWindow) {
+            mainWindow.webContents.send('tab:statusChanged', tabId, false);
+        }
+        return result;
+    });
+
+    ipcMain.handle('serial:reconnect', async (event, tabId) => {
+        const tabData = serialServiceManager.getService(tabId);
+        if (!tabData || !tabData.config) {
+            throw new Error('No previous connection configuration found');
+        }
+        const result = await serialServiceManager.openConnection(tabId, tabData.config, tabData.tabName);
+        const tabInfo = windowManager.getTab(tabId);
+        if (tabInfo && tabInfo.view) {
+            tabInfo.view.webContents.send('serial:connected', true);
+        }
+        const mainWindow = BrowserWindow.getAllWindows()[0];
+        if (mainWindow) {
+            mainWindow.webContents.send('tab:statusChanged', tabId, true);
+        }
+        return result;
+    });
+
     ipcMain.handle('serial:getConfig', async (event, tabId) => {
         return serialServiceManager.getConfig(tabId);
     });
@@ -112,7 +152,7 @@ function setupIpcHandlers() {
 
     ipcMain.handle('window:closeTab', async (event, tabId) => {
         const result = windowManager.closeTab(tabId);
-        await serialServiceManager.closeConnection(tabId);
+        await serialServiceManager.removeConnection(tabId);
         return result;
     });
 
@@ -131,6 +171,15 @@ function setupIpcHandlers() {
     ipcMain.handle('window:updateTabTitle', async (event, tabId, title) => {
         serialServiceManager.updateTabName(tabId, title);
         return windowManager.updateTabTitle(tabId, title);
+    });
+
+    ipcMain.handle('tab:toggleScroll', async (event, tabId) => {
+        const tabInfo = windowManager.getTab(tabId);
+        if (tabInfo && tabInfo.view) {
+            tabInfo.view.webContents.send('tab:toggleScroll');
+            return { success: true };
+        }
+        return { success: false };
     });
 
     ipcMain.handle('log:start', async (event, tabId, filePath, mode) => {

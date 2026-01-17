@@ -41,7 +41,7 @@ class WindowManager {
         return this.mainWindow;
     }
 
-    createNewTab(tabId = null, title = null) {
+    async createNewTab(tabId = null, title = null) {
         if (this.debugWindow) {
             this.debugWindow.log(`createNewTab called with tabId=${tabId}, title=${title}`, 'info');
         }
@@ -53,6 +53,14 @@ class WindowManager {
                 contextIsolation: false
             }
         });
+
+        if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
+            await this.updateLayoutMetrics();
+            if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
+                this.toolbarHeight = 50;
+                this.tabsHeight = 40;
+            }
+        }
 
         const bounds = this.mainWindow.getBounds();
         const yOffset = this.toolbarHeight + this.tabsHeight;
@@ -193,27 +201,28 @@ class WindowManager {
         }
     }
 
-    updateLayoutMetrics() {
+    async updateLayoutMetrics() {
         if (!this.mainWindow || !this.mainWindow.webContents) return;
 
         const bounds = this.mainWindow.getBounds();
-        this.mainWindow.webContents.executeJavaScript(`
-            const toolbar = document.querySelector('.toolbar');
-            const tabsContainer = document.querySelector('.tabs-container');
-            return {
-                toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
-                tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
-            };
-        `).then(result => {
+        try {
+            const result = await this.mainWindow.webContents.executeJavaScript(`
+                const toolbar = document.querySelector('.toolbar');
+                const tabsContainer = document.querySelector('.tabs-container');
+                return {
+                    toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
+                    tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
+                };
+            `);
             this.toolbarHeight = result.toolbarHeight;
             this.tabsHeight = result.tabsHeight;
-        }).catch(err => {
+        } catch (err) {
             if (this.debugWindow) {
                 this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
             }
             this.toolbarHeight = 50;
             this.tabsHeight = 40;
-        });
+        }
     }
 }
 

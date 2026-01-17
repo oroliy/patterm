@@ -62,9 +62,10 @@
         
         .input-bar {
             display: flex;
-            padding: 15px 20px;
+            padding: 15px 20px 20px 20px;
             background-color: #2d2d2d;
             border-top: 1px solid #3e3e3e;
+            gap: 10px;
         }
         
         .input-field {
@@ -84,7 +85,6 @@
         }
         
         .send-btn {
-            margin-left: 10px;
             padding: 8px 20px;
             background-color: #007acc;
             color: white;
@@ -94,18 +94,17 @@
             font-size: 14px;
             transition: background-color 0.2s;
         }
-        
+
         .send-btn:hover {
             background-color: #0098ff;
         }
-        
+
         .send-btn:disabled {
             background-color: #555;
             cursor: not-allowed;
         }
-        
+
         .clear-btn {
-            margin-left: 10px;
             padding: 8px 15px;
             background-color: #555;
             color: white;
@@ -140,6 +139,8 @@
         const sendBtn = document.getElementById('sendBtn');
         const clearBtn = document.getElementById('clearBtn');
 
+        let autoScroll = true;
+
         async function debugLog(message, level = 'info') {
             try {
                 await ipcRenderer.invoke('debug:log', `[Tab] ${message}`, level);
@@ -152,17 +153,28 @@
             const line = document.createElement('div');
             line.className = type + '-data';
             line.textContent = data;
+            line.style.whiteSpace = 'pre-wrap';
             terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
+            if (autoScroll) {
+                terminal.scrollTop = terminal.scrollHeight;
+            }
         }
 
         function appendText(text) {
-            terminal.textContent += text;
-            terminal.scrollTop = terminal.scrollHeight;
+            const line = document.createElement('div');
+            line.className = 'rx-data';
+            line.textContent = text;
+            line.style.whiteSpace = 'pre-wrap';
+            terminal.appendChild(line);
+            if (autoScroll) {
+                terminal.scrollTop = terminal.scrollHeight;
+            }
         }
 
         function clearTerminal() {
-            terminal.textContent = '';
+            while (terminal.firstChild) {
+                terminal.removeChild(terminal.firstChild);
+            }
         }
 
         inputField.addEventListener('keydown', (e) => {
@@ -193,7 +205,6 @@
         ipcRenderer.on('tab:init', async (event, data) => {
             tabId = data.tabId;
             await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
-            updateConnectionStatus(false);
         });
 
         ipcRenderer.on('serial:data', (event, data) => {
@@ -211,6 +222,12 @@
             inputField.disabled = !connected;
             await debugLog(`Connection status changed: ${connected}`, 'info');
             updateConnectionStatus(connected);
+        });
+
+        ipcRenderer.on('tab:toggleScroll', () => {
+            autoScroll = !autoScroll;
+            debugLog(`Auto-scroll ${autoScroll ? 'enabled' : 'disabled'}`, 'info');
+            ipcRenderer.send('tab:scrollStateChanged', tabId, autoScroll);
         });
 
         function updateConnectionStatus(connected) {
