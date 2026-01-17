@@ -22,8 +22,8 @@ async function showConnectionDialog() {
     }
 }
 
-async function addTab(tabId, tabName, connected) {
-    debugLog(`addTab called with tabId=${tabId}, tabName=${tabName}, connected=${connected}`, 'info');
+async function addTab(tabId, tabName, connected, shouldActivate = false) {
+    debugLog(`addTab called with tabId=${tabId}, tabName=${tabName}, connected=${connected}, shouldActivate=${shouldActivate}`, 'info');
 
     const tab = document.createElement('div');
     tab.className = 'tab';
@@ -56,7 +56,9 @@ async function addTab(tabId, tabName, connected) {
 
     await ipcRenderer.invoke('window:recalcLayout');
 
-    switchTab(tabId);
+    if (shouldActivate) {
+        switchTab(tabId);
+    }
 }
 
 function updateTabStatus(tabId, connected) {
@@ -232,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ipcRenderer.on('tab:created', (event, tabData) => {
     debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
-    addTab(tabData.id, tabData.tabName, tabData.connected);
+    addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
 });
 
 ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {

@@ -28,7 +28,8 @@
       "Bash(node -e:*)",
       "Bash(nc:*)",
       "Skill(changelog-generator)",
-      "Bash(killall:*)"
+      "Bash(killall:*)",
+      "Bash(pkill:*)"
     ]
   },
   "outputStyle": "default"

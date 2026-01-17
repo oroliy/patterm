@@ -95,13 +95,15 @@ class WindowManager {
             title: title || `Port ${actualTabId}`
         });
 
-        if (!this.activeTabId) {
-            this.switchTab(actualTabId);
-        }
+        // Don't automatically switch tab - let renderer trigger it after adding tab element
+        // if (!this.activeTabId) {
+        //     this.switchTab(actualTabId);
+        // }
 
         const result = {
             id: actualTabId,
-            title: title || `Port ${actualTabId}`
+            title: title || `Port ${actualTabId}`,
+            shouldActivate: !this.activeTabId
         };
 
         if (this.debugWindow) {
