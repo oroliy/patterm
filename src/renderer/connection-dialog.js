@@ -66,10 +66,8 @@ function validateForm() {
 }
 
 async function handleConnect() {
-    console.log('[handleConnect] Called');
     hideError();
     if (!validateForm()) {
-        console.log('[handleConnect] Validation failed');
         return;
     }
 
@@ -83,25 +81,18 @@ async function handleConnect() {
 
     const tabName = tabNameInput.value.trim() || portInput.value.trim();
 
-    console.log('[handleConnect] config:', config);
-    console.log('[handleConnect] tabName:', tabName);
-
     showLoading();
 
     try {
-        console.log('[handleConnect] Calling connection:create IPC...');
         const result = await ipcRenderer.invoke('connection:create', config, tabName);
-        console.log('[handleConnect] Result:', result);
 
         if (result.success) {
-            console.log('[handleConnect] Success, closing dialog');
             window.close();
         } else {
             hideLoading();
             showError(`Failed to connect: ${result.error || 'Unknown error'}`);
         }
     } catch (error) {
-        console.error('[handleConnect] Error:', error);
         hideLoading();
         showError(`Failed to connect: ${error.message}`);
     }
@@ -121,10 +112,6 @@ generalErrorClose.addEventListener('click', hideError);
 
 cancelBtn.addEventListener('click', handleCancel);
 connectBtn.addEventListener('click', handleConnect);
-
-console.log('[connection-dialog] Script loaded');
-console.log('[connection-dialog] connectBtn:', connectBtn);
-console.log('[connection-dialog] portInput:', portInput);
 
 window.addEventListener('load', () => {
     loadPorts();
