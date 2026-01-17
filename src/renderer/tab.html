@@ -140,16 +140,20 @@
         const { ipcRenderer } = require('electron');
 
         // Initialize theme
-        ipcRenderer.invoke('theme:get').then(theme => {
-            if (window.themeManager) {
-                window.themeManager.setTheme(theme);
+        ipcRenderer.invoke('theme:get').then(originalTheme => {
+            // For tabs, we get the current choice and let system handle the effective theme
+            const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+            let effectiveTheme = originalTheme;
+            if (originalTheme === 'system') {
+                effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
             }
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
         });
 
-        ipcRenderer.on('theme:update', (event, theme) => {
-            if (window.themeManager) {
-                window.themeManager.setTheme(theme);
-            }
+        // Listen for theme updates from main window
+        ipcRenderer.on('theme:update', (event, effectiveTheme) => {
+            // Just apply the effective theme, don't store it
+            document.documentElement.setAttribute('data-theme', effectiveTheme);
         });
 
         let tabId = null;
