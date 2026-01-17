@@ -108,15 +108,16 @@ jobs:
         node-version: '20'
         cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+    - name: Download all build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
 
-    - name: Build for release
-      run: npm run dist
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+    - name: Merge artifacts into dist directory
+      run: |
+        mkdir -p dist
+        find artifacts -type f -exec cp {} dist/ \;
+        ls -la dist/
 
     - name: Extract version from tag or commit message
       id: extract_version
@@ -133,7 +134,7 @@ jobs:
       with:
         tag_name: v${{ steps.extract_version.outputs.version }}
         name: Release v${{ steps.extract_version.outputs.version }}
-        files: dist/
+        files: dist/*
         draft: false
         prerelease: false
       env:
