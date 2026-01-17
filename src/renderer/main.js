@@ -84,7 +84,14 @@ async function closeTab(tabId) {
                     switchTab(remainingTabs[0]);
                 } else {
                     activeTabId = null;
-                    tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
+                    tabContent.innerHTML = `
+                        <div class="empty-state">
+                            <div style="text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2">⚡</div>
+                                <p>Create a new connection to start</p>
+                            </div>
+                        </div>
+                    `;
                     tabContent.classList.remove('has-active-tab');
                     loggingBtn.disabled = true;
                     updateUIState();
@@ -210,7 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize UI
-    tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
+    tabContent.innerHTML = `
+        <div class="empty-state">
+            <div style="text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2">⚡</div>
+                <p>Create a new connection to start</p>
+            </div>
+        </div>
+    `;
     updateUIState();
 });
 
