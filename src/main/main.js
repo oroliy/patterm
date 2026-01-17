@@ -120,7 +120,7 @@ function setupIpcHandlers() {
         if (tabInfo && tabInfo.view) {
             tabInfo.view.webContents.send('serial:connected', false);
         }
-        const mainWindow = BrowserWindow.getAllWindows()[0];
+        const mainWindow = windowManager.getMainWindow();
         if (mainWindow) {
             mainWindow.webContents.send('tab:statusChanged', tabId, false);
         }
@@ -137,7 +137,7 @@ function setupIpcHandlers() {
         if (tabInfo && tabInfo.view) {
             tabInfo.view.webContents.send('serial:connected', true);
         }
-        const mainWindow = BrowserWindow.getAllWindows()[0];
+        const mainWindow = windowManager.getMainWindow();
         if (mainWindow) {
             mainWindow.webContents.send('tab:statusChanged', tabId, true);
         }
