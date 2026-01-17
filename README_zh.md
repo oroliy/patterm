@@ -168,6 +168,33 @@ npm run dist:linux  # 仅 Linux
 
 ### 测试
 
+#### 快速端到端测试（推荐）
+
+```bash
+# 一键测试：创建虚拟串口并启动 Patterm
+npm run test:e2e
+```
+
+该命令会：
+1. 在 `/tmp/ttyV0` 创建虚拟串口
+2. 启动 Patterm 应用
+3. 显示连接说明
+4. 退出时自动清理
+
+**其他选项：**
+```bash
+bash scripts/test.sh -h      # 显示帮助
+bash scripts/test.sh -k      # 退出后保持虚拟串口运行
+bash scripts/test.sh -c      # 清理现有虚拟串口
+bash scripts/test.sh -p /tmp/ttyUSB0  # 使用自定义端口路径
+```
+
+**发送测试数据（在另一个终端）：**
+```bash
+echo "你好 Patterm！" | nc localhost 12345
+telnet localhost 12345
+```
+
 #### 虚拟串口测试
 
 无需物理串口硬件，可以创建虚拟串口进行测试：

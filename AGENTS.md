@@ -16,19 +16,22 @@ npm run dist:linux    # Build for Linux
 
 # Linting & Testing
 # npm run lint          # Run linter (placeholder - no ESLint configured yet)
-# npm test              # Run tests (placeholder - no Jest configured yet)
+# npm test              # Run unit tests
 # npm run test:watch    # Watch mode for tests
 # npm run test:coverage # Coverage report
+# npm run test:e2e      # One-click E2E test with virtual serial port
 
-# Run single test (once test framework is configured)
+# Run single test
 # npm test -- --testNamePattern="testName"
-# npm test -- path/to/test.js
 
-# Virtual Serial Port Testing
-# bash scripts/create-virtual-port.sh /tmp/ttyV0    # Create virtual port
+# Virtual Serial Port Testing (for manual testing)
+# npm run test:e2e      # RECOMMENDED: One-click test with virtual port + app
+# bash scripts/test.sh -h # Show test script options
+# bash scripts/test.sh -k # Keep virtual port running after exit
+# bash scripts/test.sh -c # Cleanup existing virtual ports
+# bash scripts/create-virtual-port.sh /tmp/ttyV0    # Create virtual port only
 # bash scripts/quick-virtual-serial.sh         # Quick echo server
 # python3 scripts/virtual-serial.py            # Python-based virtual port
-# See scripts/README.md for detailed testing guide
 ```
 
 ## Code Style Guidelines

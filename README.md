@@ -168,6 +168,33 @@ npm run dist:linux  # Linux only
 
 ### Testing
 
+#### Quick E2E Test (Recommended)
+
+```bash
+# One-click test: creates virtual serial port and starts Patterm
+npm run test:e2e
+```
+
+This will:
+1. Create a virtual serial port at `/tmp/ttyV0`
+2. Start the Patterm application
+3. Display connection instructions
+4. Automatically clean up on exit
+
+**Additional options:**
+```bash
+bash scripts/test.sh -h      # Show help
+bash scripts/test.sh -k      # Keep virtual port running after exit
+bash scripts/test.sh -c      # Cleanup existing virtual ports
+bash scripts/test.sh -p /tmp/ttyUSB0  # Use custom port path
+```
+
+**Send test data (in another terminal):**
+```bash
+echo "Hello Patterm!" | nc localhost 12345
+telnet localhost 12345
+```
+
 #### Virtual Serial Port Testing
 
 For testing without physical serial hardware, create virtual serial ports:
