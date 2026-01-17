@@ -308,6 +308,8 @@ body {
     gap: 12px;
     flex-wrap: wrap;
     flex-shrink: 0;
+    position: relative;
+    z-index: 100;
 }
 
 .main-status-bar .status-bar-section {
@@ -447,5 +449,22 @@ body {
 }
 
 .status-indicator.disconnected {
+    background: var(--text-muted);
+}
+
+.status-indicator-mini {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+.status-indicator-mini.connected {
+    background: var(--accent-success);
+    box-shadow: 0 0 6px var(--accent-success);
+}
+
+.status-indicator-mini.disconnected {
     background: var(--text-muted);
 }

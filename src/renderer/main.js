@@ -114,29 +114,6 @@ async function closeTab(tabId) {
     }
 }
 
-function switchTab(tabId) {
-    debugLog(`switchTab called with tabId=${tabId}, activeTabId=${activeTabId}`, 'info');
-
-    if (activeTabId === tabId) return;
-
-    const tab = tabs.get(tabId);
-    if (!tab) {
-        debugLog(`Tab ${tabId} not found in tabs map`, 'warn');
-        return;
-    }
-
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.element.classList.add('active');
-
-    ipcRenderer.invoke('window:switchTab', tabId);
-    activeTabId = tabId;
-
-    tabContent.innerHTML = '';
-    tabContent.classList.add('has-active-tab');
-    updateUIState();
-    debugLog(`Switched to tab ${tabId}`, 'info');
-}
-
 async function startLogging() {
     if (!activeTabId) {
         alert('Please select a tab first');
@@ -195,18 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
     mainTxRate = document.getElementById('main-tx-rate');
     mainRxBadge = document.getElementById('main-rx-badge');
     mainTxBadge = document.getElementById('main-tx-badge');
-
-    console.log('[DOMContentLoaded] Status bar elements:', {
-        mainStatusIndicator,
-        mainPortName,
-        mainDuration,
-        mainCreatedTime,
-        mainCurrentTime,
-        mainRxRate,
-        mainTxRate,
-        mainRxBadge,
-        mainTxBadge
-    });
 
     newTabBtn.addEventListener('click', showConnectionDialog);
 
