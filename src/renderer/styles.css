@@ -278,6 +278,10 @@ body {
     overflow: hidden;
 }
 
+.tab-content.has-active-tab {
+    background-color: transparent;
+}
+
 .empty-state {
     display: flex;
     align-items: center;

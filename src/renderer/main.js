@@ -90,7 +90,9 @@ async function closeTab(tabId) {
                 } else {
                     activeTabId = null;
                     tabContent.innerHTML = '<div class="empty-state">No connections. Click "New Connection" to start.</div>';
+                    tabContent.classList.remove('has-active-tab');
                     loggingBtn.disabled = true;
+                    updateUIState();
                 }
             }
         }
@@ -117,6 +119,7 @@ function switchTab(tabId) {
     activeTabId = tabId;
 
     tabContent.innerHTML = '';
+    tabContent.classList.add('has-active-tab');
     updateUIState();
     debugLog(`Switched to tab ${tabId}`, 'info');
 }

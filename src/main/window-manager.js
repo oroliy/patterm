@@ -141,6 +141,12 @@ class WindowManager {
 
         const bounds = this.mainWindow.getBounds();
         const yOffset = this.toolbarHeight + this.tabsHeight;
+
+        if (this.debugWindow) {
+            this.debugWindow.log(`switchTab bounds: x=0, y=${yOffset}, w=${bounds.width}, h=${bounds.height - yOffset}`, 'info');
+            this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}`, 'info');
+        }
+
         tab.view.setBounds({
             x: 0,
             y: yOffset,
