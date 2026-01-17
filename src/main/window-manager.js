@@ -35,6 +35,7 @@ class WindowManager {
         this.mainWindow.once('ready-to-show', () => {
             this.mainWindow.show();
             setTimeout(() => this.updateLayoutMetrics(), 100);
+            setTimeout(() => this.updateLayoutMetrics(), 500);
         });
 
         this.mainWindow.on('closed', () => {
@@ -72,23 +73,21 @@ class WindowManager {
             }
         });
 
-        // Get layout metrics AFTER setting defaults
-        // updateLayoutMetrics will only update values if they're > 0
         await this.updateLayoutMetrics();
 
         const bounds = this.mainWindow.getBounds();
-        const yOffset = this.toolbarHeight + this.tabsHeight;
+        const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
+        const viewHeight = Math.floor(bounds.height - yOffset);
 
         if (this.debugWindow) {
-            this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${bounds.height - yOffset - this.statusBarHeight}`, 'debug');
+            this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${viewHeight}`, 'debug');
         }
 
-        // Set bounds BEFORE adding to window to avoid covering toolbar/tabs
         view.setBounds({
             x: 0,
             y: yOffset,
             width: bounds.width,
-            height: bounds.height - yOffset - this.statusBarHeight
+            height: viewHeight
         });
 
         view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
@@ -96,20 +95,20 @@ class WindowManager {
         view.webContents.on('did-finish-load', async () => {
             view.webContents.send('tab:init', { tabId: actualTabId });
 
-            // Update metrics again after tab loads to get correct statusBarHeight
             await this.updateLayoutMetrics();
             const newBounds = this.mainWindow.getBounds();
-            const newYOffset = this.toolbarHeight + this.tabsHeight;
+            const newYOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
+            const newViewHeight = Math.floor(newBounds.height - newYOffset);
 
             if (this.debugWindow) {
-                this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newBounds.height - newYOffset - this.statusBarHeight}, statusBarH=${this.statusBarHeight}`, 'info');
+                this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newViewHeight}`, 'info');
             }
 
             view.setBounds({
                 x: 0,
                 y: newYOffset,
                 width: newBounds.width,
-                height: newBounds.height - newYOffset - this.statusBarHeight
+                height: newViewHeight
             });
 
             if (this.debugWindow) {
@@ -166,8 +165,11 @@ class WindowManager {
             return false;
         }
 
-        // Ensure layout metrics are up-to-date
+        const bounds = this.mainWindow.getBounds();
+
         await this.updateLayoutMetrics();
+        const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
+        const viewHeight = Math.floor(bounds.height - yOffset);
 
         if (this.activeTabId && this.activeTabId !== tabId) {
             const prevTab = this.tabs.get(this.activeTabId);
@@ -176,22 +178,27 @@ class WindowManager {
             }
         }
 
-        const bounds = this.mainWindow.getBounds();
-        const yOffset = this.toolbarHeight + this.tabsHeight;
-
         if (this.debugWindow) {
-            this.debugWindow.log(`switchTab bounds: x=0, y=${yOffset}, w=${bounds.width}, h=${bounds.height - yOffset - this.statusBarHeight}`, 'info');
-            this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}, statusBarHeight=${this.statusBarHeight}`, 'info');
+            this.debugWindow.log(`Setting view bounds BEFORE adding: x=0, y=${yOffset}, w=${bounds.width}, h=${viewHeight}`, 'info');
+            this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}, windowHeight=${bounds.height}`, 'info');
         }
 
         tab.view.setBounds({
             x: 0,
             y: yOffset,
             width: bounds.width,
-            height: bounds.height - yOffset - this.statusBarHeight
+            height: viewHeight
         });
 
         this.mainWindow.addBrowserView(tab.view);
+
+        this.mainWindow.setTopBrowserView(tab.view);
+
+        if (this.debugWindow) {
+            const actualBounds = tab.view.getBounds();
+            this.debugWindow.log(`Actual view bounds AFTER setBounds: x=${actualBounds.x}, y=${actualBounds.y}, w=${actualBounds.width}, h=${actualBounds.height}`, 'info');
+        }
+
         this.activeTabId = tabId;
 
         return true;
@@ -237,12 +244,12 @@ class WindowManager {
         const bounds = this.mainWindow.getBounds();
         const activeTab = this.tabs.get(this.activeTabId);
         if (activeTab) {
-            const yOffset = this.toolbarHeight + this.tabsHeight;
+            const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
             activeTab.view.setBounds({
                 x: 0,
                 y: yOffset,
                 width: bounds.width,
-                height: bounds.height - yOffset - this.statusBarHeight
+                height: Math.floor(bounds.height - yOffset)
             });
         }
     }
@@ -257,18 +264,21 @@ class WindowManager {
                     const toolbar = document.querySelector('.toolbar');
                     const tabsContainer = document.querySelector('.tabs-container');
                     const statusBar = document.querySelector('.main-status-bar');
+                    const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+                    const tabsHeight = tabsContainer ? tabsContainer.offsetHeight : 0;
+                    const statusBarHeight = statusBar ? Math.max(statusBar.offsetHeight, 30) : 30;
+                    const statusBarFixed = statusBar ? getComputedStyle(statusBar).position : 'static';
                     return {
-                        toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
-                        tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0,
-                        statusBarHeight: statusBar ? statusBar.offsetHeight : 0
+                        toolbarHeight,
+                        tabsHeight,
+                        statusBarHeight,
+                        statusBarFixed
                     };
                 })()
             `);
             if (this.debugWindow) {
-                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px, statusBar=${result.statusBarHeight}px`, 'info');
+                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px, statusBar=${result.statusBarHeight}px, fixed=${result.statusBarFixed}`, 'info');
             }
-            // Only update if values are valid (greater than 0)
-            // This preserves default values if DOM elements aren't ready
             if (result.toolbarHeight > 0) this.toolbarHeight = result.toolbarHeight;
             if (result.tabsHeight > 0) this.tabsHeight = result.tabsHeight;
             if (result.statusBarHeight > 0) this.statusBarHeight = result.statusBarHeight;
@@ -278,7 +288,7 @@ class WindowManager {
             }
             this.toolbarHeight = 50;
             this.tabsHeight = 40;
-            this.statusBarHeight = 24;
+            this.statusBarHeight = 30;
         }
     }
     broadcastToTabs(channel, ...args) {

@@ -433,7 +433,7 @@ ipcRenderer.on('serial:connected', (event, tabId, connected) => {
     }
 });
 
-function switchTab(tabId) {
+async function switchTab(tabId) {
     debugLog(`switchTab called with tabId=${tabId}, activeTabId=${activeTabId}`, 'info');
 
     if (activeTabId === tabId) return;
@@ -454,5 +454,6 @@ function switchTab(tabId) {
     tabContent.classList.add('has-active-tab');
     updateUIState();
     updateStatusBar();
+    await ipcRenderer.invoke('window:recalcLayout');
     debugLog(`Switched to tab ${tabId}`, 'info');
 }

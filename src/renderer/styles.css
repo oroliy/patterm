@@ -298,18 +298,22 @@ body {
 
 /* Main Status Bar */
 .main-status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     align-items: center;
-    padding: 4px 12px;
+    padding: 8px 12px;
     background: var(--bg-tertiary);
     border-top: 1px solid var(--glass-border);
     font-size: 11px;
     color: var(--text-muted);
     gap: 12px;
     flex-wrap: wrap;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 100;
+    z-index: 9999;
+    min-height: 36px;
+    height: 36px;
 }
 
 .main-status-bar .status-bar-section {
@@ -386,6 +390,7 @@ body {
     flex: 1;
     background: var(--bg-secondary);
     position: relative;
+    padding-bottom: 30px;
 }
 
 /* Terminal & Input (Specific to tab.html but good to have base styles) */
