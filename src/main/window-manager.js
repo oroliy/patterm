@@ -220,12 +220,14 @@ class WindowManager {
         const bounds = this.mainWindow.getBounds();
         try {
             const result = await this.mainWindow.webContents.executeJavaScript(`
-                const toolbar = document.querySelector('.toolbar');
-                const tabsContainer = document.querySelector('.tabs-container');
-                return {
-                    toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
-                    tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
-                };
+                (function() {
+                    const toolbar = document.querySelector('.toolbar');
+                    const tabsContainer = document.querySelector('.tabs-container');
+                    return {
+                        toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
+                        tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
+                    };
+                })()
             `);
             this.toolbarHeight = result.toolbarHeight;
             this.tabsHeight = result.tabsHeight;
