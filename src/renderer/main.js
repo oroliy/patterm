@@ -248,6 +248,7 @@ ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {
     updateTabStatus(tabId, connected);
     if (tabId === activeTabId) {
         updateUIState();
+        updateStatusBar();
     }
 });
 
@@ -270,6 +271,7 @@ ipcRenderer.on('serial:error', (event, error) => {
 
 window.addEventListener('load', () => {
     debugLog('Main window loaded', 'info');
+    startTimeTimer();
 });
 
 window.addEventListener('resize', () => {
@@ -293,4 +295,164 @@ function updateUIState() {
         disconnectBtn.classList.remove('btn-danger');
         disconnectBtn.classList.add('btn-success');
     }
+}
+
+const mainStatusIndicator = document.getElementById('main-status-indicator');
+const mainPortName = document.getElementById('main-port-name');
+const mainDuration = document.getElementById('main-duration');
+const mainCreatedTime = document.getElementById('main-created-time');
+const mainCurrentTime = document.getElementById('main-current-time');
+const mainRxRate = document.getElementById('main-rx-rate');
+const mainTxRate = document.getElementById('main-tx-rate');
+const mainRxBadge = document.getElementById('main-rx-badge');
+const mainTxBadge = document.getElementById('main-tx-badge');
+
+let tabCreatedTimes = new Map();
+let tabConnectionStartTimes = new Map();
+let tabRxRates = new Map();
+let tabTxRates = new Map();
+let tabPortInfo = new Map();
+
+function formatTime(date) {
+    return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function formatDuration(startTime) {
+    const now = Date.now();
+    const diff = Math.floor((now - startTime) / 1000);
+    const hours = Math.floor(diff / 3600);
+    const minutes = Math.floor((diff % 3600) / 60);
+    const seconds = diff % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateCurrentTime() {
+    mainCurrentTime.textContent = formatTime(new Date());
+}
+
+function startTimeTimer() {
+    setInterval(updateCurrentTime, 1000);
+    updateCurrentTime();
+}
+
+function updateStatusBar() {
+    if (!activeTabId) {
+        mainStatusIndicator.className = 'status-indicator-mini disconnected';
+        mainPortName.textContent = 'Not Connected';
+        mainDuration.textContent = '--:--:--';
+        mainCreatedTime.textContent = '--:--:--';
+        mainRxRate.textContent = '0 B/s';
+        mainTxRate.textContent = '0 B/s';
+        return;
+    }
+
+    const tab = tabs.get(activeTabId);
+    if (!tab) return;
+
+    const connected = tab.connected || false;
+    mainStatusIndicator.className = `status-indicator-mini ${connected ? 'connected' : 'disconnected'}`;
+
+    const portInfo = tabPortInfo.get(activeTabId);
+    if (portInfo) {
+        mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+    }
+
+    if (connected && tabConnectionStartTimes.has(activeTabId)) {
+        mainDuration.textContent = formatDuration(tabConnectionStartTimes.get(activeTabId));
+    } else {
+        mainDuration.textContent = '--:--:--';
+    }
+
+    if (tabCreatedTimes.has(activeTabId)) {
+        mainCreatedTime.textContent = formatTime(tabCreatedTimes.get(activeTabId));
+    }
+
+    mainRxRate.textContent = formatRate(tabRxRates.get(activeTabId) || 0);
+    mainTxRate.textContent = formatRate(tabTxRates.get(activeTabId) || 0);
+}
+
+function formatRate(bytesPerSecond) {
+    if (bytesPerSecond === 0) return '0 B/s';
+    if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`;
+    if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+}
+
+function triggerRxPulse() {
+    mainRxBadge.classList.add('active');
+    setTimeout(() => mainRxBadge.classList.remove('active'), 200);
+}
+
+function triggerTxPulse() {
+    mainTxBadge.classList.add('active');
+    setTimeout(() => mainTxBadge.classList.remove('active'), 200);
+}
+
+ipcRenderer.on('tab:created', (event, tabData) => {
+    debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
+    tabCreatedTimes.set(tabData.id, new Date());
+    addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
+});
+
+ipcRenderer.on('tab:updateRates', (event, tabId, rxRate, txRate) => {
+    tabRxRates.set(tabId, rxRate);
+    tabTxRates.set(tabId, txRate);
+    if (tabId === activeTabId) {
+        mainRxRate.textContent = formatRate(rxRate);
+        mainTxRate.textContent = formatRate(txRate);
+    }
+});
+
+ipcRenderer.on('tab:rxActivity', (event, tabId) => {
+    if (tabId === activeTabId) {
+        triggerRxPulse();
+    }
+});
+
+ipcRenderer.on('tab:txActivity', (event, tabId) => {
+    if (tabId === activeTabId) {
+        triggerTxPulse();
+    }
+});
+
+ipcRenderer.on('serial:portInfo', (event, tabId, portInfo) => {
+    tabPortInfo.set(tabId, portInfo);
+    if (tabId === activeTabId) {
+        mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+    }
+});
+
+ipcRenderer.on('serial:connected', (event, tabId, connected) => {
+    if (connected) {
+        tabConnectionStartTimes.set(tabId, Date.now());
+    } else {
+        tabConnectionStartTimes.delete(tabId);
+    }
+    if (tabId === activeTabId) {
+        updateStatusBar();
+    }
+});
+
+function switchTab(tabId) {
+    debugLog(`switchTab called with tabId=${tabId}, activeTabId=${activeTabId}`, 'info');
+
+    if (activeTabId === tabId) return;
+
+    const tab = tabs.get(tabId);
+    if (!tab) {
+        debugLog(`Tab ${tabId} not found in tabs map`, 'warn');
+        return;
+    }
+
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.element.classList.add('active');
+
+    ipcRenderer.invoke('window:switchTab', tabId);
+    activeTabId = tabId;
+
+    tabContent.innerHTML = '';
+    tabContent.classList.add('has-active-tab');
+    updateUIState();
+    updateStatusBar();
+    debugLog(`Switched to tab ${tabId}`, 'info');
 }

@@ -61,89 +61,6 @@
             color: #f14c4c;
         }
 
-        .status-bar {
-            display: flex;
-            align-items: center;
-            padding: 4px 12px;
-            background-color: #252526;
-            border-top: 1px solid #3e3e3e;
-            font-size: 11px;
-            color: #858585;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .status-bar-section {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-bar-section::before {
-            content: '|';
-            color: #3e3e3e;
-        }
-
-        .status-bar-section:first-child::before {
-            content: none;
-        }
-
-        .status-label {
-            color: #858585;
-        }
-
-        .status-value {
-            color: #cccccc;
-        }
-
-        .status-indicator-mini {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .status-indicator-mini.connected {
-            background-color: #4ec9b0;
-            box-shadow: 0 0 4px #4ec9b0;
-        }
-
-        .status-indicator-mini.disconnected {
-            background-color: #858585;
-        }
-
-        .rx-tx-indicator {
-            display: flex;
-            gap: 8px;
-        }
-
-        .rx-badge, .tx-badge {
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        .rx-badge {
-            background-color: rgba(78, 201, 176, 0.2);
-            color: #4ec9b0;
-        }
-
-        .tx-badge {
-            background-color: rgba(206, 145, 120, 0.2);
-            color: #ce9178;
-        }
-
-        .rx-badge.active, .tx-badge.active {
-            animation: pulse 0.5s ease-out;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
         .input-bar {
             display: flex;
             padding: 10px 15px;
@@ -234,31 +151,6 @@
     <div class="terminal-container">
         <div id="terminal" class="terminal-display"></div>
 
-        <div class="status-bar" id="status-bar">
-            <div class="status-bar-section">
-                <span class="status-indicator-mini disconnected" id="status-indicator-mini"></span>
-                <span class="status-value" id="port-name">Not Connected</span>
-            </div>
-            <div class="status-bar-section">
-                <span class="status-label">Duration:</span>
-                <span class="status-value" id="connection-duration">--:--:--</span>
-            </div>
-            <div class="status-bar-section">
-                <span class="status-label">Created:</span>
-                <span class="status-value" id="created-time">--:--:--</span>
-            </div>
-            <div class="status-bar-section">
-                <span class="status-label">Current:</span>
-                <span class="status-value" id="current-time">--:--:--</span>
-            </div>
-            <div class="status-bar-section">
-                <div class="rx-tx-indicator">
-                    <span class="rx-badge" id="rx-badge">RX</span>
-                    <span class="tx-badge" id="tx-badge">TX</span>
-                </div>
-            </div>
-        </div>
-
         <div class="input-bar">
             <div class="status-dot disconnected" id="status-dot"></div>
             <input type="text" id="command-input" class="input-field" placeholder="Type command..." autocomplete="off" disabled>
@@ -285,24 +177,21 @@
 
         let tabId = null;
         let isConnected = false;
-        let connectionStartTime = null;
-        let durationUpdateInterval = null;
-        let timeUpdateInterval = null;
 
         const terminal = document.getElementById('terminal');
         const serialInput = document.getElementById('command-input');
         const sendBtn = document.getElementById('send-btn');
         const clearBtn = document.getElementById('clear-btn');
         const statusDot = document.getElementById('status-dot');
-        const statusIndicatorMini = document.getElementById('status-indicator-mini');
-        const portNameEl = document.getElementById('port-name');
-        const durationEl = document.getElementById('connection-duration');
-        const createdTimeEl = document.getElementById('created-time');
-        const currentTimeEl = document.getElementById('current-time');
-        const rxBadge = document.getElementById('rx-badge');
-        const txBadge = document.getElementById('tx-badge');
 
         let autoScroll = true;
+        let lastRxTime = 0;
+        let lastTxTime = 0;
+        let rxBytes = 0;
+        let txBytes = 0;
+        let rxRate = 0;
+        let txRate = 0;
+        let rateUpdateInterval = null;
 
         async function debugLog(message, level = 'info') {
             try {
@@ -312,64 +201,36 @@
             }
         }
 
-        function formatTime(date) {
-            return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        function formatRate(bytesPerSecond) {
+            if (bytesPerSecond === 0) return '0 B/s';
+            if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`;
+            if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+            return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
         }
 
-        function formatDuration(startTime) {
-            const now = Date.now();
-            const diff = Math.floor((now - startTime) / 1000);
-            const hours = Math.floor(diff / 3600);
-            const minutes = Math.floor((diff % 3600) / 60);
-            const seconds = diff % 60;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        function updateRates() {
+            ipcRenderer.send('tab:updateRates', tabId, rxRate, txRate);
         }
 
-        function updateDuration() {
-            if (connectionStartTime && isConnected) {
-                durationEl.textContent = formatDuration(connectionStartTime);
-            } else {
-                durationEl.textContent = '--:--:--';
+        function startRateCalculation() {
+            stopRateCalculation();
+            rateUpdateInterval = setInterval(updateRates, 1000);
+        }
+
+        function stopRateCalculation() {
+            if (rateUpdateInterval) {
+                clearInterval(rateUpdateInterval);
+                rateUpdateInterval = null;
             }
         }
 
-        function updateCurrentTime() {
-            currentTimeEl.textContent = formatTime(new Date());
-        }
-
-        function startDurationTimer() {
-            stopDurationTimer();
-            durationUpdateInterval = setInterval(updateDuration, 1000);
-        }
-
-        function stopDurationTimer() {
-            if (durationUpdateInterval) {
-                clearInterval(durationUpdateInterval);
-                durationUpdateInterval = null;
-            }
-        }
-
-        function startTimeTimer() {
-            stopTimeTimer();
-            timeUpdateInterval = setInterval(updateCurrentTime, 1000);
-            updateCurrentTime();
-        }
-
-        function stopTimeTimer() {
-            if (timeUpdateInterval) {
-                clearInterval(timeUpdateInterval);
-                timeUpdateInterval = null;
-            }
-        }
-
-        function triggerRxIndicator() {
-            rxBadge.classList.add('active');
-            setTimeout(() => rxBadge.classList.remove('active'), 500);
-        }
-
-        function triggerTxIndicator() {
-            txBadge.classList.add('active');
-            setTimeout(() => txBadge.classList.remove('active'), 500);
+        function resetRateCounters() {
+            rxBytes = 0;
+            txBytes = 0;
+            rxRate = 0;
+            txRate = 0;
+            lastRxTime = Date.now();
+            lastTxTime = Date.now();
         }
 
         function appendData(data, type) {
@@ -377,11 +238,27 @@
             line.className = type + '-data';
             if (type === 'rx') {
                 line.style.color = 'var(--text-primary)';
-                triggerRxIndicator();
+                const now = Date.now();
+                rxBytes += data.length;
+                const timeDiff = (now - lastRxTime) / 1000;
+                if (timeDiff >= 1) {
+                    rxRate = Math.round(rxBytes / timeDiff);
+                    rxBytes = 0;
+                    lastRxTime = now;
+                }
+                ipcRenderer.send('tab:rxActivity', tabId);
             }
             if (type === 'tx') {
                 line.style.color = 'var(--text-secondary)';
-                triggerTxIndicator();
+                const now = Date.now();
+                txBytes += data.length;
+                const timeDiff = (now - lastTxTime) / 1000;
+                if (timeDiff >= 1) {
+                    txRate = Math.round(txBytes / timeDiff);
+                    txBytes = 0;
+                    lastTxTime = now;
+                }
+                ipcRenderer.send('tab:txActivity', tabId);
             }
             if (type === 'error') {
                 line.style.color = 'var(--accent-danger)';
@@ -434,8 +311,9 @@
         ipcRenderer.on('tab:init', async (event, data) => {
             tabId = data.tabId;
             await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
-            createdTimeEl.textContent = formatTime(new Date());
-            startTimeTimer();
+            lastRxTime = Date.now();
+            lastTxTime = Date.now();
+            startRateCalculation();
         });
 
         ipcRenderer.on('serial:data', (event, data) => {
@@ -455,16 +333,10 @@
             updateConnectionStatus(connected);
 
             if (connected) {
-                connectionStartTime = Date.now();
-                startDurationTimer();
+                resetRateCounters();
             } else {
-                stopDurationTimer();
-            }
-        });
-
-        ipcRenderer.on('serial:portInfo', (event, portInfo) => {
-            if (portInfo && portInfo.path) {
-                portNameEl.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+                rxRate = 0;
+                txRate = 0;
             }
         });
 
@@ -475,12 +347,8 @@
         });
 
         function updateConnectionStatus(connected) {
-            const statusClass = connected ? 'connected' : 'disconnected';
             if (statusDot) {
-                statusDot.className = `status-dot ${statusClass}`;
-            }
-            if (statusIndicatorMini) {
-                statusIndicatorMini.className = `status-indicator-mini ${statusClass}`;
+                statusDot.className = `status-dot ${connected ? 'connected' : 'disconnected'}`;
             }
         }
 
@@ -489,8 +357,7 @@
         });
 
         window.addEventListener('beforeunload', () => {
-            stopDurationTimer();
-            stopTimeTimer();
+            stopRateCalculation();
         });
     </script>
 </body>

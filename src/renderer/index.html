@@ -46,6 +46,37 @@
                 </div>
             </div>
         </div>
+
+        <div class="main-status-bar" id="main-status-bar">
+            <div class="status-bar-section">
+                <span class="status-indicator-mini disconnected" id="main-status-indicator"></span>
+                <span class="status-value" id="main-port-name">Not Connected</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Duration:</span>
+                <span class="status-value" id="main-duration">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Created:</span>
+                <span class="status-value" id="main-created-time">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Current:</span>
+                <span class="status-value" id="main-current-time">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <div class="rx-tx-indicator">
+                    <span class="rx-badge" id="main-rx-badge">
+                        <span class="arrow-icon">↓</span>
+                        <span class="rate-label" id="main-rx-rate">0 B/s</span>
+                    </span>
+                    <span class="tx-badge" id="main-tx-badge">
+                        <span class="arrow-icon">↑</span>
+                        <span class="rate-label" id="main-tx-rate">0 B/s</span>
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="theme-manager.js"></script>
