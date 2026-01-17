@@ -53,6 +53,17 @@ class WindowManager {
             this.debugWindow.log(`createNewTab called with tabId=${tabId}, title=${title}`, 'info');
         }
 
+        // Set default values first, before async operations
+        if (this.statusBarHeight === 0) {
+            this.statusBarHeight = 24;
+        }
+        if (this.toolbarHeight === 0) {
+            this.toolbarHeight = 50;
+        }
+        if (this.tabsHeight === 0) {
+            this.tabsHeight = 40;
+        }
+
         const actualTabId = tabId || ++this.tabCounter;
         const view = new BrowserView({
             webPreferences: {
@@ -61,16 +72,9 @@ class WindowManager {
             }
         });
 
-        // Get layout metrics BEFORE creating the view bounds
-        // Always update metrics to ensure statusBarHeight is correct
+        // Get layout metrics AFTER setting defaults
+        // updateLayoutMetrics will only update values if they're > 0
         await this.updateLayoutMetrics();
-
-        // Use fallback values if metrics failed to load
-        if (this.toolbarHeight === 0 || this.tabsHeight === 0 || this.statusBarHeight === 0) {
-            this.toolbarHeight = this.toolbarHeight || 50;
-            this.tabsHeight = this.tabsHeight || 40;
-            this.statusBarHeight = this.statusBarHeight || 24;
-        }
 
         const bounds = this.mainWindow.getBounds();
         const yOffset = this.toolbarHeight + this.tabsHeight;
@@ -263,9 +267,11 @@ class WindowManager {
             if (this.debugWindow) {
                 this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px, statusBar=${result.statusBarHeight}px`, 'info');
             }
-            this.toolbarHeight = result.toolbarHeight;
-            this.tabsHeight = result.tabsHeight;
-            this.statusBarHeight = result.statusBarHeight;
+            // Only update if values are valid (greater than 0)
+            // This preserves default values if DOM elements aren't ready
+            if (result.toolbarHeight > 0) this.toolbarHeight = result.toolbarHeight;
+            if (result.tabsHeight > 0) this.tabsHeight = result.tabsHeight;
+            if (result.statusBarHeight > 0) this.statusBarHeight = result.statusBarHeight;
         } catch (err) {
             if (this.debugWindow) {
                 this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
