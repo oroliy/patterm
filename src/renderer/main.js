@@ -106,6 +106,7 @@ async function closeTab(tabId) {
                     tabContent.classList.remove('has-active-tab');
                     loggingBtn.disabled = true;
                     updateUIState();
+                    updateStatusBar();
                 }
             }
         }
@@ -317,9 +318,8 @@ function formatDuration(startTime) {
 function updateCurrentTime() {
     if (mainCurrentTime && activeTabId) {
         mainCurrentTime.textContent = formatTime(new Date());
-    } else if (mainCurrentTime && !activeTabId) {
-        mainCurrentTime.textContent = '--:--:--';
     }
+    // If no active tab, keep it empty (cleared by updateStatusBar)
 }
 
 function startTimeTimer() {
@@ -334,11 +334,12 @@ function updateStatusBar() {
 
     if (!activeTabId) {
         mainStatusIndicator.className = 'status-indicator-mini disconnected';
-        mainPortName.textContent = 'Not Connected';
-        mainDuration.textContent = '--:--:--';
-        mainCreatedTime.textContent = '--:--:--';
-        mainRxRate.textContent = '0 B/s';
-        mainTxRate.textContent = '0 B/s';
+        mainPortName.textContent = '';
+        mainDuration.textContent = '';
+        mainCreatedTime.textContent = '';
+        mainCurrentTime.textContent = '';
+        mainRxRate.textContent = '';
+        mainTxRate.textContent = '';
         return;
     }
 

@@ -89,8 +89,25 @@ class WindowManager {
 
         view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
 
-        view.webContents.on('did-finish-load', () => {
+        view.webContents.on('did-finish-load', async () => {
             view.webContents.send('tab:init', { tabId: actualTabId });
+
+            // Update metrics again after tab loads to get correct statusBarHeight
+            await this.updateLayoutMetrics();
+            const newBounds = this.mainWindow.getBounds();
+            const newYOffset = this.toolbarHeight + this.tabsHeight;
+
+            if (this.debugWindow) {
+                this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newBounds.height - newYOffset - this.statusBarHeight}, statusBarH=${this.statusBarHeight}`, 'info');
+            }
+
+            view.setBounds({
+                x: 0,
+                y: newYOffset,
+                width: newBounds.width,
+                height: newBounds.height - newYOffset - this.statusBarHeight
+            });
+
             if (this.debugWindow) {
                 this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
             }
