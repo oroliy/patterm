@@ -1,43 +1,75 @@
+<div align="center">
+
 # Patterm
 
-A professional serial terminal application built with Electron, featuring multi-window support and comprehensive UART configuration.
+**A professional serial terminal application built with Electron**
+
+![GitHub Release](https://img.shields.io/github/v/release/oroliy/patterm)
+![GitHub License](https://img.shields.io/github/license/oroliy/patterm)
+![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm)
+![GitHub Stars](https://img.shields.io/github/stars/oroliy/patterm)
+![Node.js Version](https://img.shields.io/node/v/node)
+![Electron Version](https://img.shields.io/github/package-json/dependency-version/oroliy/patterm/dev/electron)
+
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Development](#development) • [Contributing](#contributing)
+
+</div>
+
+---
 
 ## Features
 
-- **Multi-Tab Management**: Open and manage multiple serial connections in independent tabs
-  - Each tab has its own serial connection, terminal, and input field
-  - Automatic tab creation with connection dialog
-  - Custom tab names with port display
-  - Connection status indicators (● for connected, ○ for disconnected)
-  - Tab switching with dedicated BrowserView management
-- **Complete UART Configuration**:
-  - Baud rates: 110 to 921600
-  - Data bits: 5, 6, 7, 8
-  - Stop bits: 1, 1.5, 2
-  - Parity: None, Odd, Even, Mark, Space
-  - Flow control: RTS/CTS, XON/XOFF
-- **Connection Dialog**: Intuitive modal for creating new connections
-  - Port selection with manufacturer info
-  - Custom tab naming
-  - All serial parameters in one place
-  - Port refresh functionality
- - **Real-Time Serial I/O**: Send and receive data with minimal latency
- - **Debug Console**:
-   - Real-time logging of application events
-   - Color-coded log levels (info, warn, error, debug)
-   - Selectable and copyable log entries
-   - Timestamp for each log entry
-   - Clear logs with Ctrl/Cmd + L
- - **File Logging**:
-  - Manual logging (start/stop on demand)
-  - Auto logging (continuous)
-  - Timestamped entries
-  - Per-tab logging support
-- **Cross-Platform**: Windows, macOS, and Linux support
-- **Keyboard Shortcuts**:
-   - `Ctrl/Cmd + N` - New connection
-   - `Ctrl/Cmd + W` - Close window
-   - `Ctrl/Cmd + Shift + D` - Toggle debug console
+### Multi-Tab Management
+- Open and manage multiple serial connections in independent tabs
+- Each tab has its own serial connection, terminal, and input field
+- Automatic tab creation with connection dialog
+- Custom tab names with port display
+- Connection status indicators (● for connected, ○ for disconnected)
+- Tab switching with dedicated BrowserView management
+
+### Complete UART Configuration
+- **Baud rates**: 110 to 921600
+- **Data bits**: 5, 6, 7, 8
+- **Stop bits**: 1, 1.5, 2
+- **Parity**: None, Odd, Even, Mark, Space
+- **Flow control**: RTS/CTS, XON/XOFF
+
+### Connection Dialog
+- Intuitive modal for creating new connections
+- Port selection with manufacturer info
+- Custom tab naming
+- All serial parameters in one place
+- Port refresh functionality
+
+### Real-Time Serial I/O
+- Send and receive data with minimal latency
+
+### Debug Console
+- Real-time logging of application events
+- Color-coded log levels (info, warn, error, debug)
+- Selectable and copyable log entries
+- Timestamp for each log entry
+- Clear logs with `Ctrl/Cmd + L`
+
+### File Logging
+- Manual logging (start/stop on demand)
+- Auto logging (continuous)
+- Timestamped entries
+- Per-tab logging support
+
+### Cross-Platform
+- ![Windows](https://img.shields.io/badge/Windows-x64-0078D4?logo=windows) NSIS + Portable
+- ![macOS](https://img.shields.io/badge/macOS-x64%20%7C%20ARM64-999999?logo=apple) DMG
+- ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux) AppImage + deb
+
+### Keyboard Shortcuts
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + N` | New connection |
+| `Ctrl/Cmd + W` | Close window |
+| `Ctrl/Cmd + Shift + D` | Toggle debug console |
+
+---
 
 ## Installation
 
@@ -57,6 +89,8 @@ For users in China, use the Electron mirror for faster downloads:
 ```bash
 ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm install
 ```
+
+---
 
 ## Usage
 
@@ -82,6 +116,8 @@ npm start
 8. **Enable logging** to save serial data to a file (per tab)
 9. **Close tab** to disconnect serial port and remove tab
 
+---
+
 ## Development
 
 ### Project Structure
@@ -104,9 +140,11 @@ patterm/
 │   │   ├── serial-service.js  # Single serial port handling
 │   │   └── serial-service-manager.js  # Multi-connection management
 │   └── public/         # Static assets
+├── tests/              # Jest test suites
 ├── .github/workflows/  # CI/CD configuration
 ├── package.json
-└── AGENTS.md          # Development guidelines
+├── AGENTS.md           # Development guidelines
+└── CLAUDE.md           # AI agent guidance
 ```
 
 ### Development Commands
@@ -130,7 +168,7 @@ npm run dist:linux  # Linux only
 
 ### Testing
 
-### Virtual Serial Port Testing
+#### Virtual Serial Port Testing
 
 For testing without physical serial hardware, create virtual serial ports:
 
@@ -146,7 +184,7 @@ telnet localhost 12345
 echo "Hello Patterm!" | nc localhost 12345
 ```
 
-### Quick Test Script
+#### Quick Test Script
 
 ```bash
 # Create virtual port and start echo server
@@ -156,7 +194,7 @@ bash scripts/quick-virtual-serial.sh
 # All sent data will be echoed back
 ```
 
-### Python Virtual Serial Port
+#### Python Virtual Serial Port
 
 ```bash
 # Install required package
@@ -168,7 +206,7 @@ python3 scripts/virtual-serial.py
 # Use commands: 1, 2, q, or type any text
 ```
 
-### Unit Tests
+#### Unit Tests
 
 ```bash
 # Run all tests
@@ -198,11 +236,15 @@ npm run lint -- --fix
 
 Electron Builder is configured to create platform-specific installers:
 
-- **Windows**: NSIS installer (.exe)
-- **macOS**: DMG disk image (.dmg)
-- **Linux**: AppImage and Debian package (.deb)
+| Platform | Formats |
+|----------|---------|
+| Windows | NSIS installer (.exe) + Portable (.exe) |
+| macOS | DMG disk image (.dmg) |
+| Linux | AppImage + Debian package (.deb) |
 
 Build artifacts are placed in the `dist/` directory.
+
+---
 
 ## Contributing
 
@@ -227,33 +269,56 @@ Use conventional commits:
 
 Example: `feat: implement serial port auto-reconnect`
 
+---
+
 ## CI/CD
 
 This project uses GitHub Actions for continuous integration:
 
-- **Triggers**: Push to master, pull requests
+- **Triggers**: Push to master, pull requests, tags
 - **Platforms**: Ubuntu, macOS, Windows
-- **Node versions**: 18.x, 20.x
-- **Actions**: Install, lint, build, test
+- **Node version**: 20.x
+- **Actions**: Lint, Build, Test, Release
 - **Artifacts**: Build artifacts retained for 7 days
-- **Releases**: Automatic on tagged commits
+- **Releases**: Automatic on tagged commits (v*)
 
-See `.github/workflows/ci.yml` for configuration.
+![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/oroliy/patterm/ci-cd.yml?branch=master&label=CI%2FCD)
+
+See `.github/workflows/ci-cd.yml` for configuration.
+
+---
 
 ## License
 
 MIT License - see LICENSE file for details
 
+---
+
 ## Support
 
 For issues, questions, or contributions:
 
-- Open an issue on GitHub
-- Check existing documentation in AGENTS.md
+- ![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm) [Open an issue](https://github.com/oroliy/patterm/issues)
+- Check existing documentation in [AGENTS.md](./AGENTS.md)
 - Review code examples in the repository
+
+---
 
 ## Acknowledgments
 
-- Built with [Electron](https://www.electronjs.org/)
-- Serial communication via [SerialPort.js](https://serialport.io/)
-- Build system by [Electron Builder](https://www.electron.build/)
+Built with:
+
+- [![Electron](https://img.shields.io/badge/Electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org/)
+- [![SerialPort.js](https://img.shields.io/badge/SerialPort-12.0.0-00A98F?logo=node.js)](https://serialport.io/)
+- [![Electron Builder](https://img.shields.io/badge/Electron%20Builder-24.9.1-475A86?logo=electron)](https://www.electron.build/)
+- [![Jest](https://img.shields.io/badge/Jest-29.7.0-C21325?logo=jest)](https://jestjs.io/)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the Patterm Team**
+
+[⬆ Back to Top](#patterm)
+
+</div>
