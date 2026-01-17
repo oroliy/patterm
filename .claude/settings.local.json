@@ -27,7 +27,8 @@
       "Bash(tree:*)",
       "Bash(node -e:*)",
       "Bash(nc:*)",
-      "Skill(changelog-generator)"
+      "Skill(changelog-generator)",
+      "Bash(killall:*)"
     ]
   },
   "outputStyle": "default"

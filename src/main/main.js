@@ -165,6 +165,10 @@ function setupIpcHandlers() {
         return windowManager.resize();
     });
 
+    ipcMain.handle('window:recalcLayout', async () => {
+        return windowManager.updateLayoutMetrics();
+    });
+
     ipcMain.handle('window:showConnectionDialog', async () => {
         return showConnectionDialog();
     });

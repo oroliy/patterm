@@ -22,7 +22,7 @@ async function showConnectionDialog() {
     }
 }
 
-function addTab(tabId, tabName, connected) {
+async function addTab(tabId, tabName, connected) {
     debugLog(`addTab called with tabId=${tabId}, tabName=${tabName}, connected=${connected}`, 'info');
 
     const tab = document.createElement('div');
@@ -53,6 +53,8 @@ function addTab(tabId, tabName, connected) {
 
     debugLog(`Tab element appended to container, children count: ${tabsContainer.children.length}`, 'info');
     debugLog(`Tab element dimensions: ${tab.offsetWidth}x${tab.offsetHeight}`, 'debug');
+
+    await ipcRenderer.invoke('window:recalcLayout');
 
     switchTab(tabId);
 }
