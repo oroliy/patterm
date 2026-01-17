@@ -86,7 +86,8 @@ function setupIpcHandlers() {
                 mainWindow.webContents.send('tab:created', {
                     id: tabId,
                     tabName: result.tabName,
-                    connected: true
+                    connected: true,
+                    shouldActivate: tab.shouldActivate
                 });
             }
 

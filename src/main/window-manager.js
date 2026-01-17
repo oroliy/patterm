@@ -55,6 +55,7 @@ class WindowManager {
                 contextIsolation: false
             }
         });
+        view.setAutoResize(false);
 
         // Get layout metrics BEFORE creating the view bounds
         if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
@@ -133,12 +134,17 @@ class WindowManager {
     }
 
     switchTab(tabId) {
+        console.log('[switchTab] Called with tabId:', tabId, 'activeTabId:', this.activeTabId);
         const tab = this.tabs.get(tabId);
-        if (!tab) return false;
+        if (!tab) {
+            console.error('[switchTab] Tab not found:', tabId);
+            return false;
+        }
 
         if (this.activeTabId && this.activeTabId !== tabId) {
             const prevTab = this.tabs.get(this.activeTabId);
             if (prevTab) {
+                console.log('[switchTab] Removing previous view:', this.activeTabId);
                 this.mainWindow.removeBrowserView(prevTab.view);
             }
         }
@@ -146,6 +152,9 @@ class WindowManager {
         // Calculate bounds BEFORE adding view to window
         const bounds = this.mainWindow.getBounds();
         const yOffset = this.toolbarHeight + this.tabsHeight;
+
+        console.log('[switchTab] Setting bounds:', { x: 0, y: yOffset, width: bounds.width, height: bounds.height - yOffset });
+        console.log('[switchTab] toolbarHeight:', this.toolbarHeight, 'tabsHeight:', this.tabsHeight);
 
         if (this.debugWindow) {
             this.debugWindow.log(`switchTab bounds: x=0, y=${yOffset}, w=${bounds.width}, h=${bounds.height - yOffset}`, 'info');
@@ -160,8 +169,10 @@ class WindowManager {
             height: bounds.height - yOffset
         });
 
+        console.log('[switchTab] Adding BrowserView to window for tab:', tabId);
         this.mainWindow.addBrowserView(tab.view);
         this.activeTabId = tabId;
+        console.log('[switchTab] Tab activated, activeTabId now:', this.activeTabId);
 
         return true;
     }
@@ -225,15 +236,23 @@ class WindowManager {
                 (function() {
                     const toolbar = document.querySelector('.toolbar');
                     const tabsContainer = document.querySelector('.tabs-container');
+                    console.log('[updateLayoutMetrics] toolbar:', toolbar, 'offsetHeight:', toolbar ? toolbar.offsetHeight : 'N/A');
+                    console.log('[updateLayoutMetrics] tabsContainer:', tabsContainer, 'offsetHeight:', tabsContainer ? tabsContainer.offsetHeight : 'N/A');
+                    console.log('[updateLayoutMetrics] tabsContainer children:', tabsContainer ? tabsContainer.children.length : 'N/A');
                     return {
                         toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
                         tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
                     };
                 })()
             `);
+            console.log('[updateLayoutMetrics] Result:', result);
+            if (this.debugWindow) {
+                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px`, 'info');
+            }
             this.toolbarHeight = result.toolbarHeight;
             this.tabsHeight = result.tabsHeight;
         } catch (err) {
+            console.error('[updateLayoutMetrics] Error:', err);
             if (this.debugWindow) {
                 this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
             }

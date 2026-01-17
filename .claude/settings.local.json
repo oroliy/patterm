@@ -29,7 +29,8 @@
       "Bash(nc:*)",
       "Skill(changelog-generator)",
       "Bash(killall:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(pgrep:*)"
     ]
   },
   "outputStyle": "default"

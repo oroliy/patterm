@@ -23,6 +23,9 @@ async function showConnectionDialog() {
 }
 
 async function addTab(tabId, tabName, connected, shouldActivate = false) {
+    console.log('[addTab] Called with tabId=' + tabId + ', tabName=' + tabName + ', connected=' + connected + ', shouldActivate=' + shouldActivate);
+    console.log('[addTab] tabsContainer:', tabsContainer);
+
     debugLog(`addTab called with tabId=${tabId}, tabName=${tabName}, connected=${connected}, shouldActivate=${shouldActivate}`, 'info');
 
     const tab = document.createElement('div');
@@ -37,6 +40,8 @@ async function addTab(tabId, tabName, connected, shouldActivate = false) {
         <button class="tab-close" data-tab-id="${tabId}">×</button>
     `;
 
+    console.log('[addTab] Tab element created, innerHTML:', tab.innerHTML);
+
     tab.addEventListener('click', (e) => {
         if (!e.target.classList.contains('tab-close')) {
             switchTab(tabId);
@@ -49,14 +54,21 @@ async function addTab(tabId, tabName, connected, shouldActivate = false) {
         connected: connected
     });
 
+    console.log('[addTab] Appending tab to tabsContainer...');
     tabsContainer.appendChild(tab);
+
+    console.log('[addTab] Tab appended, tabsContainer children count:', tabsContainer.children.length);
+    console.log('[addTab] Tab offsetWidth/offsetHeight:', tab.offsetWidth, tab.offsetHeight);
 
     debugLog(`Tab element appended to container, children count: ${tabsContainer.children.length}`, 'info');
     debugLog(`Tab element dimensions: ${tab.offsetWidth}x${tab.offsetHeight}`, 'debug');
 
     await ipcRenderer.invoke('window:recalcLayout');
 
+    console.log('[addTab] Layout recalculated, shouldActivate:', shouldActivate);
+
     if (shouldActivate) {
+        console.log('[addTab] Calling switchTab for tabId:', tabId);
         switchTab(tabId);
     }
 }
@@ -172,12 +184,17 @@ async function stopLogging() {
 
 // Initialize DOM elements and event listeners
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DOMContentLoaded] Initializing DOM elements');
     newTabBtn = document.getElementById('new-connection-btn');
     loggingBtn = document.getElementById('log-btn');
     disconnectBtn = document.getElementById('disconnect-btn');
     scrollBtn = document.getElementById('auto-scroll-btn');
     tabsContainer = document.getElementById('tabs-container');
     tabContent = document.getElementById('tab-content');
+
+    console.log('[DOMContentLoaded] tabsContainer:', tabsContainer);
+    console.log('[DOMContentLoaded] tabsContainer class:', tabsContainer ? tabsContainer.className : 'N/A');
+    console.log('[DOMContentLoaded] tabsContainer children:', tabsContainer ? tabsContainer.children.length : 'N/A');
 
     newTabBtn.addEventListener('click', showConnectionDialog);
 
@@ -233,6 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 ipcRenderer.on('tab:created', (event, tabData) => {
+    console.log('[Renderer] tab:created event received:', JSON.stringify(tabData));
+    console.log('[Renderer] tabsContainer:', tabsContainer);
+    console.log('[Renderer] tabsContainer children:', tabsContainer ? tabsContainer.children.length : 'N/A');
     debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
     addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
 });
