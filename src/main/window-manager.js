@@ -55,7 +55,6 @@ class WindowManager {
                 contextIsolation: false
             }
         });
-        view.setAutoResize(false);
 
         // Get layout metrics BEFORE creating the view bounds
         if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
