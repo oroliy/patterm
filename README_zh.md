@@ -1,43 +1,75 @@
 # Patterm
 
-一款基于 Electron 构建的专业串口终端应用，支持多窗口功能和完整的 UART 配置。
+<div align="center">
+
+**一款基于 Electron 构建的专业串口终端应用**
+
+[![GitHub Release](https://img.shields.io/github/v/release/oroliy/patterm?include_prereleases)](https://github.com/oroliy/patterm/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/oroliy/patterm/blob/master/LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm)](https://github.com/oroliy/patterm/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/oroliy/patterm?style=social)](https://github.com/oroliy/patterm/stargazers)
+[![Node.js](https://img.shields.io/badge/node-18%20%7C%2020-339933?logo=node.js)](https://nodejs.org)
+[![Electron](https://img.shields.io/badge/electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org)
+
+[功能特性](#功能特性) • [安装](#安装) • [使用方法](#使用方法) • [开发](#开发) • [贡献指南](#贡献指南)
+
+</div>
+
+---
 
 ## 功能特性
 
-- **多标签页管理**：在独立的标签页中打开和管理多个串口连接
-   - 每个标签页有自己的串口连接、终端和输入框
-   - 连接对话框自动创建标签页
-   - 支持自定义标签页名称并显示端口
-   - 连接状态指示器（● 已连接，○ 未连接）
-   - 标签页切换使用专用 BrowserView 管理
-- **完整的 UART 配置**：
-  - 波特率：110 至 921600
-  - 数据位：5, 6, 7, 8
-  - 停止位：1, 1.5, 2
-  - 校验位：无、奇校验、偶校验、标记校验、空格校验
-   - 流控：RTS/CTS、XON/XOFF
-- **连接对话框**：创建新连接的直观模态对话框
-   - 带厂商信息的端口选择
-   - 自定义标签页名称
-   - 所有串口参数集中配置
-   - 端口刷新功能
-- **实时串口 I/O**：以最小延迟发送和接收数据
-- **调试控制台**：
-   - 应用程序事件的实时日志记录
-   - 彩色日志级别（info、warn、error、debug）
-   - 可选中和复制的日志条目
-   - 每个日志条目带时间戳
-   - 使用 Ctrl/Cmd + L 清除日志
-- **文件记录**：
-  - 手动记录（按需开始/停止）
-  - 自动记录（连续）
-   - 带时间戳的条目
-   - 支持每个标签页的记录
-- **跨平台**：支持 Windows、macOS 和 Linux
-- **键盘快捷键**：
-   - `Ctrl/Cmd + N` - 新建连接
-   - `Ctrl/Cmd + W` - 关闭窗口
-   - `Ctrl/Cmd + Shift + D` - 切换调试控制台
+### 多标签页管理
+- 在独立的标签页中打开和管理多个串口连接
+- 每个标签页有自己的串口连接、终端和输入框
+- 连接对话框自动创建标签页
+- 支持自定义标签页名称并显示端口
+- 连接状态指示器（● 已连接，○ 未连接）
+- 标签页切换使用专用 BrowserView 管理
+
+### 完整的 UART 配置
+- **波特率**：110 至 921600
+- **数据位**：5, 6, 7, 8
+- **停止位**：1, 1.5, 2
+- **校验位**：无、奇校验、偶校验、标记校验、空格校验
+- **流控**：RTS/CTS、XON/XOFF
+
+### 连接对话框
+- 创建新连接的直观模态对话框
+- 带厂商信息的端口选择
+- 自定义标签页名称
+- 所有串口参数集中配置
+- 端口刷新功能
+
+### 实时串口 I/O
+- 以最小延迟发送和接收数据
+
+### 调试控制台
+- 应用程序事件的实时日志记录
+- 彩色日志级别（info、warn、error、debug）
+- 可选中和复制的日志条目
+- 每个日志条目带时间戳
+- 使用 `Ctrl/Cmd + L` 清除日志
+
+### 文件记录
+- 手动记录（按需开始/停止）
+- 自动记录（连续）
+- 带时间戳的条目
+- 支持每个标签页的记录
+
+### 跨平台支持
+- ![Windows](https://img.shields.io/badge/Windows-x64-0078D4?logo=windows) NSIS + Portable
+- ![macOS](https://img.shields.io/badge/macOS-x64%20%7C%20ARM64-999999?logo=apple) DMG
+- ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux) AppImage + deb
+
+### 键盘快捷键
+| 快捷键 | 操作 |
+|--------|------|
+| `Ctrl/Cmd + N` | 新建连接 |
+| `Ctrl/Cmd + W` | 关闭窗口 |
+| `Ctrl/Cmd + Shift + D` | 切换调试控制台 |
+
+---
 
 ## 安装
 
@@ -57,6 +89,8 @@ npm install
 ```bash
 ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm install
 ```
+
+---
 
 ## 使用方法
 
@@ -82,33 +116,35 @@ npm start
 8. **启用记录**：将串口数据保存到文件（每个标签页）
 9. **关闭标签页**：断开串口连接并移除标签页
 
+---
+
 ## 开发
 
 ### 项目结构
 
 ```
 patterm/
- ├── src/
- │   ├── main/           # Electron 主进程
- │   │   ├── main.js     # 应用入口点
- │   │   ├── window-manager.js  # 多窗口和标签页管理
- │   │   └── debug-window.js     # 调试控制台管理
- │   ├── renderer/       # UI/前端代码
- │   │   ├── index.html  # 主窗口 HTML
- │   │   ├── main.js     # 主窗口 JavaScript
- │   │   ├── tab.html    # 标签页内容 HTML
- │   │   ├── connection-dialog.html  # 连接对话框 HTML
- │   │   ├── connection-dialog.js    # 连接对话框逻辑
- │   │   ├── debug-window.html     # 调试控制台 HTML
- │   │   ├── about.html  # 关于对话框 HTML
- │   │   └── styles.css  # 全局 CSS 样式
- │   ├── services/       # 业务逻辑
- │   │   ├── serial-service.js  # 单个串口处理
- │   │   └── serial-service-manager.js  # 多连接管理
- │   └── public/         # 静态资源
- ├── .github/workflows/  # CI/CD 配置
- ├── package.json
- └── AGENTS.md          # 开发指南
+├── src/
+│   ├── main/           # Electron 主进程
+│   │   ├── main.js     # 应用入口点
+│   │   └── window-manager.js  # 多窗口和标签页管理
+│   ├── renderer/       # UI/前端代码
+│   │   ├── index.html  # 主窗口 HTML
+│   │   ├── main.js     # 主窗口 JavaScript
+│   │   ├── tab.html    # 标签页内容 HTML
+│   │   ├── connection-dialog.html  # 连接对话框 HTML
+│   │   ├── connection-dialog.js    # 连接对话框逻辑
+│   │   ├── about.html  # 关于对话框 HTML
+│   │   └── styles.css  # 全局 CSS 样式
+│   ├── services/       # 业务逻辑
+│   │   ├── serial-service.js  # 单个串口处理
+│   │   └── serial-service-manager.js  # 多连接管理
+│   └── public/         # 静态资源
+├── tests/              # Jest 测试套件
+├── .github/workflows/  # CI/CD 配置
+├── package.json
+├── AGENTS.md           # 开发指南
+└── CLAUDE.md           # AI 助手指南
 ```
 
 ### 开发命令
@@ -132,7 +168,7 @@ npm run dist:linux  # 仅 Linux
 
 ### 测试
 
-### 虚拟串口测试
+#### 虚拟串口测试
 
 无需物理串口硬件，可以创建虚拟串口进行测试：
 
@@ -148,7 +184,7 @@ telnet localhost 12345
 echo "你好 Patterm！" | nc localhost 12345
 ```
 
-### 快速测试脚本
+#### 快速测试脚本
 
 ```bash
 # 创建虚拟端口并启动回显服务器
@@ -158,7 +194,7 @@ bash scripts/quick-virtual-serial.sh
 # 所有发送的数据都会被回显
 ```
 
-### Python 虚拟串口
+#### Python 虚拟串口
 
 ```bash
 # 安装所需包
@@ -170,7 +206,7 @@ python3 scripts/virtual-serial.py
 # 使用命令：1、2、q 或直接输入任何文本
 ```
 
-### 单元测试
+#### 单元测试
 
 ```bash
 # 运行所有测试
@@ -200,11 +236,15 @@ npm run lint -- --fix
 
 Electron Builder 配置为创建平台特定的安装程序：
 
-- **Windows**：NSIS 安装程序（.exe）
-- **macOS**：DMG 磁盘映像（.dmg）
-- **Linux**：AppImage 和 Debian 软件包（.deb）
+| 平台 | 格式 |
+|------|------|
+| Windows | NSIS 安装程序 (.exe) + Portable (.exe) |
+| macOS | DMG 磁盘映像 (.dmg) |
+| Linux | AppImage + Debian 软件包 (.deb) |
 
 构建产物放置在 `dist/` 目录中。
+
+---
 
 ## 贡献指南
 
@@ -229,33 +269,56 @@ Electron Builder 配置为创建平台特定的安装程序：
 
 示例：`feat: 实现串口自动重连`
 
+---
+
 ## CI/CD
 
 本项目使用 GitHub Actions 进行持续集成：
 
-- **触发条件**：推送到 master、拉取请求
+- **触发条件**：推送到 master、拉取请求、标签
 - **平台**：Ubuntu、macOS、Windows
-- **Node 版本**：18.x、20.x
-- **操作**：安装、检查、构建、测试
+- **Node 版本**：20.x
+- **操作**：代码检查、构建、测试、发布
 - **产物**：构建产物保留 7 天
-- **发布**：标记提交时自动发布
+- **发布**：标记提交时自动发布 (v*)
 
-配置详情请查看 `.github/workflows/ci.yml`。
+![CI/CD Pipeline](https://img.shields.io/github/actions/workflow/status/oroliy/patterm/ci-cd.yml?branch=master&label=CI%2FCD)
+
+配置详情请查看 `.github/workflows/ci-cd.yml`。
+
+---
 
 ## 许可证
 
 MIT 许可证 - 详见 LICENSE 文件
 
+---
+
 ## 支持
 
 如有问题、疑问或贡献意向：
 
-- 在 GitHub 上提 issue
-- 查看 AGENTS.md 中的现有文档
+- ![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm) [提交 Issue](https://github.com/oroliy/patterm/issues)
+- 查看 [AGENTS.md](./AGENTS.md) 中的现有文档
 - 查看仓库中的代码示例
+
+---
 
 ## 致谢
 
-- 使用 [Electron](https://www.electronjs.org/) 构建
-- 串口通信使用 [SerialPort.js](https://serialport.io/)
-- 构建系统由 [Electron Builder](https://www.electron.build/) 提供
+使用以下技术构建：
+
+- [![Electron](https://img.shields.io/badge/Electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org/)
+- [![SerialPort.js](https://img.shields.io/badge/SerialPort-12.0.0-00A98F?logo=node.js)](https://serialport.io/)
+- [![Electron Builder](https://img.shields.io/badge/Electron%20Builder-24.9.1-475A86?logo=electron)](https://www.electron.build/)
+- [![Jest](https://img.shields.io/badge/Jest-29.7.0-C21325?logo=jest)](https://jestjs.io/)
+
+---
+
+<div align="center">
+
+**由 Patterm 团队用 ❤️ 制作**
+
+[⬆ 返回顶部](#patterm)
+
+</div>

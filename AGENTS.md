@@ -166,3 +166,30 @@ src/
 - Always push to remote after committing
 - Check .gitignore before committing new file types
 - Use ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ in China
+
+## Documentation Requirements (CRITICAL)
+
+When making changes to the project, you MUST keep documentation in sync:
+
+### Files to Update Together
+- **README.md** - English documentation
+- **README_zh.md** - Chinese documentation (MUST mirror README.md)
+- **CHANGELOG.md** - Version history and changes
+
+### When to Update Documentation
+1. **Every release**: Update CHANGELOG.md with version changes
+2. **Badge changes**: Update badges in BOTH README.md and README_zh.md
+3. **New features**: Document in both README files
+4. **Configuration changes**: Update build info in both README files
+5. **Test changes**: Update testing sections in both README files
+
+### Version Sync Requirements
+- package.json version MUST match release tag (e.g., v0.3.0)
+- When bumping version: `npm version <version>` before creating tag
+- Delete and recreate tags if needed to sync with package.json
+
+### Badge Best Practices
+- Use static badges where possible (e.g., `license-MIT-blue.svg`)
+- Avoid GitHub API badges that may fail (e.g., `github/license/*`)
+- Link badges to relevant URLs for better UX
+- Keep badges consistent between README and README_zh
