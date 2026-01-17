@@ -315,8 +315,10 @@ function formatDuration(startTime) {
 }
 
 function updateCurrentTime() {
-    if (mainCurrentTime) {
+    if (mainCurrentTime && activeTabId) {
         mainCurrentTime.textContent = formatTime(new Date());
+    } else if (mainCurrentTime && !activeTabId) {
+        mainCurrentTime.textContent = '--:--:--';
     }
 }
 

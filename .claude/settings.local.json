@@ -30,7 +30,8 @@
       "Skill(changelog-generator)",
       "Bash(killall:*)",
       "Bash(pkill:*)",
-      "Bash(pgrep:*)"
+      "Bash(pgrep:*)",
+      "Bash(npm start)"
     ]
   },
   "outputStyle": "default"

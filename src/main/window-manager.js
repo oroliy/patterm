@@ -62,13 +62,14 @@ class WindowManager {
         });
 
         // Get layout metrics BEFORE creating the view bounds
-        if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
-            await this.updateLayoutMetrics();
-            if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
-                this.toolbarHeight = 50;
-                this.tabsHeight = 40;
-                this.statusBarHeight = 24;
-            }
+        // Always update metrics to ensure statusBarHeight is correct
+        await this.updateLayoutMetrics();
+
+        // Use fallback values if metrics failed to load
+        if (this.toolbarHeight === 0 || this.tabsHeight === 0 || this.statusBarHeight === 0) {
+            this.toolbarHeight = this.toolbarHeight || 50;
+            this.tabsHeight = this.tabsHeight || 40;
+            this.statusBarHeight = this.statusBarHeight || 24;
         }
 
         const bounds = this.mainWindow.getBounds();
