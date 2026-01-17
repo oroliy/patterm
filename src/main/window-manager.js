@@ -54,6 +54,7 @@ class WindowManager {
             }
         });
 
+        // Get layout metrics BEFORE creating the view bounds
         if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
             await this.updateLayoutMetrics();
             if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
@@ -69,12 +70,14 @@ class WindowManager {
             this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${bounds.height - yOffset}`, 'debug');
         }
 
+        // Set bounds BEFORE adding to window to avoid covering toolbar/tabs
         view.setBounds({
             x: 0,
             y: yOffset,
             width: bounds.width,
             height: bounds.height - yOffset
         });
+
         view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
 
         view.webContents.on('did-finish-load', () => {
@@ -136,9 +139,7 @@ class WindowManager {
             }
         }
 
-        this.mainWindow.addBrowserView(tab.view);
-        this.activeTabId = tabId;
-
+        // Calculate bounds BEFORE adding view to window
         const bounds = this.mainWindow.getBounds();
         const yOffset = this.toolbarHeight + this.tabsHeight;
 
@@ -147,12 +148,16 @@ class WindowManager {
             this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}`, 'info');
         }
 
+        // Set bounds BEFORE adding to prevent covering toolbar/tabs
         tab.view.setBounds({
             x: 0,
             y: yOffset,
             width: bounds.width,
             height: bounds.height - yOffset
         });
+
+        this.mainWindow.addBrowserView(tab.view);
+        this.activeTabId = tabId;
 
         return true;
     }
