@@ -1,7 +1,8 @@
 const { ipcRenderer } = require('electron');
 
 const tabNameInput = document.getElementById('tabName');
-const portSelect = document.getElementById('portSelect');
+const portInput = document.getElementById('portInput');
+const portList = document.getElementById('portList');
 const baudRate = document.getElementById('baudRate');
 const dataBits = document.getElementById('dataBits');
 const stopBits = document.getElementById('stopBits');
@@ -20,12 +21,12 @@ async function loadPorts() {
     hideError();
     try {
         const ports = await ipcRenderer.invoke('serial:listPorts');
-        portSelect.innerHTML = '<option value="">Select Port...</option>';
+        portList.innerHTML = '';
         ports.forEach(port => {
             const option = document.createElement('option');
             option.value = port.path;
-            option.textContent = `${port.path} (${port.manufacturer || 'Unknown'})`;
-            portSelect.appendChild(option);
+            option.label = `${port.path} (${port.manufacturer || 'Unknown'})`;
+            portList.appendChild(option);
         });
     } catch (error) {
         console.error('Failed to load ports:', error);
@@ -56,7 +57,7 @@ function validateForm() {
     tabNameError.classList.remove('show');
     let isValid = true;
 
-    if (!portSelect.value) {
+    if (!portInput.value.trim()) {
         portError.classList.add('show');
         isValid = false;
     }
@@ -71,14 +72,14 @@ async function handleConnect() {
     }
 
     const config = {
-        path: portSelect.value,
+        path: portInput.value.trim(),
         baudRate: parseInt(baudRate.value),
         dataBits: parseInt(dataBits.value),
         stopBits: parseFloat(stopBits.value),
         parity: parity.value
     };
 
-    const tabName = tabNameInput.value.trim() || portSelect.value;
+    const tabName = tabNameInput.value.trim() || portInput.value.trim();
 
     showLoading();
 

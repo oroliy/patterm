@@ -189,14 +189,14 @@
         </div>
 
         <div class="form-group">
-            <label for="portSelect">Serial Port *</label>
+            <label for="portInput">Serial Port *</label>
             <div class="form-row">
-                <select id="portSelect">
-                    <option value="">Select Port...</option>
-                </select>
+                <input type="text" id="portInput" list="portList" placeholder="e.g., /dev/ttyUSB0 or /tmp/ttyV0" />
+                <datalist id="portList">
+                </datalist>
                 <button id="refreshPortsBtn" class="btn btn-icon" title="Refresh Ports">↻</button>
             </div>
-            <div class="error-message" id="portError">Please select a port</div>
+            <div class="error-message" id="portError">Please enter a port path</div>
         </div>
 
         <div class="config-grid">
