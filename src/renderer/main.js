@@ -186,6 +186,16 @@ document.addEventListener('DOMContentLoaded', () => {
     tabsContainer = document.getElementById('tabs-container');
     tabContent = document.getElementById('tab-content');
 
+    mainStatusIndicator = document.getElementById('main-status-indicator');
+    mainPortName = document.getElementById('main-port-name');
+    mainDuration = document.getElementById('main-duration');
+    mainCreatedTime = document.getElementById('main-created-time');
+    mainCurrentTime = document.getElementById('main-current-time');
+    mainRxRate = document.getElementById('main-rx-rate');
+    mainTxRate = document.getElementById('main-tx-rate');
+    mainRxBadge = document.getElementById('main-rx-badge');
+    mainTxBadge = document.getElementById('main-tx-badge');
+
     newTabBtn.addEventListener('click', showConnectionDialog);
 
     loggingBtn.addEventListener('click', () => {
@@ -241,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 ipcRenderer.on('tab:created', (event, tabData) => {
     debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
+    tabCreatedTimes.set(tabData.id, new Date());
     addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
 });
 
@@ -297,15 +308,15 @@ function updateUIState() {
     }
 }
 
-const mainStatusIndicator = document.getElementById('main-status-indicator');
-const mainPortName = document.getElementById('main-port-name');
-const mainDuration = document.getElementById('main-duration');
-const mainCreatedTime = document.getElementById('main-created-time');
-const mainCurrentTime = document.getElementById('main-current-time');
-const mainRxRate = document.getElementById('main-rx-rate');
-const mainTxRate = document.getElementById('main-tx-rate');
-const mainRxBadge = document.getElementById('main-rx-badge');
-const mainTxBadge = document.getElementById('main-tx-badge');
+let mainStatusIndicator;
+let mainPortName;
+let mainDuration;
+let mainCreatedTime;
+let mainCurrentTime;
+let mainRxRate;
+let mainTxRate;
+let mainRxBadge;
+let mainTxBadge;
 
 let tabCreatedTimes = new Map();
 let tabConnectionStartTimes = new Map();
@@ -327,7 +338,9 @@ function formatDuration(startTime) {
 }
 
 function updateCurrentTime() {
-    mainCurrentTime.textContent = formatTime(new Date());
+    if (mainCurrentTime) {
+        mainCurrentTime.textContent = formatTime(new Date());
+    }
 }
 
 function startTimeTimer() {
@@ -336,6 +349,10 @@ function startTimeTimer() {
 }
 
 function updateStatusBar() {
+    if (!mainStatusIndicator || !mainPortName || !mainDuration || !mainCreatedTime || !mainCurrentTime || !mainRxRate || !mainTxRate) {
+        return;
+    }
+
     if (!activeTabId) {
         mainStatusIndicator.className = 'status-indicator-mini disconnected';
         mainPortName.textContent = 'Not Connected';
@@ -379,25 +396,23 @@ function formatRate(bytesPerSecond) {
 }
 
 function triggerRxPulse() {
-    mainRxBadge.classList.add('active');
-    setTimeout(() => mainRxBadge.classList.remove('active'), 200);
+    if (mainRxBadge) {
+        mainRxBadge.classList.add('active');
+        setTimeout(() => mainRxBadge.classList.remove('active'), 200);
+    }
 }
 
 function triggerTxPulse() {
-    mainTxBadge.classList.add('active');
-    setTimeout(() => mainTxBadge.classList.remove('active'), 200);
+    if (mainTxBadge) {
+        mainTxBadge.classList.add('active');
+        setTimeout(() => mainTxBadge.classList.remove('active'), 200);
+    }
 }
-
-ipcRenderer.on('tab:created', (event, tabData) => {
-    debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
-    tabCreatedTimes.set(tabData.id, new Date());
-    addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
-});
 
 ipcRenderer.on('tab:updateRates', (event, tabId, rxRate, txRate) => {
     tabRxRates.set(tabId, rxRate);
     tabTxRates.set(tabId, txRate);
-    if (tabId === activeTabId) {
+    if (tabId === activeTabId && mainRxRate && mainTxRate) {
         mainRxRate.textContent = formatRate(rxRate);
         mainTxRate.textContent = formatRate(txRate);
     }
@@ -417,7 +432,7 @@ ipcRenderer.on('tab:txActivity', (event, tabId) => {
 
 ipcRenderer.on('serial:portInfo', (event, tabId, portInfo) => {
     tabPortInfo.set(tabId, portInfo);
-    if (tabId === activeTabId) {
+    if (tabId === activeTabId && mainPortName) {
         mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
     }
 });
