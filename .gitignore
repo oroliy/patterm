@@ -9,5 +9,6 @@ dist/
 *~
 .env
 *.local
+!.claude/settings.local.json
 coverage/
 .nyc_output/

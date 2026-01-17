@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git config:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Skill(glm-plan-usage:usage-query-skill)",
+      "Bash(git push:*)",
+      "Bash(gh release create:*)",
+      "Bash(git tag:*)",
+      "mcp__web-reader__webReader",
+      "Bash(gh api:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm view:*)",
+      "Bash(npm install:*)",
+      "Bash(ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm install:*)",
+      "Bash(npm version:*)",
+      "Bash(npm test)",
+      "Bash(gh release view:*)",
+      "Bash(gh release delete:*)",
+      "Bash(git check-ignore:*)"
+    ]
+  },
+  "outputStyle": "default"
+}
