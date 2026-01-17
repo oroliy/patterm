@@ -9,6 +9,7 @@ class WindowManager {
         this.tabCounter = 0;
         this.toolbarHeight = 0;
         this.tabsHeight = 0;
+        this.statusBarHeight = 0;
         this.debugWindow = debugWindow;
     }
 
@@ -66,6 +67,7 @@ class WindowManager {
             if (this.toolbarHeight === 0 || this.tabsHeight === 0) {
                 this.toolbarHeight = 50;
                 this.tabsHeight = 40;
+                this.statusBarHeight = 24;
             }
         }
 
@@ -73,7 +75,7 @@ class WindowManager {
         const yOffset = this.toolbarHeight + this.tabsHeight;
 
         if (this.debugWindow) {
-            this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${bounds.height - yOffset}`, 'debug');
+            this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${bounds.height - yOffset - this.statusBarHeight}`, 'debug');
         }
 
         // Set bounds BEFORE adding to window to avoid covering toolbar/tabs
@@ -81,7 +83,7 @@ class WindowManager {
             x: 0,
             y: yOffset,
             width: bounds.width,
-            height: bounds.height - yOffset
+            height: bounds.height - yOffset - this.statusBarHeight
         });
 
         view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
@@ -154,14 +156,14 @@ class WindowManager {
 
         if (this.debugWindow) {
             this.debugWindow.log(`switchTab bounds: x=0, y=${yOffset}, w=${bounds.width}, h=${bounds.height - yOffset}`, 'info');
-            this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}`, 'info');
+            this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}, statusBarHeight=${this.statusBarHeight}`, 'info');
         }
 
         tab.view.setBounds({
             x: 0,
             y: yOffset,
             width: bounds.width,
-            height: bounds.height - yOffset
+            height: bounds.height - yOffset - this.statusBarHeight
         });
 
         this.mainWindow.addBrowserView(tab.view);
@@ -215,7 +217,7 @@ class WindowManager {
                 x: 0,
                 y: yOffset,
                 width: bounds.width,
-                height: bounds.height - yOffset
+                height: bounds.height - yOffset - this.statusBarHeight
             });
         }
     }
@@ -229,23 +231,27 @@ class WindowManager {
                 (function() {
                     const toolbar = document.querySelector('.toolbar');
                     const tabsContainer = document.querySelector('.tabs-container');
+                    const statusBar = document.querySelector('.main-status-bar');
                     return {
                         toolbarHeight: toolbar ? toolbar.offsetHeight : 0,
-                        tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0
+                        tabsHeight: tabsContainer ? tabsContainer.offsetHeight : 0,
+                        statusBarHeight: statusBar ? statusBar.offsetHeight : 0
                     };
                 })()
             `);
             if (this.debugWindow) {
-                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px`, 'info');
+                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px, statusBar=${result.statusBarHeight}px`, 'info');
             }
             this.toolbarHeight = result.toolbarHeight;
             this.tabsHeight = result.tabsHeight;
+            this.statusBarHeight = result.statusBarHeight;
         } catch (err) {
             if (this.debugWindow) {
                 this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
             }
             this.toolbarHeight = 50;
             this.tabsHeight = 40;
+            this.statusBarHeight = 24;
         }
     }
     broadcastToTabs(channel, ...args) {

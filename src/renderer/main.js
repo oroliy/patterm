@@ -196,6 +196,18 @@ document.addEventListener('DOMContentLoaded', () => {
     mainRxBadge = document.getElementById('main-rx-badge');
     mainTxBadge = document.getElementById('main-tx-badge');
 
+    console.log('[DOMContentLoaded] Status bar elements:', {
+        mainStatusIndicator,
+        mainPortName,
+        mainDuration,
+        mainCreatedTime,
+        mainCurrentTime,
+        mainRxRate,
+        mainTxRate,
+        mainRxBadge,
+        mainTxBadge
+    });
+
     newTabBtn.addEventListener('click', showConnectionDialog);
 
     loggingBtn.addEventListener('click', () => {
