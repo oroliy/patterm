@@ -2,6 +2,8 @@
 
 # Patterm
 
+<img src="assets/icon.png" width="128" height="128" align="center" />
+
 **A professional serial terminal application built with Electron**
 
 [![GitHub Release](https://img.shields.io/github/v/release/oroliy/patterm?include_prereleases)](https://github.com/oroliy/patterm/releases/latest)
