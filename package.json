@@ -1,6 +1,6 @@
 {
   "name": "patterm",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Professional Serial Terminal Application",
   "main": "src/main/main.js",
   "homepage": "./",
