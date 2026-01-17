@@ -142,6 +142,28 @@ pkill -f virtual-serial.py
 
 ## Advanced Testing
 
+### Random Log Generator
+
+Continuously sends random log messages with different log levels to test terminal display:
+
+```bash
+# Default: port 12345, interval 0.5-2.0s
+bash scripts/random-logger.sh
+
+# Custom settings
+bash scripts/random-logger.sh 12345 localhost 0.3 1.0
+
+# Fast logging for stress testing
+bash scripts/random-logger.sh 12345 localhost 0.1 0.3
+
+# Slow logging for readability
+bash scripts/random-logger.sh 12345 localhost 1.0 3.0
+```
+
+**Log Levels**: INFO (green), WARN (yellow), ERROR (red), DEBUG (cyan)
+
+**Stop**: Press Ctrl+C
+
 ### Automated Test Script
 
 ```bash

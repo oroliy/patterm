@@ -24,7 +24,9 @@
       "Bash(git check-ignore:*)",
       "Bash(curl:*)",
       "Bash(ls:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(node -e:*)",
+      "Bash(nc:*)"
     ]
   },
   "outputStyle": "default"
