@@ -87,63 +87,12 @@ class WindowManager {
             height: viewHeight
         });
 
-        view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
-
-        view.webContents.on('did-finish-load', async () => {
-            view.webContents.send('tab:init', { tabId: actualTabId });
-
-            await this.updateLayoutMetrics();
-            const newBounds = this.mainWindow.getContentBounds();
-            const newYOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
-            const newViewHeight = Math.floor(newBounds.height - newYOffset);
-
-            if (this.debugWindow) {
-                this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newViewHeight}`, 'info');
-                this.debugWindow.log(`Expected: BrowserView from ${newYOffset} to ${newYOffset + newViewHeight}`, 'info');
-            }
-
-            view.setBounds({
-                x: 0,
-                y: newYOffset,
-                width: newBounds.width,
-                height: newViewHeight
-            });
-
-            if (this.debugWindow) {
-                this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
-                this.debugWindow.log(`Actual view bounds: x=${view.getBounds().x}, y=${view.getBounds().y}, w=${view.getBounds().width}, h=${view.getBounds().height}`, 'info');
-
-                setTimeout(async () => {
-                    try {
-                        const docInfo = await view.webContents.executeJavaScript(`
-                            (function() {
-                                return {
-                                    bodyHeight: document.body.offsetHeight,
-                                    bodyScrollHeight: document.body.scrollHeight,
-                                    innerHeight: window.innerHeight,
-                                    outerHeight: window.outerHeight,
-                                    htmlHeight: document.documentElement.offsetHeight
-                                };
-                            })()
-                        `);
-                        this.debugWindow.log(`Tab doc info: body=${docInfo.bodyHeight}px, scroll=${docInfo.bodyScrollHeight}px, innerH=${docInfo.innerHeight}px`, 'info');
-                    } catch (err) {
-                        this.debugWindow.error(`Failed to get doc info: ${err.message}`);
-                    }
-                }, 500);
-            }
-        });
-
+        // Store tab before loading
         this.tabs.set(actualTabId, {
             id: actualTabId,
             view: view,
             title: title || `Port ${actualTabId}`
         });
-
-        // Don't automatically switch tab - let renderer trigger it after adding tab element
-        // if (!this.activeTabId) {
-        //     this.switchTab(actualTabId);
-        // }
 
         const result = {
             id: actualTabId,
@@ -151,11 +100,61 @@ class WindowManager {
             shouldActivate: !this.activeTabId
         };
 
-        if (this.debugWindow) {
-            this.debugWindow.log(`Tab created and stored: ${JSON.stringify(result)}`, 'info');
-        }
+        // Return a promise that resolves when the tab is fully loaded
+        return new Promise((resolve) => {
+            view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
 
-        return result;
+            view.webContents.on('did-finish-load', async () => {
+                view.webContents.send('tab:init', { tabId: actualTabId });
+
+                await this.updateLayoutMetrics();
+                const newBounds = this.mainWindow.getContentBounds();
+                const newYOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
+                const newViewHeight = Math.floor(newBounds.height - newYOffset);
+
+                if (this.debugWindow) {
+                    this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newViewHeight}`, 'info');
+                    this.debugWindow.log(`Expected: BrowserView from ${newYOffset} to ${newYOffset + newViewHeight}`, 'info');
+                }
+
+                view.setBounds({
+                    x: 0,
+                    y: newYOffset,
+                    width: newBounds.width,
+                    height: newViewHeight
+                });
+
+                if (this.debugWindow) {
+                    this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
+                    this.debugWindow.log(`Actual view bounds: x=${view.getBounds().x}, y=${view.getBounds().y}, w=${view.getBounds().width}, h=${view.getBounds().height}`, 'info');
+
+                    setTimeout(async () => {
+                        try {
+                            const docInfo = await view.webContents.executeJavaScript(`
+                                (function() {
+                                    return {
+                                        bodyHeight: document.body.offsetHeight,
+                                        bodyScrollHeight: document.body.scrollHeight,
+                                        innerHeight: window.innerHeight,
+                                        outerHeight: window.outerHeight,
+                                        htmlHeight: document.documentElement.offsetHeight
+                                    };
+                                })()
+                            `);
+                            this.debugWindow.log(`Tab doc info: body=${docInfo.bodyHeight}px, scroll=${docInfo.bodyScrollHeight}px, innerH=${docInfo.innerHeight}px`, 'info');
+                        } catch (err) {
+                            this.debugWindow.error(`Failed to get doc info: ${err.message}`);
+                        }
+                    }, 500);
+                }
+
+                if (this.debugWindow) {
+                    this.debugWindow.log(`Tab created and fully loaded: ${JSON.stringify(result)}`, 'info');
+                }
+
+                resolve(result);
+            });
+        });
     }
 
     closeTab(tabId) {

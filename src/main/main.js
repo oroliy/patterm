@@ -67,7 +67,7 @@ function setupIpcHandlers() {
             if (tabInfo && tabInfo.view) {
                 debugWindow.log(`Sending serial:connected event to tab ${tabId}`, 'info');
                 tabInfo.view.webContents.send('serial:connected', true);
-                tabInfo.view.webContents.send('serial:portInfo', {
+                tabInfo.view.webContents.send('serial:portInfo', tabId, {
                     path: config.path,
                     baudRate: config.baudRate
                 });
