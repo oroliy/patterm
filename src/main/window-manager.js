@@ -9,7 +9,6 @@ class WindowManager {
         this.tabCounter = 0;
         this.toolbarHeight = 0;
         this.tabsHeight = 0;
-        this.statusBarHeight = 0;
         this.debugWindow = debugWindow;
     }
 
@@ -55,9 +54,6 @@ class WindowManager {
         }
 
         // Set default values first, before async operations
-        if (this.statusBarHeight === 0) {
-            this.statusBarHeight = 24;
-        }
         if (this.toolbarHeight === 0) {
             this.toolbarHeight = 50;
         }
@@ -116,7 +112,7 @@ class WindowManager {
             if (this.debugWindow) {
                 this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
                 this.debugWindow.log(`Actual view bounds: x=${view.getBounds().x}, y=${view.getBounds().y}, w=${view.getBounds().width}, h=${view.getBounds().height}`, 'info');
-                
+
                 setTimeout(async () => {
                     try {
                         const docInfo = await view.webContents.executeJavaScript(`
@@ -292,32 +288,25 @@ class WindowManager {
                 (function() {
                     const toolbar = document.querySelector('.toolbar');
                     const tabsContainer = document.querySelector('.tabs-container');
-                    const statusBar = document.querySelector('.main-status-bar');
                     const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
                     const tabsHeight = tabsContainer ? tabsContainer.offsetHeight : 0;
-                    const statusBarHeight = statusBar ? Math.max(statusBar.offsetHeight, 30) : 30;
-                    const statusBarFixed = statusBar ? getComputedStyle(statusBar).position : 'static';
                     return {
                         toolbarHeight,
-                        tabsHeight,
-                        statusBarHeight,
-                        statusBarFixed
+                        tabsHeight
                     };
                 })()
             `);
             if (this.debugWindow) {
-                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px, statusBar=${result.statusBarHeight}px, fixed=${result.statusBarFixed}`, 'info');
+                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px`, 'info');
             }
             if (result.toolbarHeight > 0) this.toolbarHeight = result.toolbarHeight;
             if (result.tabsHeight > 0) this.tabsHeight = result.tabsHeight;
-            if (result.statusBarHeight > 0) this.statusBarHeight = result.statusBarHeight;
         } catch (err) {
             if (this.debugWindow) {
                 this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
             }
             this.toolbarHeight = 50;
             this.tabsHeight = 40;
-            this.statusBarHeight = 30;
         }
     }
     broadcastToTabs(channel, ...args) {

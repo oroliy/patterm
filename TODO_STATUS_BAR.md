@@ -36,12 +36,12 @@
 - **Impact**: Performance overhead, clutters debug output
 - **Status**: Cleaned up in latest changes
 
-### 6. Layout Metrics Confusion
+### 6. Layout Metrics Confusion ✅ RESOLVED
 - **Issue**: Code references `.main-status-bar` which doesn't exist in index.html
 - **Location**: `src/main/window-manager.js` line 295, `src/renderer/styles.css` line 300
 - **Impact**: `statusBarHeight` variable is calculated but main window has no status bar
 - **Root Cause**: Inconsistency between code expectation and actual UI structure
-- **Current Workaround**: BrowserView calculation was incorrectly subtracting `statusBarHeight`
+- **Resolution**: Removed all references to `.main-status-bar`, simplified layout metrics to only track toolbar and tabs
 
 ## Files Affected
 

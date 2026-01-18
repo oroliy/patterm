@@ -188,6 +188,8 @@
             flex-shrink: 0;
             height: 32px;
             min-height: 32px;
+            padding: 4px 12px;
+            background: var(--bg-secondary, #1e293b);
         }
 
         .main-content {
@@ -252,9 +254,17 @@
         }
 
         @keyframes status-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .tab-status-bar .arrow-icon {
@@ -293,317 +303,318 @@
 
         <div class="input-bar">
             <div class="status-dot disconnected" id="status-dot"></div>
-            <input type="text" id="command-input" class="input-field" placeholder="Type command..." autocomplete="off" disabled>
+            <input type="text" id="command-input" class="input-field" placeholder="Type command..." autocomplete="off"
+                disabled>
             <button id="send-btn" class="btn btn-primary btn-icon" disabled>➤</button>
             <button id="clear-btn" class="btn">Clear</button>
         </div>
 
         <div id="tab-status-bar" class="tab-status-bar">
-        <div class="status-bar-section">
-            <span class="status-indicator-mini disconnected" id="tab-status-indicator"></span>
-            <span class="status-value" id="tab-port-name">Not Connected</span>
-        </div>
-        <div class="status-bar-section">
-            <span class="status-label">Duration:</span>
-            <span class="status-value" id="tab-duration">--:--:--</span>
-        </div>
-        <div class="status-bar-section">
-            <span class="status-label">Created:</span>
-            <span class="status-value" id="tab-created-time">--:--:--</span>
-        </div>
-        <div class="status-bar-section">
-            <span class="status-label">Current:</span>
-            <span class="status-value" id="tab-current-time">--:--:--</span>
-        </div>
-        <div class="status-bar-section">
-            <div class="rx-tx-indicator">
-                <span class="rx-badge" id="tab-rx-badge">
-                    <span class="arrow-icon">↓</span>
-                    <span class="rate-label" id="tab-rx-rate">0 B/s</span>
-                </span>
-                <span class="tx-badge" id="tab-tx-badge">
-                    <span class="arrow-icon">↑</span>
-                    <span class="rate-label" id="tab-tx-rate">0 B/s</span>
-                </span>
+            <div class="status-bar-section">
+                <span class="status-indicator-mini disconnected" id="tab-status-indicator"></span>
+                <span class="status-value" id="tab-port-name">Not Connected</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Duration:</span>
+                <span class="status-value" id="tab-duration">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Created:</span>
+                <span class="status-value" id="tab-created-time">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">Current:</span>
+                <span class="status-value" id="tab-current-time">--:--:--</span>
+            </div>
+            <div class="status-bar-section">
+                <div class="rx-tx-indicator">
+                    <span class="rx-badge" id="tab-rx-badge">
+                        <span class="arrow-icon">↓</span>
+                        <span class="rate-label" id="tab-rx-rate">0 B/s</span>
+                    </span>
+                    <span class="tx-badge" id="tab-tx-badge">
+                        <span class="arrow-icon">↑</span>
+                        <span class="rate-label" id="tab-tx-rate">0 B/s</span>
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const { ipcRenderer } = require('electron');
+        <script>
+            const { ipcRenderer } = require('electron');
 
-        ipcRenderer.invoke('theme:get').then(originalTheme => {
-            const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
-            let effectiveTheme = originalTheme;
-            if (originalTheme === 'system') {
-                effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
-            }
-            document.documentElement.setAttribute('data-theme', effectiveTheme);
-        });
-
-        ipcRenderer.on('theme:update', (event, effectiveTheme) => {
-            document.documentElement.setAttribute('data-theme', effectiveTheme);
-        });
-
-        let tabId = null;
-        let isConnected = false;
-        let connectionStartTime = null;
-        let tabCreatedTime = null;
-
-        const terminal = document.getElementById('terminal');
-        const serialInput = document.getElementById('command-input');
-        const sendBtn = document.getElementById('send-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const statusDot = document.getElementById('status-dot');
-        const tabStatusBar = document.getElementById('tab-status-bar');
-        const tabStatusIndicator = document.getElementById('tab-status-indicator');
-        const tabPortName = document.getElementById('tab-port-name');
-        const tabDuration = document.getElementById('tab-duration');
-        const tabCreatedTime = document.getElementById('tab-created-time');
-        const tabCurrentTime = document.getElementById('tab-current-time');
-        const tabRxRate = document.getElementById('tab-rx-rate');
-        const tabTxRate = document.getElementById('tab-tx-rate');
-        const tabRxBadge = document.getElementById('tab-rx-badge');
-        const tabTxBadge = document.getElementById('tab-tx-badge');
-
-        let autoScroll = true;
-        let lastRxTime = 0;
-        let lastTxTime = 0;
-        let rxBytes = 0;
-        let txBytes = 0;
-        let rxRate = 0;
-        let txRate = 0;
-        let rateUpdateInterval = null;
-
-        async function debugLog(message, level = 'info') {
-            try {
-                await ipcRenderer.invoke('debug:log', `[Tab] ${message}`, level);
-            } catch (error) {
-                console.error('[Tab] Failed to log to debug window:', error);
-            }
-        }
-
-        function formatRate(bytesPerSecond) {
-            if (bytesPerSecond === 0) return '0 B/s';
-            if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`;
-            if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
-            return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
-        }
-
-        function formatTime(date) {
-            return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-
-        function formatDuration(startTime) {
-            if (!startTime) return '--:--:--';
-            const now = Date.now();
-            const diff = Math.floor((now - startTime) / 1000);
-            const hours = Math.floor(diff / 3600);
-            const minutes = Math.floor((diff % 3600) / 60);
-            const seconds = diff % 60;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        function updateStatusBar() {
-            tabStatusIndicator.className = `status-indicator-mini ${isConnected ? 'connected' : 'disconnected'}`;
-
-            tabDuration.textContent = formatDuration(connectionStartTime);
-
-            if (tabCreatedTime) {
-                tabCreatedTime.textContent = formatTime(tabCreatedTime);
-            }
-
-            tabRxRate.textContent = formatRate(rxRate);
-            tabTxRate.textContent = formatRate(txRate);
-        }
-
-        function updateCurrentTime() {
-            tabCurrentTime.textContent = formatTime(new Date());
-            updateStatusBar();
-        }
-
-        function triggerRxPulse() {
-            tabRxBadge.classList.add('active');
-            setTimeout(() => tabRxBadge.classList.remove('active'), 200);
-        }
-
-        function triggerTxPulse() {
-            tabTxBadge.classList.add('active');
-            setTimeout(() => tabTxBadge.classList.remove('active'), 200);
-        }
-
-        function updateRates() {
-            ipcRenderer.send('tab:updateRates', tabId, rxRate, txRate);
-            updateStatusBar();
-        }
-
-        function startRateCalculation() {
-            stopRateCalculation();
-            rateUpdateInterval = setInterval(updateRates, 1000);
-        }
-
-        function stopRateCalculation() {
-            if (rateUpdateInterval) {
-                clearInterval(rateUpdateInterval);
-                rateUpdateInterval = null;
-            }
-        }
-
-        function resetRateCounters() {
-            rxBytes = 0;
-            txBytes = 0;
-            rxRate = 0;
-            txRate = 0;
-            lastRxTime = Date.now();
-            lastTxTime = Date.now();
-        }
-
-        function appendData(data, type) {
-            const line = document.createElement('div');
-            line.className = type + '-data';
-            if (type === 'rx') {
-                line.style.color = 'var(--text-primary)';
-                const now = Date.now();
-                rxBytes += data.length;
-                const timeDiff = (now - lastRxTime) / 1000;
-                if (timeDiff >= 1) {
-                    rxRate = Math.round(rxBytes / timeDiff);
-                    rxBytes = 0;
-                    lastRxTime = now;
-                } else if (rxBytes > 0 && timeDiff > 0) {
-                    rxRate = Math.round(rxBytes / Math.max(timeDiff, 0.1));
+            ipcRenderer.invoke('theme:get').then(originalTheme => {
+                const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+                let effectiveTheme = originalTheme;
+                if (originalTheme === 'system') {
+                    effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
                 }
-                triggerRxPulse();
-                ipcRenderer.send('tab:rxActivity', tabId);
-            }
-            if (type === 'tx') {
-                line.style.color = 'var(--text-secondary)';
-                const now = Date.now();
-                txBytes += data.length;
-                const timeDiff = (now - lastTxTime) / 1000;
-                if (timeDiff >= 1) {
-                    txRate = Math.round(txBytes / timeDiff);
-                    txBytes = 0;
-                    lastTxTime = now;
-                } else if (txBytes > 0 && timeDiff > 0) {
-                    txRate = Math.round(txBytes / Math.max(timeDiff, 0.1));
+                document.documentElement.setAttribute('data-theme', effectiveTheme);
+            });
+
+            ipcRenderer.on('theme:update', (event, effectiveTheme) => {
+                document.documentElement.setAttribute('data-theme', effectiveTheme);
+            });
+
+            let tabId = null;
+            let isConnected = false;
+            let connectionStartTime = null;
+            let tabCreatedTime = null;
+
+            const terminal = document.getElementById('terminal');
+            const serialInput = document.getElementById('command-input');
+            const sendBtn = document.getElementById('send-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const statusDot = document.getElementById('status-dot');
+            const tabStatusBar = document.getElementById('tab-status-bar');
+            const tabStatusIndicator = document.getElementById('tab-status-indicator');
+            const tabPortName = document.getElementById('tab-port-name');
+            const tabDuration = document.getElementById('tab-duration');
+            const tabCreatedTimeEl = document.getElementById('tab-created-time');
+            const tabCurrentTime = document.getElementById('tab-current-time');
+            const tabRxRate = document.getElementById('tab-rx-rate');
+            const tabTxRate = document.getElementById('tab-tx-rate');
+            const tabRxBadge = document.getElementById('tab-rx-badge');
+            const tabTxBadge = document.getElementById('tab-tx-badge');
+
+            let autoScroll = true;
+            let lastRxTime = 0;
+            let lastTxTime = 0;
+            let rxBytes = 0;
+            let txBytes = 0;
+            let rxRate = 0;
+            let txRate = 0;
+            let rateUpdateInterval = null;
+
+            async function debugLog(message, level = 'info') {
+                try {
+                    await ipcRenderer.invoke('debug:log', `[Tab] ${message}`, level);
+                } catch (error) {
+                    console.error('[Tab] Failed to log to debug window:', error);
                 }
-                triggerTxPulse();
-                ipcRenderer.send('tab:txActivity', tabId);
-            }
-            if (type === 'error') {
-                line.style.color = 'var(--accent-danger)';
             }
 
-            line.textContent = data;
-            line.style.whiteSpace = 'pre-wrap';
-            line.style.fontFamily = "'JetBrains Mono', monospace";
-            terminal.appendChild(line);
-            if (autoScroll) {
-                terminal.scrollTop = terminal.scrollHeight;
+            function formatRate(bytesPerSecond) {
+                if (bytesPerSecond === 0) return '0 B/s';
+                if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`;
+                if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+                return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
             }
-            updateStatusBar();
-        }
 
-        function appendText(text) {
-            appendData(text, 'rx');
-        }
-
-        function clearTerminal() {
-            while (terminal.firstChild) {
-                terminal.removeChild(terminal.firstChild);
+            function formatTime(date) {
+                return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
-        }
 
-        serialInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                sendData();
+            function formatDuration(startTime) {
+                if (!startTime) return '--:--:--';
+                const now = Date.now();
+                const diff = Math.floor((now - startTime) / 1000);
+                const hours = Math.floor(diff / 3600);
+                const minutes = Math.floor((diff % 3600) / 60);
+                const seconds = diff % 60;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }
-        });
 
-        sendBtn.addEventListener('click', sendData);
+            function updateStatusBar() {
+                tabStatusIndicator.className = `status-indicator-mini ${isConnected ? 'connected' : 'disconnected'}`;
 
-        async function sendData() {
-            const data = serialInput.value;
-            if (data.trim() === '' || !isConnected) return;
+                tabDuration.textContent = formatDuration(connectionStartTime);
 
-            await debugLog(`Sending data: ${data}`, 'info');
-            try {
-                await ipcRenderer.invoke('serial:write', tabId, data);
-                appendData(`> ${data}`, 'tx');
-                serialInput.value = '';
-            } catch (error) {
-                await debugLog(`Send failed: ${error.message}`, 'error');
-                appendData(`Error: ${error.message}`, 'error');
+                if (tabCreatedTime && tabCreatedTimeEl) {
+                    tabCreatedTimeEl.textContent = formatTime(tabCreatedTime);
+                }
+
+                tabRxRate.textContent = formatRate(rxRate);
+                tabTxRate.textContent = formatRate(txRate);
             }
-        }
 
-        clearBtn.addEventListener('click', clearTerminal);
+            function updateCurrentTime() {
+                tabCurrentTime.textContent = formatTime(new Date());
+                updateStatusBar();
+            }
 
-        ipcRenderer.on('tab:init', async (event, data) => {
-            tabId = data.tabId;
-            tabCreatedTime = new Date();
-            await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
-            lastRxTime = Date.now();
-            lastTxTime = Date.now();
-            startRateCalculation();
-            setInterval(updateCurrentTime, 1000);
-            updateCurrentTime();
-        });
+            function triggerRxPulse() {
+                tabRxBadge.classList.add('active');
+                setTimeout(() => tabRxBadge.classList.remove('active'), 200);
+            }
 
-        ipcRenderer.on('serial:data', (event, data) => {
-            appendText(data);
-        });
+            function triggerTxPulse() {
+                tabTxBadge.classList.add('active');
+                setTimeout(() => tabTxBadge.classList.remove('active'), 200);
+            }
 
-        ipcRenderer.on('serial:error', async (event, error) => {
-            await debugLog(`Serial error: ${error}`, 'error');
-            appendData(`Error: ${error}`, 'error');
-        });
+            function updateRates() {
+                ipcRenderer.send('tab:updateRates', tabId, rxRate, txRate);
+                updateStatusBar();
+            }
 
-        ipcRenderer.on('serial:connected', async (event, connected) => {
-            isConnected = connected;
-            sendBtn.disabled = !connected;
-            serialInput.disabled = !connected;
-            await debugLog(`Connection status changed: ${connected}`, 'info');
-            updateConnectionStatus(connected);
-            updateStatusBar();
+            function startRateCalculation() {
+                stopRateCalculation();
+                rateUpdateInterval = setInterval(updateRates, 1000);
+            }
 
-            if (connected) {
-                connectionStartTime = Date.now();
-                resetRateCounters();
-            } else {
-                connectionStartTime = null;
+            function stopRateCalculation() {
+                if (rateUpdateInterval) {
+                    clearInterval(rateUpdateInterval);
+                    rateUpdateInterval = null;
+                }
+            }
+
+            function resetRateCounters() {
+                rxBytes = 0;
+                txBytes = 0;
                 rxRate = 0;
                 txRate = 0;
+                lastRxTime = Date.now();
+                lastTxTime = Date.now();
             }
-        });
 
-        ipcRenderer.on('tab:toggleScroll', () => {
-            autoScroll = !autoScroll;
-            debugLog(`Auto-scroll ${autoScroll ? 'enabled' : 'disabled'}`, 'info');
-            ipcRenderer.send('tab:scrollStateChanged', tabId, autoScroll);
-        });
+            function appendData(data, type) {
+                const line = document.createElement('div');
+                line.className = type + '-data';
+                if (type === 'rx') {
+                    line.style.color = 'var(--text-primary)';
+                    const now = Date.now();
+                    rxBytes += data.length;
+                    const timeDiff = (now - lastRxTime) / 1000;
+                    if (timeDiff >= 1) {
+                        rxRate = Math.round(rxBytes / timeDiff);
+                        rxBytes = 0;
+                        lastRxTime = now;
+                    } else if (rxBytes > 0 && timeDiff > 0) {
+                        rxRate = Math.round(rxBytes / Math.max(timeDiff, 0.1));
+                    }
+                    triggerRxPulse();
+                    ipcRenderer.send('tab:rxActivity', tabId);
+                }
+                if (type === 'tx') {
+                    line.style.color = 'var(--text-secondary)';
+                    const now = Date.now();
+                    txBytes += data.length;
+                    const timeDiff = (now - lastTxTime) / 1000;
+                    if (timeDiff >= 1) {
+                        txRate = Math.round(txBytes / timeDiff);
+                        txBytes = 0;
+                        lastTxTime = now;
+                    } else if (txBytes > 0 && timeDiff > 0) {
+                        txRate = Math.round(txBytes / Math.max(timeDiff, 0.1));
+                    }
+                    triggerTxPulse();
+                    ipcRenderer.send('tab:txActivity', tabId);
+                }
+                if (type === 'error') {
+                    line.style.color = 'var(--accent-danger)';
+                }
 
-        ipcRenderer.on('serial:portInfo', (event, tabIdReceived, portInfo) => {
-            if (tabIdReceived === tabId) {
-                tabPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+                line.textContent = data;
+                line.style.whiteSpace = 'pre-wrap';
+                line.style.fontFamily = "'JetBrains Mono', monospace";
+                terminal.appendChild(line);
+                if (autoScroll) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+                updateStatusBar();
             }
-        });
 
-        function updateConnectionStatus(connected) {
-            if (statusDot) {
-                statusDot.className = `status-dot ${connected ? 'connected' : 'disconnected'}`;
+            function appendText(text) {
+                appendData(text, 'rx');
             }
-        }
 
-        window.addEventListener('load', () => {
-            debugLog('Tab window loaded', 'info');
-        });
+            function clearTerminal() {
+                while (terminal.firstChild) {
+                    terminal.removeChild(terminal.firstChild);
+                }
+            }
 
-        window.addEventListener('beforeunload', () => {
-            stopRateCalculation();
-        });
-    </script>
+            serialInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendData();
+                }
+            });
+
+            sendBtn.addEventListener('click', sendData);
+
+            async function sendData() {
+                const data = serialInput.value;
+                if (data.trim() === '' || !isConnected) return;
+
+                await debugLog(`Sending data: ${data}`, 'info');
+                try {
+                    await ipcRenderer.invoke('serial:write', tabId, data);
+                    appendData(`> ${data}`, 'tx');
+                    serialInput.value = '';
+                } catch (error) {
+                    await debugLog(`Send failed: ${error.message}`, 'error');
+                    appendData(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            clearBtn.addEventListener('click', clearTerminal);
+
+            ipcRenderer.on('tab:init', async (event, data) => {
+                tabId = data.tabId;
+                tabCreatedTime = new Date();
+                await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
+                lastRxTime = Date.now();
+                lastTxTime = Date.now();
+                startRateCalculation();
+                setInterval(updateCurrentTime, 1000);
+                updateCurrentTime();
+            });
+
+            ipcRenderer.on('serial:data', (event, data) => {
+                appendText(data);
+            });
+
+            ipcRenderer.on('serial:error', async (event, error) => {
+                await debugLog(`Serial error: ${error}`, 'error');
+                appendData(`Error: ${error}`, 'error');
+            });
+
+            ipcRenderer.on('serial:connected', async (event, connected) => {
+                isConnected = connected;
+                sendBtn.disabled = !connected;
+                serialInput.disabled = !connected;
+                await debugLog(`Connection status changed: ${connected}`, 'info');
+                updateConnectionStatus(connected);
+                updateStatusBar();
+
+                if (connected) {
+                    connectionStartTime = Date.now();
+                    resetRateCounters();
+                } else {
+                    connectionStartTime = null;
+                    rxRate = 0;
+                    txRate = 0;
+                }
+            });
+
+            ipcRenderer.on('tab:toggleScroll', () => {
+                autoScroll = !autoScroll;
+                debugLog(`Auto-scroll ${autoScroll ? 'enabled' : 'disabled'}`, 'info');
+                ipcRenderer.send('tab:scrollStateChanged', tabId, autoScroll);
+            });
+
+            ipcRenderer.on('serial:portInfo', (event, tabIdReceived, portInfo) => {
+                if (tabIdReceived === tabId) {
+                    tabPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+                }
+            });
+
+            function updateConnectionStatus(connected) {
+                if (statusDot) {
+                    statusDot.className = `status-dot ${connected ? 'connected' : 'disconnected'}`;
+                }
+            }
+
+            window.addEventListener('load', () => {
+                debugLog('Tab window loaded', 'info');
+            });
+
+            window.addEventListener('beforeunload', () => {
+                stopRateCalculation();
+            });
+        </script>
 </body>
 
 </html>
