@@ -269,11 +269,11 @@ class WindowManager {
         if (activeTab) {
             const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
             const viewHeight = Math.floor(bounds.height - yOffset);
-            
+
             if (this.debugWindow) {
                 this.debugWindow.log(`Resize: Setting view bounds to y=${yOffset}, h=${viewHeight}`, 'info');
             }
-            
+
             activeTab.view.setBounds({
                 x: 0,
                 y: yOffset,

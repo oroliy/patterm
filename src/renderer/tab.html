@@ -22,6 +22,7 @@
             overflow: hidden;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
         html {
@@ -35,15 +36,12 @@
             flex-direction: column;
             overflow: hidden;
             border: none;
-            background-color: blue;
         }
 
         .terminal-container {
             display: flex;
             flex-direction: column;
-            padding: var(--spacing-md);
             gap: var(--spacing-md);
-            padding-bottom: 0;
             flex: 1;
             overflow: hidden;
             min-height: 0;
@@ -52,7 +50,7 @@
         .terminal-display {
             flex: 1 1 auto;
             overflow-y: auto;
-            padding: 10px;
+            padding: var(--spacing-md);
             font-size: 14px;
             line-height: 1.5;
             white-space: pre-wrap;
@@ -91,10 +89,10 @@
 
         .input-bar {
             display: flex;
-            padding: 10px 15px;
+            padding: var(--spacing-sm) var(--spacing-md);
             background-color: #2d2d2d;
             border-top: 1px solid #3e3e3e;
-            gap: 10px;
+            gap: var(--spacing-sm);
             align-items: center;
             flex-shrink: 0;
         }
@@ -182,14 +180,11 @@
         .tab-status-bar {
             display: flex;
             align-items: center;
-            padding: 4px 8px;
-            background-color: #1a1a1a;
             border-top: 1px solid #3e3e3e;
             font-size: 10px;
             color: #d4d4d4;
             gap: 8px;
             flex-wrap: wrap;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
             flex-shrink: 0;
             height: 32px;
             min-height: 32px;
@@ -200,9 +195,6 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 3px solid green;
-            background-color: blue;
-            padding-bottom: 30px;
         }
 
         .tab-status-bar .status-bar-section {
@@ -475,12 +467,14 @@
                 rxBytes += data.length;
                 const timeDiff = (now - lastRxTime) / 1000;
                 if (timeDiff >= 1) {
-                rxRate = Math.round(rxBytes / timeDiff);
-                rxBytes = 0;
-                lastRxTime = now;
-            }
-            triggerRxPulse();
-            ipcRenderer.send('tab:rxActivity', tabId);
+                    rxRate = Math.round(rxBytes / timeDiff);
+                    rxBytes = 0;
+                    lastRxTime = now;
+                } else if (rxBytes > 0 && timeDiff > 0) {
+                    rxRate = Math.round(rxBytes / Math.max(timeDiff, 0.1));
+                }
+                triggerRxPulse();
+                ipcRenderer.send('tab:rxActivity', tabId);
             }
             if (type === 'tx') {
                 line.style.color = 'var(--text-secondary)';
@@ -488,12 +482,14 @@
                 txBytes += data.length;
                 const timeDiff = (now - lastTxTime) / 1000;
                 if (timeDiff >= 1) {
-                txRate = Math.round(txBytes / timeDiff);
-                txBytes = 0;
-                lastTxTime = now;
-            }
-            triggerTxPulse();
-            ipcRenderer.send('tab:txActivity', tabId);
+                    txRate = Math.round(txBytes / timeDiff);
+                    txBytes = 0;
+                    lastTxTime = now;
+                } else if (txBytes > 0 && timeDiff > 0) {
+                    txRate = Math.round(txBytes / Math.max(timeDiff, 0.1));
+                }
+                triggerTxPulse();
+                ipcRenderer.send('tab:txActivity', tabId);
             }
             if (type === 'error') {
                 line.style.color = 'var(--accent-danger)';
@@ -506,6 +502,7 @@
             if (autoScroll) {
                 terminal.scrollTop = terminal.scrollHeight;
             }
+            updateStatusBar();
         }
 
         function appendText(text) {
@@ -601,23 +598,6 @@
 
         window.addEventListener('load', () => {
             debugLog('Tab window loaded', 'info');
-            debugLog(`Body height: ${document.body.offsetHeight}px`, 'info');
-            debugLog(`Body style height: ${getComputedStyle(document.body).height}`, 'info');
-            debugLog(`Main content height: ${document.querySelector('.main-content').offsetHeight}px`, 'info');
-            debugLog(`Terminal container height: ${document.querySelector('.terminal-container').offsetHeight}px`, 'info');
-            debugLog(`Status bar exists: ${!!tabStatusBar}`, 'info');
-            debugLog(`Status bar offsetHeight: ${tabStatusBar.offsetHeight}px`, 'info');
-            debugLog(`Status bar offsetTop: ${tabStatusBar.offsetTop}px`, 'info');
-            debugLog(`Status bar position: ${getComputedStyle(tabStatusBar).position}`, 'info');
-            debugLog(`Status bar bottom: ${getComputedStyle(tabStatusBar).bottom}`, 'info');
-            debugLog(`Window innerHeight: ${window.innerHeight}px`, 'info');
-            debugLog(`Window outerHeight: ${window.outerHeight}px`, 'info');
-            debugLog(`HTML height: ${document.documentElement.offsetHeight}px`, 'info');
-            debugLog(`Document height: ${document.documentElement.scrollHeight}px`, 'info');
-
-            setInterval(() => {
-                debugLog(`[Periodic] Body height: ${document.body.offsetHeight}px, Status bar offsetTop: ${tabStatusBar.offsetTop}px`, 'info');
-            }, 2000);
         });
 
         window.addEventListener('beforeunload', () => {
