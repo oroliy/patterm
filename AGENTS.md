@@ -145,6 +145,7 @@ src/
 - Example: `feat: implement serial port auto-reconnect`
 - Commit after completing each logical unit of work
 - Push to remote after each commit (don't accumulate multiple commits)
+- **IMPORTANT**: Always run `npm run lint` and `npm test` before committing to verify code quality
 
 ### GitHub Actions CI/CD
 - Runs on push to master and PRs

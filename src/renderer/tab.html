@@ -341,12 +341,12 @@
                 <span class="status-value" id="tab-tx-bytes">0 B</span>
             </div>
             <div class="status-bar-section">
-                <span class="status-label">RX Rate:</span>
-                <span class="status-value" id="tab-rx-rate">0 B/s</span>
+                <span class="status-label">Duration:</span>
+                <span class="status-value" id="tab-duration">--:--:--</span>
             </div>
             <div class="status-bar-section">
-                <span class="status-label">TX Rate:</span>
-                <span class="status-value" id="tab-tx-rate">0 B/s</span>
+                <span class="status-label">Created:</span>
+                <span class="status-value" id="tab-created-time">--:--:--</span>
             </div>
             <div class="status-bar-section">
                 <span class="status-label">Current:</span>
@@ -409,6 +409,7 @@
             const tabTxBytesEl = document.getElementById('tab-tx-bytes');
             const tabRxBadge = document.getElementById('tab-rx-badge');
             const tabTxBadge = document.getElementById('tab-tx-badge');
+            const tabDuration = document.getElementById('tab-duration');
 
             let lastLogLine = null;
             let autoScroll = true;
@@ -470,6 +471,12 @@
                     tabCreatedTimeEl.textContent = formatTime(connectionEstablishedTime);
                 } else if (tabCreatedTimeEl) {
                     tabCreatedTimeEl.textContent = '--:--:--';
+                }
+
+                if (connectionStartTime && tabDuration) {
+                    tabDuration.textContent = formatDuration(connectionStartTime);
+                } else if (tabDuration) {
+                    tabDuration.textContent = '--:--:--';
                 }
 
                 tabRxBytesEl.textContent = formatBytes(totalRxBytes);
@@ -680,6 +687,30 @@
 
             clearBtn.addEventListener('click', clearTerminal);
 
+            document.getElementById('terminal').addEventListener('contextmenu', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                try {
+                    const action = await ipcRenderer.invoke('window:showTerminalContextMenu', tabId);
+                    if (action === 'clear') {
+                        clearTerminal();
+                    } else if (action === 'save') {
+                        const result = await ipcRenderer.invoke('window:saveTabOutput', tabId);
+                        if (!result.success) {
+                            alert(`Failed to save: ${result.error}`);
+                        }
+                    } else if (action === 'copy') {
+                        const result = await ipcRenderer.invoke('window:getTabContent', tabId);
+                        if (result.success) {
+                            await navigator.clipboard.writeText(result.content);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to show context menu:', error);
+                }
+            });
+
             // Start current time updates immediately
             setInterval(updateCurrentTime, 1000);
             updateCurrentTime();
@@ -732,7 +763,8 @@
 
             ipcRenderer.on('serial:portInfo', (event, tabIdReceived, portInfo) => {
                 if (tabIdReceived === tabId) {
-                    tabPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+                    const parityChar = portInfo.parity === 'none' ? 'N' : portInfo.parity.charAt(0).toUpperCase();
+                    tabPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200} ${portInfo.dataBits || 8}${parityChar}${portInfo.stopBits || 1}`;
                 }
             });
 

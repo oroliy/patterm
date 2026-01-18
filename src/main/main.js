@@ -64,13 +64,18 @@ function setupIpcHandlers() {
 
             debugWindow.log(`Tab info from manager: ${JSON.stringify(tabInfo)}`, 'info');
 
+            const portInfo = {
+                path: config.path,
+                baudRate: config.baudRate,
+                dataBits: config.dataBits,
+                stopBits: config.stopBits,
+                parity: config.parity
+            };
+
             if (tabInfo && tabInfo.view) {
                 debugWindow.log(`Sending serial:connected event to tab ${tabId}`, 'info');
                 tabInfo.view.webContents.send('serial:connected', true);
-                tabInfo.view.webContents.send('serial:portInfo', tabId, {
-                    path: config.path,
-                    baudRate: config.baudRate
-                });
+                tabInfo.view.webContents.send('serial:portInfo', tabId, portInfo);
 
                 tabInfo.view.webContents.on('ipc-message', (event, channel, ...args) => {
                     if (channel === 'tab:scrollStateChanged') {
@@ -93,6 +98,7 @@ function setupIpcHandlers() {
                     connected: true,
                     shouldActivate: tab.shouldActivate
                 });
+                mainWindow.webContents.send('serial:portInfo', tabId, portInfo);
             }
 
             return {
@@ -236,6 +242,156 @@ function setupIpcHandlers() {
 
     ipcMain.handle('theme:get', async () => {
         return currentTheme;
+    });
+
+    ipcMain.handle('window:clearTabScreen', async (event, tabId) => {
+        const tabInfo = windowManager.getTab(tabId);
+        if (tabInfo && tabInfo.view) {
+            tabInfo.view.webContents.executeJavaScript(`
+                const terminal = document.getElementById('terminal');
+                if (terminal) {
+                    terminal.innerHTML = '';
+                }
+            `);
+        }
+    });
+
+    ipcMain.handle('window:saveTabOutput', async (event, tabId) => {
+        const tabInfo = windowManager.getTab(tabId);
+        if (!tabInfo || !tabInfo.view) {
+            return { success: false, error: 'Tab not found' };
+        }
+
+        const terminalContent = await tabInfo.view.webContents.executeJavaScript(`
+            const terminal = document.getElementById('terminal');
+            return terminal ? terminal.innerText : '';
+        `);
+
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const defaultPath = `patterm-export-${timestamp}.txt`;
+
+        const mainWindow = windowManager.getMainWindow();
+        if (!mainWindow) {
+            return { success: false, error: 'Main window not available' };
+        }
+
+        const { filePath } = await dialog.showSaveDialog(mainWindow, {
+            defaultPath: defaultPath,
+            filters: [
+                { name: 'Text Files', extensions: ['txt'] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        });
+
+        if (filePath) {
+            const fs = require('fs');
+            fs.writeFileSync(filePath, terminalContent, 'utf8');
+            return { success: true, filePath };
+        }
+
+        return { success: false, error: 'No file selected' };
+    });
+
+    ipcMain.handle('window:renameTab', async (event, tabId, newName) => {
+        const tabInfo = windowManager.getTab(tabId);
+        if (tabInfo) {
+            tabInfo.title = newName;
+            const mainWindow = windowManager.getMainWindow();
+            if (mainWindow) {
+                mainWindow.webContents.send('tab:titleUpdated', tabId, newName);
+            }
+            return { success: true };
+        }
+        return { success: false, error: 'Tab not found' };
+    });
+
+    ipcMain.handle('window:getTabConfig', async (event, tabId) => {
+        const config = serialServiceManager.getConfig(tabId);
+        return config || null;
+    });
+
+    ipcMain.handle('window:getTabContent', async (event, tabId) => {
+        const tabInfo = windowManager.getTab(tabId);
+        if (!tabInfo || !tabInfo.view) {
+            return { success: false, error: 'Tab not found' };
+        }
+
+        const terminalContent = await tabInfo.view.webContents.executeJavaScript(`
+            const terminal = document.getElementById('terminal');
+            return terminal ? terminal.innerText : '';
+        `);
+
+        return { success: true, content: terminalContent };
+    });
+
+    ipcMain.handle('window:showTabContextMenu', async (event, tabId, connected, title) => {
+        return new Promise((resolve) => {
+            const menu = Menu.buildFromTemplate([
+                {
+                    label: 'Close Tab',
+                    click: () => { resolve('close'); }
+                },
+                { type: 'separator' },
+                {
+                    label: connected ? 'Disconnect' : 'Reconnect',
+                    click: () => { resolve(connected ? 'disconnect' : 'reconnect'); }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Clear Screen',
+                    click: () => { resolve('clear'); }
+                },
+                {
+                    label: 'Save Current Output...',
+                    click: () => { resolve('save'); }
+                },
+                {
+                    label: 'Start/Stop Logging...',
+                    click: () => { resolve('logging'); }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Copy All Text',
+                    click: () => { resolve('copy'); }
+                },
+                {
+                    label: 'Rename Tab...',
+                    click: () => { resolve('rename'); }
+                },
+                {
+                    label: 'Show Connection Settings',
+                    click: () => { resolve('settings'); }
+                }
+            ]);
+
+            menu.popup(BrowserWindow.getFocusedWindow(), () => {
+                resolve(null);
+            });
+        });
+    });
+
+    ipcMain.handle('window:showTerminalContextMenu', async (event, tabId) => {
+        return new Promise((resolve) => {
+            const menu = Menu.buildFromTemplate([
+                {
+                    label: 'Clear Screen',
+                    click: () => { resolve('clear'); }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Save Current Output...',
+                    click: () => { resolve('save'); }
+                },
+                {
+                    label: 'Copy All Text',
+                    click: () => { resolve('copy'); }
+                }
+            ]);
+
+            menu.popup(BrowserWindow.getFocusedWindow(), () => {
+                resolve(null);
+            });
+        });
     });
 }
 

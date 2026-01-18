@@ -215,6 +215,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    tabsContainer.addEventListener('contextmenu', async (e) => {
+        const tabElement = e.target.closest('.tab');
+        if (!tabElement) return;
+
+        const tabId = parseInt(tabElement.dataset.tabId);
+        const tab = tabs.get(tabId);
+        if (!tab) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+            const action = await ipcRenderer.invoke('window:showTabContextMenu', tabId, tab.connected, tab.title);
+            if (action) {
+                if (action === 'close') {
+                    closeTab(tabId);
+                } else if (action === 'disconnect' || action === 'reconnect') {
+                    if (tab.connected) {
+                        await ipcRenderer.invoke('serial:disconnect', tabId);
+                    } else {
+                        await ipcRenderer.invoke('serial:reconnect', tabId);
+                    }
+                } else if (action === 'clear') {
+                    await ipcRenderer.invoke('window:clearTabScreen', tabId);
+                } else if (action === 'save') {
+                    const result = await ipcRenderer.invoke('window:saveTabOutput', tabId);
+                    if (!result.success) {
+                        alert(`Failed to save: ${result.error}`);
+                    }
+                } else if (action === 'logging') {
+                    if (!activeTabId) return;
+                    if (loggingBtn.textContent === 'Log') {
+                        startLogging();
+                    } else {
+                        stopLogging();
+                    }
+                } else if (action === 'copy') {
+                    const result = await ipcRenderer.invoke('window:getTabContent', tabId);
+                    if (result.success) {
+                        await navigator.clipboard.writeText(result.content);
+                    }
+                } else if (action === 'rename') {
+                    const newName = prompt('Enter new tab name:', tab.title);
+                    if (newName && newName.trim()) {
+                        const result = await ipcRenderer.invoke('window:renameTab', tabId, newName.trim());
+                        if (result.success) {
+                            const titleElement = tab.element.querySelector('.tab-title');
+                            if (titleElement) {
+                                titleElement.textContent = newName.trim();
+                            }
+                            tab.title = newName.trim();
+                        }
+                    }
+                } else if (action === 'settings') {
+                    const config = await ipcRenderer.invoke('window:getTabConfig', tabId);
+                    if (config) {
+                        alert(`Connection Settings:\nPort: ${config.path}\nBaud Rate: ${config.baudRate}\nData Bits: ${config.dataBits}\nStop Bits: ${config.stopBits}\nParity: ${config.parity}`);
+                    } else {
+                        alert('Unable to retrieve connection settings');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Failed to show context menu:', error);
+        }
+    });
+
     // Initialize UI
     tabContent.innerHTML = `
         <div class="empty-state">
@@ -231,6 +298,17 @@ ipcRenderer.on('tab:created', (event, tabData) => {
     debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
     tabCreatedTimes.set(tabData.id, new Date());
     addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
+});
+
+ipcRenderer.on('tab:titleUpdated', (event, tabId, newName) => {
+    const tab = tabs.get(tabId);
+    if (tab) {
+        tab.title = newName;
+        const titleElement = tab.element.querySelector('.tab-title');
+        if (titleElement) {
+            titleElement.textContent = newName;
+        }
+    }
 });
 
 ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {
@@ -356,7 +434,8 @@ function updateStatusBar() {
 
     const portInfo = tabPortInfo.get(activeTabId);
     if (portInfo) {
-        mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
+        const parityChar = portInfo.parity === 'none' ? 'N' : portInfo.parity.charAt(0).toUpperCase();
+        mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200} ${portInfo.dataBits || 8}${parityChar}${portInfo.stopBits || 1}`;
     }
 
     if (connected && tabConnectionStartTimes.has(activeTabId)) {
