@@ -437,6 +437,18 @@
                 return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }
 
+            function updateConnectionStatus(connected) {
+                if (connected) {
+                    statusDot.classList.remove('disconnected');
+                    statusDot.classList.add('connected');
+                    tabPortName.textContent = 'Connected';
+                } else {
+                    statusDot.classList.remove('connected');
+                    statusDot.classList.add('disconnected');
+                    tabPortName.textContent = 'Not Connected';
+                }
+            }
+
             function updateStatusBar() {
                 tabStatusIndicator.className = `status-indicator-mini ${isConnected ? 'connected' : 'disconnected'}`;
 
