@@ -60,25 +60,6 @@
             min-height: 0;
         }
 
-        .terminal-container {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            padding: var(--spacing-md);
-            gap: var(--spacing-md);
-            padding-bottom: 0;
-        }
-
-        .terminal-display {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            font-size: 14px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
         .terminal-display::-webkit-scrollbar {
             width: 10px;
         }
@@ -352,66 +333,6 @@
                     <span class="arrow-icon">↑</span>
                     <span class="rate-label" id="tab-tx-rate">0 B/s</span>
                 </span>
-            </div>
-        </div>
-        </div>
-    </div>
-
-            <div id="tab-status-bar" class="tab-status-bar">
-        <div class="status-bar-section">
-            <span class="status-indicator-mini disconnected" id="tab-status-indicator"></span>
-            <span class="status-value" id="tab-port-name">Not Connected</span>
-        </div>
-        <div class="status-bar-section">
-            <span class="status-label">Duration:</span>
-            <span class="status-value" id="tab-duration">--:--:--</span>
-        </div>
-        <div class="status-bar-section">
-            <span class="status-label">Created:</span>
-            <span class="status-value" id="tab-created-time">--:--:--</span>
-        </div>
-        <div class="status-bar-section">
-            <span class="status-label">Current:</span>
-            <span class="status-value" id="tab-current-time">--:--:--</span>
-        </div>
-        <div class="status-bar-section">
-            <div class="rx-tx-indicator">
-                <span class="rx-badge" id="tab-rx-badge">
-                    <span class="arrow-icon">↓</span>
-                    <span class="rate-label" id="tab-rx-rate">0 B/s</span>
-                </span>
-                <span class="tx-badge" id="tab-tx-badge">
-                    <span class="arrow-icon">↑</span>
-                    <span class="rate-label" id="tab-tx-rate">0 B/s</span>
-                </span>
-            <div class="status-bar-section">
-                <span class="status-indicator-mini disconnected" id="tab-status-indicator"></span>
-                <span class="status-value" id="tab-port-name">Not Connected</span>
-            </div>
-            <div class="status-bar-section">
-                <span class="status-label">Duration:</span>
-                <span class="status-value" id="tab-duration">--:--:--</span>
-            </div>
-            <div class="status-bar-section">
-                <span class="status-label">Created:</span>
-                <span class="status-value" id="tab-created-time">--:--:--</span>
-            </div>
-            <div class="status-bar-section">
-                <span class="status-label">Current:</span>
-                <span class="status-value" id="tab-current-time">--:--:--</span>
-            </div>
-            <div class="status-bar-section">
-                <div class="rx-tx-indicator">
-                    <span class="rx-badge" id="tab-rx-badge">
-                        <span class="arrow-icon">↓</span>
-                        <span class="rate-label" id="tab-rx-rate">0 B/s</span>
-                    </span>
-                    <span class="tx-badge" id="tab-tx-badge">
-                        <span class="arrow-icon">↑</span>
-                        <span class="rate-label" id="tab-tx-rate">0 B/s</span>
-                    </span>
-                </div>
-            </div>
             </div>
         </div>
     </div>
