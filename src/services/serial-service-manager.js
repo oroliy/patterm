@@ -4,6 +4,7 @@ const path = require('path');
 class SerialServiceManager {
     constructor() {
         this.services = new Map();
+        this.listeners = new Map();
         this.tabCounter = 0;
     }
 
@@ -19,6 +20,13 @@ class SerialServiceManager {
         };
 
         await service.open(serviceConfig);
+
+        // Re-attach existing listeners for this tabId
+        if (this.listeners.has(tabId)) {
+            const listeners = this.listeners.get(tabId);
+            listeners.data.forEach(cb => service.on('data', cb));
+            listeners.error.forEach(cb => service.on('error', cb));
+        }
 
         const tabData = {
             id: tabId,
@@ -78,6 +86,7 @@ class SerialServiceManager {
         }
 
         this.services.delete(tabId);
+        this.listeners.delete(tabId); // Clean up listeners
         return true;
     }
 
@@ -120,32 +129,49 @@ class SerialServiceManager {
         }));
     }
 
-    onData(tabId, callback) {
-        const tabData = this.services.get(tabId);
-        if (!tabData || !tabData.service) return;
+    _getListeners(tabId) {
+        if (!this.listeners.has(tabId)) {
+            this.listeners.set(tabId, { data: [], error: [] });
+        }
+        return this.listeners.get(tabId);
+    }
 
-        tabData.service.on('data', callback);
+    onData(tabId, callback) {
+        this._getListeners(tabId).data.push(callback);
+
+        const tabData = this.services.get(tabId);
+        if (tabData && tabData.service) {
+            tabData.service.on('data', callback);
+        }
     }
 
     offData(tabId, callback) {
-        const tabData = this.services.get(tabId);
-        if (!tabData || !tabData.service) return;
+        const listeners = this._getListeners(tabId);
+        listeners.data = listeners.data.filter(cb => cb !== callback);
 
-        tabData.service.off('data', callback);
+        const tabData = this.services.get(tabId);
+        if (tabData && tabData.service) {
+            tabData.service.off('data', callback);
+        }
     }
 
     onError(tabId, callback) {
-        const tabData = this.services.get(tabId);
-        if (!tabData || !tabData.service) return;
+        this._getListeners(tabId).error.push(callback);
 
-        tabData.service.on('error', callback);
+        const tabData = this.services.get(tabId);
+        if (tabData && tabData.service) {
+            tabData.service.on('error', callback);
+        }
     }
 
     offError(tabId, callback) {
-        const tabData = this.services.get(tabId);
-        if (!tabData || !tabData.service) return;
+        const listeners = this._getListeners(tabId);
+        listeners.error = listeners.error.filter(cb => cb !== callback);
 
-        tabData.service.off('error', callback);
+        const tabData = this.services.get(tabId);
+        if (tabData && tabData.service) {
+            tabData.service.off('error', callback);
+        }
     }
 
     isConnected(tabId) {

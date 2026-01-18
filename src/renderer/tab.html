@@ -508,11 +508,14 @@
             }
 
             function renderToTerminal(text, type) {
+                // If text is empty (but existed), handle it?
+                if (!text && text !== '') return;
+
                 const parts = text.split('\n');
 
                 parts.forEach((part, index) => {
                     const isLastPart = index === parts.length - 1;
-                    const hasNewline = !isLastPart; // If there are more parts, this part was followed by \n
+                    const hasNewline = !isLastPart;
 
                     if (part.length > 0) {
                         if (lastLogLine && lastLogLine.classList.contains(type + '-data')) {
@@ -520,6 +523,7 @@
                         } else {
                             const line = document.createElement('div');
                             line.className = type + '-data';
+                            // ... style setup ...
                             if (type === 'rx') line.style.color = 'var(--text-primary)';
                             if (type === 'tx') line.style.color = 'var(--text-secondary)';
                             if (type === 'error') line.style.color = 'var(--accent-danger)';
@@ -532,16 +536,19 @@
                         }
                     }
 
-                    // If this part ends with a newline (i.e., not the very last part of the split),
-                    // force the NEXT content to start on a new line.
-                    // We do this by nulling lastLogLine, so the next iteration forces a new div.
-                    // Special case: if text is just "\n", parts=['', '']. 
-                    // i=0 part='', hasNewline=true. We do nothing for text, but null lastLogLine.
                     if (hasNewline) {
-                        // Creating an empty div for newline is usually not needed because block elements stack.
-                        // But if we just closed a line, we null the reference.
-                        // If we want VISUAL double spacing for \n\n, we might need explicit handling.
-                        // For now, simple block behavior is usually sufficient for "log mode".
+                        // FORCE a new line by nulling lastLogLine AND ensuring visual spacing if needed.
+                        // If part was empty (e.g. \n\n), we need to ensure the newline takes space.
+                        // However, standard terminal behavior: \n just moves functionality to next line.
+                        // An empty div or textNode is needed if we want to SEE the empty line in block layout.
+                        if (part.length === 0 && !lastLogLine) {
+                            // This is a standalone newline or consecutive newline
+                            const line = document.createElement('div');
+                            line.className = type + '-data';
+                            line.innerHTML = '&nbsp;'; // Non-breaking space to give height
+                            line.style.fontFamily = "'JetBrains Mono', monospace";
+                            terminal.appendChild(line);
+                        }
                         lastLogLine = null;
                     }
                 });
@@ -552,9 +559,27 @@
             }
 
             function appendData(data, type) {
+                // If data is incoming (RX), it might be a Buffer or array of bytes
+                // We need to handle it. IPC usually serializes Buffer as Uint8Array.
+                let textData = data;
+                let hexData = '';
+
+                if (type === 'rx' && typeof data === 'object') {
+                    // Assume Uint8Array/Buffer
+                    const uint8 = new Uint8Array(data);
+                    textData = new TextDecoder().decode(uint8);
+
+                    // Generate Hex String for Debug Log
+                    hexData = [...uint8].map(x => x.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+
+                    // Log original hex to debug window
+                    debugLog(`RX Hex: ${hexData}`, 'info');
+                    debugLog(`RX Text: ${JSON.stringify(textData)}`, 'info');
+                }
+
                 if (type === 'rx') {
                     const now = Date.now();
-                    onDataReceived(data); // Update totalRxBytes
+                    onDataReceived(textData); // Update totalRxBytes
                     const timeDiff = (now - lastRxTime) / 1000;
                     if (timeDiff >= 1) {
                         rxRate = Math.round(rxBytes / timeDiff);
@@ -568,7 +593,7 @@
                 }
                 if (type === 'tx') {
                     const now = Date.now();
-                    onDataSent(data); // Update totalTxBytes
+                    onDataSent(textData); // Update totalTxBytes
                     const timeDiff = (now - lastTxTime) / 1000;
                     if (timeDiff >= 1) {
                         txRate = Math.round(txBytes / timeDiff);
@@ -581,7 +606,7 @@
                     ipcRenderer.send('tab:txActivity', tabId);
                 }
 
-                renderToTerminal(data, type);
+                renderToTerminal(textData, type);
                 updateStatusBar();
             }
 
