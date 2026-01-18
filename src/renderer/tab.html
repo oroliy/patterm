@@ -376,29 +376,6 @@
             let connectionStartTime = null;
             let connectionEstablishedTime = null;
 
-            // EMERGENCY DEBUGGER
-            window.onerror = function (message, source, lineno, colno, error) {
-                const term = document.getElementById('terminal');
-                if (term) {
-                    const div = document.createElement('div');
-                    div.style.color = 'red';
-                    div.style.backgroundColor = '#330000';
-                    div.style.padding = '5px';
-                    div.textContent = `JS ERROR: ${message} (${lineno}:${colno})`;
-                    term.appendChild(div);
-                }
-            };
-
-            function appLog(msg) {
-                const term = document.getElementById('terminal');
-                if (term) {
-                    const div = document.createElement('div');
-                    div.style.color = 'yellow';
-                    div.textContent = `[SYS] ${msg}`;
-                    term.appendChild(div);
-                }
-            }
-
             const terminal = document.getElementById('terminal');
             const serialInput = document.getElementById('command-input');
             const sendBtn = document.getElementById('send-btn');
@@ -420,6 +397,7 @@
             const tabRxBadge = document.getElementById('tab-rx-badge');
             const tabTxBadge = document.getElementById('tab-tx-badge');
 
+            let lastLogLine = null;
             let autoScroll = true;
             let lastRxTime = 0;
             let lastTxTime = 0;
@@ -526,13 +504,55 @@
                 txRate = 0;
                 lastRxTime = Date.now();
                 lastTxTime = Date.now();
+                lastLogLine = null;
+            }
+
+            function renderToTerminal(text, type) {
+                const parts = text.split('\n');
+
+                parts.forEach((part, index) => {
+                    const isLastPart = index === parts.length - 1;
+                    const hasNewline = !isLastPart; // If there are more parts, this part was followed by \n
+
+                    if (part.length > 0) {
+                        if (lastLogLine && lastLogLine.classList.contains(type + '-data')) {
+                            lastLogLine.textContent += part;
+                        } else {
+                            const line = document.createElement('div');
+                            line.className = type + '-data';
+                            if (type === 'rx') line.style.color = 'var(--text-primary)';
+                            if (type === 'tx') line.style.color = 'var(--text-secondary)';
+                            if (type === 'error') line.style.color = 'var(--accent-danger)';
+
+                            line.textContent = part;
+                            line.style.whiteSpace = 'pre-wrap';
+                            line.style.fontFamily = "'JetBrains Mono', monospace";
+                            terminal.appendChild(line);
+                            lastLogLine = line;
+                        }
+                    }
+
+                    // If this part ends with a newline (i.e., not the very last part of the split),
+                    // force the NEXT content to start on a new line.
+                    // We do this by nulling lastLogLine, so the next iteration forces a new div.
+                    // Special case: if text is just "\n", parts=['', '']. 
+                    // i=0 part='', hasNewline=true. We do nothing for text, but null lastLogLine.
+                    if (hasNewline) {
+                        // Creating an empty div for newline is usually not needed because block elements stack.
+                        // But if we just closed a line, we null the reference.
+                        // If we want VISUAL double spacing for \n\n, we might need explicit handling.
+                        // For now, simple block behavior is usually sufficient for "log mode".
+                        lastLogLine = null;
+                    }
+                });
+
+                if (autoScroll) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
             }
 
             function appendData(data, type) {
-                const line = document.createElement('div');
-                line.className = type + '-data';
                 if (type === 'rx') {
-                    line.style.color = 'var(--text-primary)';
                     const now = Date.now();
                     onDataReceived(data); // Update totalRxBytes
                     const timeDiff = (now - lastRxTime) / 1000;
@@ -547,7 +567,6 @@
                     ipcRenderer.send('tab:rxActivity', tabId);
                 }
                 if (type === 'tx') {
-                    line.style.color = 'var(--text-secondary)';
                     const now = Date.now();
                     onDataSent(data); // Update totalTxBytes
                     const timeDiff = (now - lastTxTime) / 1000;
@@ -561,17 +580,8 @@
                     triggerTxPulse();
                     ipcRenderer.send('tab:txActivity', tabId);
                 }
-                if (type === 'error') {
-                    line.style.color = 'var(--accent-danger)';
-                }
 
-                line.textContent = data;
-                line.style.whiteSpace = 'pre-wrap';
-                line.style.fontFamily = "'JetBrains Mono', monospace";
-                terminal.appendChild(line);
-                if (autoScroll) {
-                    terminal.scrollTop = terminal.scrollHeight;
-                }
+                renderToTerminal(data, type);
                 updateStatusBar();
             }
 
@@ -594,6 +604,7 @@
                 while (terminal.firstChild) {
                     terminal.removeChild(terminal.firstChild);
                 }
+                lastLogLine = null;
             }
 
             serialInput.addEventListener('keydown', (e) => {
@@ -627,7 +638,6 @@
 
             ipcRenderer.on('tab:init', async (event, data) => {
                 tabId = data.tabId;
-                appLog(`Tab Init: ID=${tabId}`);
                 await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
                 lastRxTime = Date.now();
                 lastTxTime = Date.now();
@@ -644,7 +654,6 @@
             });
 
             ipcRenderer.on('serial:connected', async (event, connected) => {
-                appLog(`Event: serial:connected=${connected}`);
                 isConnected = connected;
                 sendBtn.disabled = !connected;
                 serialInput.disabled = !connected;
