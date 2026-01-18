@@ -320,12 +320,20 @@
                 <span class="status-value" id="tab-port-name">Not Connected</span>
             </div>
             <div class="status-bar-section">
-                <span class="status-label">Duration:</span>
-                <span class="status-value" id="tab-duration">--:--:--</span>
+                <span class="status-label">RX:</span>
+                <span class="status-value" id="tab-rx-bytes">0 B</span>
             </div>
             <div class="status-bar-section">
-                <span class="status-label">Connected:</span>
-                <span class="status-value" id="tab-created-time">--:--:--</span>
+                <span class="status-label">TX:</span>
+                <span class="status-value" id="tab-tx-bytes">0 B</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">RX Rate:</span>
+                <span class="status-value" id="tab-rx-rate">0 B/s</span>
+            </div>
+            <div class="status-bar-section">
+                <span class="status-label">TX Rate:</span>
+                <span class="status-value" id="tab-tx-rate">0 B/s</span>
             </div>
             <div class="status-bar-section">
                 <span class="status-label">Current:</span>
@@ -376,11 +384,16 @@
             const tabStatusBar = document.getElementById('tab-status-bar');
             const tabStatusIndicator = document.getElementById('tab-status-indicator');
             const tabPortName = document.getElementById('tab-port-name');
-            const tabDuration = document.getElementById('tab-duration');
+            let rxRate = 0;
+            let txRate = 0;
+            let totalRxBytes = 0;
+            let totalTxBytes = 0;
             const tabCreatedTimeEl = document.getElementById('tab-created-time');
             const tabCurrentTime = document.getElementById('tab-current-time');
             const tabRxRate = document.getElementById('tab-rx-rate');
             const tabTxRate = document.getElementById('tab-tx-rate');
+            const tabRxBytesEl = document.getElementById('tab-rx-bytes');
+            const tabTxBytesEl = document.getElementById('tab-tx-bytes');
             const tabRxBadge = document.getElementById('tab-rx-badge');
             const tabTxBadge = document.getElementById('tab-tx-badge');
 
@@ -389,8 +402,6 @@
             let lastTxTime = 0;
             let rxBytes = 0;
             let txBytes = 0;
-            let rxRate = 0;
-            let txRate = 0;
             let rateUpdateInterval = null;
 
             async function debugLog(message, level = 'info') {
@@ -401,13 +412,17 @@
                 }
             }
 
-            function formatRate(bytesPerSecond) {
-                if (bytesPerSecond === 0) return '0 B/s';
-                if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`;
-                if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
-                return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+            function formatBytes(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
+            function formatRate(bytesPerSecond) {
+                return formatBytes(bytesPerSecond) + '/s';
+            }
             function formatTime(date) {
                 return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
             }
@@ -433,6 +448,8 @@
                     tabCreatedTimeEl.textContent = '--:--:--';
                 }
 
+                tabRxBytesEl.textContent = formatBytes(totalRxBytes);
+                tabTxBytesEl.textContent = formatBytes(totalTxBytes);
                 tabRxRate.textContent = formatRate(rxRate);
                 tabTxRate.textContent = formatRate(txRate);
             }
@@ -484,7 +501,7 @@
                 if (type === 'rx') {
                     line.style.color = 'var(--text-primary)';
                     const now = Date.now();
-                    rxBytes += data.length;
+                    onDataReceived(data); // Update totalRxBytes
                     const timeDiff = (now - lastRxTime) / 1000;
                     if (timeDiff >= 1) {
                         rxRate = Math.round(rxBytes / timeDiff);
@@ -499,7 +516,7 @@
                 if (type === 'tx') {
                     line.style.color = 'var(--text-secondary)';
                     const now = Date.now();
-                    txBytes += data.length;
+                    onDataSent(data); // Update totalTxBytes
                     const timeDiff = (now - lastTxTime) / 1000;
                     if (timeDiff >= 1) {
                         txRate = Math.round(txBytes / timeDiff);
@@ -525,6 +542,17 @@
                 updateStatusBar();
             }
 
+            function onDataReceived(data) {
+                const bytes = new TextEncoder().encode(data).length;
+                rxBytes += bytes;
+                totalRxBytes += bytes;
+            }
+
+            function onDataSent(data) {
+                const bytes = new TextEncoder().encode(data).length;
+                txBytes += bytes;
+                totalTxBytes += bytes;
+            }
             function appendText(text) {
                 appendData(text, 'rx');
             }
@@ -592,6 +620,8 @@
                     connectionStartTime = Date.now();
                     connectionEstablishedTime = new Date();
                     resetRateCounters();
+                    totalRxBytes = 0;
+                    totalTxBytes = 0;
                 } else {
                     connectionStartTime = null;
                     connectionEstablishedTime = null;

@@ -65,8 +65,9 @@ class SerialService {
 
             // Use raw data mode instead of ReadlineParser to support all data types
             this.port.on('data', (data) => {
-                this.emitData(data);
-                this.writeToLog(data);
+                const textData = data.toString('utf-8');
+                this.emitData(textData);
+                this.writeToLog(textData);
             });
 
             this.port.on('error', (error) => {
