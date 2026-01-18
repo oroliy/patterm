@@ -616,6 +616,8 @@
 
             window.addEventListener('load', () => {
                 debugLog('Tab window loaded', 'info');
+                // Ensure status bar starts updating
+                updateCurrentTime();
             });
 
             window.addEventListener('beforeunload', () => {
