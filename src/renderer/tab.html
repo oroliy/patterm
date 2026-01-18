@@ -43,6 +43,16 @@
         .terminal-container {
             display: flex;
             flex-direction: column;
+            padding: var(--spacing-md);
+            gap: var(--spacing-md);
+            padding-bottom: 0;
+            max-height: calc(100% - 50px);
+            overflow: hidden;
+        }
+
+        .terminal-container {
+            display: flex;
+            flex-direction: column;
             flex: 1;
             padding: var(--spacing-md);
             gap: var(--spacing-md);
@@ -191,7 +201,8 @@
             color: #d4d4d4;
             gap: 8px;
             flex-wrap: wrap;
-            min-height: 28px;
+            min-height: 40px;
+            height: 40px;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
             border: 5px solid cyan;
             z-index: 100;
@@ -609,13 +620,16 @@
             debugLog(`Body height: ${document.body.offsetHeight}px`, 'info');
             debugLog(`Body style height: ${getComputedStyle(document.body).height}`, 'info');
             debugLog(`Main content height: ${document.querySelector('.main-content').offsetHeight}px`, 'info');
+            debugLog(`Terminal container height: ${document.querySelector('.terminal-container').offsetHeight}px`, 'info');
             debugLog(`Status bar exists: ${!!tabStatusBar}`, 'info');
             debugLog(`Status bar offsetHeight: ${tabStatusBar.offsetHeight}px`, 'info');
             debugLog(`Status bar offsetTop: ${tabStatusBar.offsetTop}px`, 'info');
             debugLog(`Status bar position: ${getComputedStyle(tabStatusBar).position}`, 'info');
+            debugLog(`Status bar bottom: ${getComputedStyle(tabStatusBar).bottom}`, 'info');
             debugLog(`Window innerHeight: ${window.innerHeight}px`, 'info');
             debugLog(`Window outerHeight: ${window.outerHeight}px`, 'info');
             debugLog(`HTML height: ${document.documentElement.offsetHeight}px`, 'info');
+            debugLog(`Document height: ${document.documentElement.scrollHeight}px`, 'info');
 
             setInterval(() => {
                 debugLog(`[Periodic] Body height: ${document.body.offsetHeight}px, Status bar offsetTop: ${tabStatusBar.offsetTop}px`, 'info');

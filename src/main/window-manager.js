@@ -81,6 +81,7 @@ class WindowManager {
 
         if (this.debugWindow) {
             this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${viewHeight}`, 'debug');
+            this.debugWindow.log(`BrowserView will occupy from y=${yOffset} to y=${yOffset + viewHeight} (total ${viewHeight}px)`, 'debug');
         }
 
         view.setBounds({
@@ -102,6 +103,7 @@ class WindowManager {
 
             if (this.debugWindow) {
                 this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newViewHeight}`, 'info');
+                this.debugWindow.log(`Expected: BrowserView from ${newYOffset} to ${newYOffset + newViewHeight}`, 'info');
             }
 
             view.setBounds({
@@ -113,6 +115,26 @@ class WindowManager {
 
             if (this.debugWindow) {
                 this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
+                this.debugWindow.log(`Actual view bounds: x=${view.getBounds().x}, y=${view.getBounds().y}, w=${view.getBounds().width}, h=${view.getBounds().height}`, 'info');
+                
+                setTimeout(async () => {
+                    try {
+                        const docInfo = await view.webContents.executeJavaScript(`
+                            (function() {
+                                return {
+                                    bodyHeight: document.body.offsetHeight,
+                                    bodyScrollHeight: document.body.scrollHeight,
+                                    innerHeight: window.innerHeight,
+                                    outerHeight: window.outerHeight,
+                                    htmlHeight: document.documentElement.offsetHeight
+                                };
+                            })()
+                        `);
+                        this.debugWindow.log(`Tab doc info: body=${docInfo.bodyHeight}px, scroll=${docInfo.bodyScrollHeight}px, innerH=${docInfo.innerHeight}px`, 'info');
+                    } catch (err) {
+                        this.debugWindow.error(`Failed to get doc info: ${err.message}`);
+                    }
+                }, 500);
             }
         });
 
@@ -246,11 +268,17 @@ class WindowManager {
         const activeTab = this.tabs.get(this.activeTabId);
         if (activeTab) {
             const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
+            const viewHeight = Math.floor(bounds.height - yOffset);
+            
+            if (this.debugWindow) {
+                this.debugWindow.log(`Resize: Setting view bounds to y=${yOffset}, h=${viewHeight}`, 'info');
+            }
+            
             activeTab.view.setBounds({
                 x: 0,
                 y: yOffset,
                 width: bounds.width,
-                height: Math.floor(bounds.height - yOffset)
+                height: viewHeight
             });
         }
     }
