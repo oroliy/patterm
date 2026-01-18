@@ -187,7 +187,7 @@
             align-items: center;
             border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
             font-size: 10px;
-            color: var(--text-muted, #64748b);
+            color: var(--text-secondary, #94a3b8);
             gap: 12px;
             flex-wrap: nowrap;
             flex-shrink: 0;
@@ -324,7 +324,7 @@
                 <span class="status-value" id="tab-duration">--:--:--</span>
             </div>
             <div class="status-bar-section">
-                <span class="status-label">Created:</span>
+                <span class="status-label">Connected:</span>
                 <span class="status-value" id="tab-created-time">--:--:--</span>
             </div>
             <div class="status-bar-section">
@@ -364,7 +364,7 @@
             let tabId = null;
             let isConnected = false;
             let connectionStartTime = null;
-            let tabCreatedTime = null;
+            let connectionEstablishedTime = null;
 
             const terminal = document.getElementById('terminal');
             const serialInput = document.getElementById('command-input');
@@ -425,8 +425,10 @@
 
                 tabDuration.textContent = formatDuration(connectionStartTime);
 
-                if (tabCreatedTime && tabCreatedTimeEl) {
-                    tabCreatedTimeEl.textContent = formatTime(tabCreatedTime);
+                if (connectionEstablishedTime && tabCreatedTimeEl) {
+                    tabCreatedTimeEl.textContent = formatTime(connectionEstablishedTime);
+                } else if (tabCreatedTimeEl) {
+                    tabCreatedTimeEl.textContent = '--:--:--';
                 }
 
                 tabRxRate.textContent = formatRate(rxRate);
@@ -557,7 +559,6 @@
             clearBtn.addEventListener('click', clearTerminal);
 
             // Start current time updates immediately
-            tabCreatedTime = new Date();
             setInterval(updateCurrentTime, 1000);
             updateCurrentTime();
 
@@ -584,16 +585,19 @@
                 serialInput.disabled = !connected;
                 await debugLog(`Connection status changed: ${connected}`, 'info');
                 updateConnectionStatus(connected);
-                updateStatusBar();
 
                 if (connected) {
                     connectionStartTime = Date.now();
+                    connectionEstablishedTime = new Date();
                     resetRateCounters();
                 } else {
                     connectionStartTime = null;
+                    connectionEstablishedTime = null;
                     rxRate = 0;
                     txRate = 0;
                 }
+
+                updateStatusBar();
             });
 
             ipcRenderer.on('tab:toggleScroll', () => {
