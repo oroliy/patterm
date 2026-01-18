@@ -71,7 +71,7 @@ class WindowManager {
 
         await this.updateLayoutMetrics();
 
-        const bounds = this.mainWindow.getBounds();
+        const bounds = this.mainWindow.getContentBounds();
         const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
         const viewHeight = Math.floor(bounds.height - yOffset);
 
@@ -93,7 +93,7 @@ class WindowManager {
             view.webContents.send('tab:init', { tabId: actualTabId });
 
             await this.updateLayoutMetrics();
-            const newBounds = this.mainWindow.getBounds();
+            const newBounds = this.mainWindow.getContentBounds();
             const newYOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
             const newViewHeight = Math.floor(newBounds.height - newYOffset);
 
@@ -183,7 +183,7 @@ class WindowManager {
             return false;
         }
 
-        const bounds = this.mainWindow.getBounds();
+        const bounds = this.mainWindow.getContentBounds();
 
         await this.updateLayoutMetrics();
         const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
@@ -260,7 +260,7 @@ class WindowManager {
 
         this.updateLayoutMetrics();
 
-        const bounds = this.mainWindow.getBounds();
+        const bounds = this.mainWindow.getContentBounds();
         const activeTab = this.tabs.get(this.activeTabId);
         if (activeTab) {
             const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
