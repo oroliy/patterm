@@ -63,11 +63,10 @@ class SerialService {
                 parity: this.config.parity
             });
 
-            this.parser = this.port.pipe(new ReadlineParser({ delimiter: '\n' }));
-
-            this.parser.on('data', (data) => {
+            // Use raw data mode instead of ReadlineParser to support all data types
+            this.port.on('data', (data) => {
                 this.emitData(data);
-                this.writeToLog(data + '\n');
+                this.writeToLog(data);
             });
 
             this.port.on('error', (error) => {

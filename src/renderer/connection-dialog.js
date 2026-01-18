@@ -46,14 +46,8 @@ async function loadPorts() {
             hasPorts = true;
         });
 
-        // Set default value if ports exist and input is empty or current value is invalid
-        if (hasPorts) {
-            // Check if current value matches any port
-            const currentMatch = ports.find(p => p.path === portInput.value.trim());
-            if (!currentMatch && ports.length > 0) {
-                portInput.value = ports[0].path;
-            }
-        }
+        // Default selection logic removed to show placeholder
+        // User can select from dropdown or type manually
     } catch (error) {
         console.error('Failed to load ports:', error);
         showError('Failed to load ports');
