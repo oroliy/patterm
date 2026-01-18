@@ -301,7 +301,6 @@ body {
     flex: 1;
     background: var(--bg-secondary);
     position: relative;
-    padding-bottom: 30px;
 }
 
 /* Terminal & Input (Specific to tab.html but good to have base styles) */
