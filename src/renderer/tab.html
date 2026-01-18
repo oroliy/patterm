@@ -355,9 +355,11 @@
                     effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
                 }
                 document.documentElement.setAttribute('data-theme', effectiveTheme);
+                console.log(`[Tab] Initial theme set to: ${effectiveTheme}`);
             });
 
             ipcRenderer.on('theme:update', (event, effectiveTheme) => {
+                console.log(`[Tab] Received theme:update event: ${effectiveTheme}`);
                 document.documentElement.setAttribute('data-theme', effectiveTheme);
             });
 

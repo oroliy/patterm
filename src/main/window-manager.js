@@ -309,9 +309,17 @@ class WindowManager {
         }
     }
     broadcastToTabs(channel, ...args) {
+        if (this.debugWindow) {
+            this.debugWindow.log(`Broadcasting to ${this.tabs.size} tabs: ${channel}`, 'info');
+        }
         for (const tab of this.tabs.values()) {
             try {
-                tab.view.webContents.send(channel, ...args);
+                if (tab.view && tab.view.webContents && !tab.view.webContents.isDestroyed()) {
+                    tab.view.webContents.send(channel, ...args);
+                    if (this.debugWindow) {
+                        this.debugWindow.log(`Sent ${channel} to tab ${tab.id}`, 'debug');
+                    }
+                }
             } catch (error) {
                 console.error(`Failed to send to tab ${tab.id}:`, error);
             }

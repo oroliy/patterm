@@ -243,8 +243,9 @@ function showConnectionDialog() {
     return new Promise((resolve) => {
         const dialogWindow = new BrowserWindow({
             width: 500,
-            height: 550,
-            resizable: false,
+            height: 620,
+            minHeight: 550,
+            resizable: true,
             modal: true,
             parent: BrowserWindow.getFocusedWindow(),
             autoHideMenuBar: true,
