@@ -297,6 +297,19 @@
         .status-indicator-mini.disconnected {
             background: #858585;
         }
+
+        .timestamp {
+            color: #666;
+            margin-right: 8px;
+            font-size: 0.9em;
+            user-select: none;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        [data-theme='light'] .timestamp {
+            color: #999;
+        }
     </style>
     <link rel="stylesheet" href="styles.css">
     <script src="theme-manager.js"></script>
@@ -507,48 +520,58 @@
                 lastLogLine = null;
             }
 
+            function getCurrentTimestamp() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                const s = String(now.getSeconds()).padStart(2, '0');
+                const ms = String(now.getMilliseconds()).padStart(3, '0');
+                return `[${h}:${m}:${s}.${ms}]`;
+            }
+
             function renderToTerminal(text, type) {
                 // If text is empty (but existed), handle it?
                 if (!text && text !== '') return;
 
-                const parts = text.split('\n');
+                // Normalize \r\n and \r to \n to ensure consistent line breaks
+                const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const parts = normalizedText.split('\n');
 
                 parts.forEach((part, index) => {
                     const isLastPart = index === parts.length - 1;
                     const hasNewline = !isLastPart;
 
-                    if (part.length > 0) {
-                        if (lastLogLine && lastLogLine.classList.contains(type + '-data')) {
-                            lastLogLine.textContent += part;
-                        } else {
-                            const line = document.createElement('div');
-                            line.className = type + '-data';
-                            // ... style setup ...
-                            if (type === 'rx') line.style.color = 'var(--text-primary)';
-                            if (type === 'tx') line.style.color = 'var(--text-secondary)';
-                            if (type === 'error') line.style.color = 'var(--accent-danger)';
+                    // If existing line, append
+                    if (lastLogLine && lastLogLine.classList.contains(type + '-data')) {
+                        const textNode = document.createTextNode(part);
+                        lastLogLine.appendChild(textNode);
+                    } else if (part.length > 0 || (hasNewline && !lastLogLine)) {
+                        // Create New Line
+                        const line = document.createElement('div');
+                        line.className = type + '-data';
+                        if (type === 'rx') line.style.color = 'var(--text-primary)';
+                        if (type === 'tx') line.style.color = 'var(--text-secondary)';
+                        if (type === 'error') line.style.color = 'var(--accent-danger)';
 
-                            line.textContent = part;
-                            line.style.whiteSpace = 'pre-wrap';
-                            line.style.fontFamily = "'JetBrains Mono', monospace";
-                            terminal.appendChild(line);
-                            lastLogLine = line;
-                        }
+                        line.style.whiteSpace = 'pre-wrap';
+                        line.style.fontFamily = "'JetBrains Mono', monospace";
+
+                        // Add Timestamp for new line
+                        const tsSpan = document.createElement('span');
+                        tsSpan.className = 'timestamp';
+                        tsSpan.textContent = getCurrentTimestamp();
+                        line.appendChild(tsSpan);
+
+                        // Add Content
+                        const textNode = document.createTextNode(part);
+                        line.appendChild(textNode);
+
+                        terminal.appendChild(line);
+                        lastLogLine = line;
                     }
 
                     if (hasNewline) {
-                        // FORCE a new line by nulling lastLogLine AND ensuring visual spacing if needed.
-                        // If part was empty (e.g. \n\n), we need to ensure the newline takes space.
-                        // However, standard terminal behavior: \n just moves functionality to next line.
-                        // An empty div or textNode is needed if we want to SEE the empty line in block layout.
-                        if (part.length === 0 && !lastLogLine) {
-                            // This is a standalone newline or consecutive newline
-                            const line = document.createElement('div');
-                            line.className = type + '-data';
-                            line.innerHTML = '&nbsp;'; // Non-breaking space to give height
-                            line.style.fontFamily = "'JetBrains Mono', monospace";
-                            terminal.appendChild(line);
-                        }
+                        // Force next chunk to start a new line
                         lastLogLine = null;
                     }
                 });
