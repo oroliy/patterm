@@ -1,5 +1,19 @@
 const { ipcRenderer } = require('electron');
 
+// Initialize theme
+ipcRenderer.invoke('theme:get').then(originalTheme => {
+    const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    let effectiveTheme = originalTheme;
+    if (originalTheme === 'system') {
+        effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', effectiveTheme);
+});
+
+ipcRenderer.on('theme:update', (event, effectiveTheme) => {
+    document.documentElement.setAttribute('data-theme', effectiveTheme);
+});
+
 const tabNameInput = document.getElementById('tabName');
 const portInput = document.getElementById('portInput');
 const portList = document.getElementById('portList');

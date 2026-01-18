@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,8 @@
     <style>
         body {
             padding: 20px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
         }
 
         .dialog-container {
@@ -22,13 +25,13 @@
 
         .dialog-header h2 {
             font-size: 20px;
-            color: #333;
+            color: var(--text-primary);
             margin-bottom: 5px;
         }
 
         .dialog-header p {
             font-size: 13px;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         .form-group {
@@ -39,17 +42,17 @@
 
         .form-group label {
             font-size: 13px;
-            color: #333;
+            color: var(--text-primary);
             font-weight: 500;
         }
 
         .form-group input[type="text"],
         .form-group select {
             padding: 10px 12px;
-            border: 1px solid #d0d0d0;
-            border-radius: 4px;
-            background-color: #ffffff;
-            color: #333;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
             font-size: 14px;
             outline: none;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
@@ -57,7 +60,7 @@
 
         .form-group input[type="text"]:focus,
         .form-group select:focus {
-            border-color: #007acc;
+            border-color: var(--accent-primary);
         }
 
         .form-row {
@@ -81,7 +84,7 @@
             gap: 10px;
             margin-top: 10px;
             padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid var(--glass-border);
         }
 
         .btn {
@@ -94,7 +97,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--glass-surface);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -108,19 +111,24 @@
         .spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #007acc;
+            border: 4px solid var(--bg-tertiary);
+            border-top: 4px solid var(--accent-primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .error-message {
-            color: #f44336;
+            color: var(--accent-danger);
             font-size: 13px;
             margin-top: 5px;
             display: none;
@@ -131,9 +139,9 @@
         }
 
         .general-error {
-            background-color: #fee2e2;
-            border: 1px solid #f87171;
-            border-radius: 4px;
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-danger);
+            border-radius: var(--radius-sm);
             padding: 12px 16px;
             margin-bottom: 15px;
             display: none;
@@ -147,7 +155,7 @@
 
         .general-error-text {
             flex: 1;
-            color: #dc2626;
+            color: var(--accent-danger);
             font-size: 14px;
             line-height: 1.5;
             user-select: text;
@@ -156,7 +164,7 @@
         .general-error-close {
             background: none;
             border: none;
-            color: #dc2626;
+            color: var(--accent-danger);
             font-size: 20px;
             cursor: pointer;
             padding: 0;
@@ -170,6 +178,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="dialog-container">
         <div class="general-error" id="generalError">
@@ -191,7 +200,8 @@
         <div class="form-group">
             <label for="portInput">Serial Port *</label>
             <div class="form-row">
-                <input type="text" id="portInput" list="portList" placeholder="e.g., /dev/ttyUSB0 or /tmp/ttyV0" value="/tmp/ttyV0" />
+                <input type="text" id="portInput" list="portList" placeholder="e.g., /dev/ttyUSB0 or /tmp/ttyV0"
+                    value="/tmp/ttyV0" />
                 <datalist id="portList">
                 </datalist>
                 <button id="refreshPortsBtn" class="btn btn-icon" title="Refresh Ports">↻</button>
@@ -264,4 +274,5 @@
 
     <script src="connection-dialog.js"></script>
 </body>
+
 </html>
