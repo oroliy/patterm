@@ -475,8 +475,6 @@
             function updateStatusBar() {
                 tabStatusIndicator.className = `status-indicator-mini ${isConnected ? 'connected' : 'disconnected'}`;
 
-                tabDuration.textContent = formatDuration(connectionStartTime);
-
                 if (connectionEstablishedTime && tabCreatedTimeEl) {
                     tabCreatedTimeEl.textContent = formatTime(connectionEstablishedTime);
                 } else if (tabCreatedTimeEl) {
