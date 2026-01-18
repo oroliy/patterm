@@ -14,14 +14,21 @@
 
         body {
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            background-color: transparent;
+            background-color: red;
             color: #d4d4d4;
-            height: 100vh;
+            min-height: 100vh;
+            height: 100%;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             margin: 0;
             padding: 0;
+            border: 5px solid yellow;
+        }
+
+        html {
+            height: 100%;
+            overflow: hidden;
         }
 
         .main-content {
@@ -29,6 +36,8 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 3px solid green;
+            background-color: blue;
         }
 
         .terminal-container {
@@ -169,11 +178,14 @@
         }
 
         .tab-status-bar {
-            flex-shrink: 0;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
             display: flex !important;
             align-items: center;
             padding: 4px 8px;
-            background-color: #1a1a1a;
+            background-color: magenta;
             border-top: 1px solid #3e3e3e;
             font-size: 10px;
             color: #d4d4d4;
@@ -181,6 +193,18 @@
             flex-wrap: wrap;
             min-height: 28px;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+            border: 5px solid cyan;
+            z-index: 100;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 3px solid green;
+            background-color: blue;
+            padding-bottom: 30px;
         }
 
         .tab-status-bar .status-bar-section {
@@ -582,6 +606,20 @@
 
         window.addEventListener('load', () => {
             debugLog('Tab window loaded', 'info');
+            debugLog(`Body height: ${document.body.offsetHeight}px`, 'info');
+            debugLog(`Body style height: ${getComputedStyle(document.body).height}`, 'info');
+            debugLog(`Main content height: ${document.querySelector('.main-content').offsetHeight}px`, 'info');
+            debugLog(`Status bar exists: ${!!tabStatusBar}`, 'info');
+            debugLog(`Status bar offsetHeight: ${tabStatusBar.offsetHeight}px`, 'info');
+            debugLog(`Status bar offsetTop: ${tabStatusBar.offsetTop}px`, 'info');
+            debugLog(`Status bar position: ${getComputedStyle(tabStatusBar).position}`, 'info');
+            debugLog(`Window innerHeight: ${window.innerHeight}px`, 'info');
+            debugLog(`Window outerHeight: ${window.outerHeight}px`, 'info');
+            debugLog(`HTML height: ${document.documentElement.offsetHeight}px`, 'info');
+
+            setInterval(() => {
+                debugLog(`[Periodic] Body height: ${document.body.offsetHeight}px, Status bar offsetTop: ${tabStatusBar.offsetTop}px`, 'info');
+            }, 2000);
         });
 
         window.addEventListener('beforeunload', () => {

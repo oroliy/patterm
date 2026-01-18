@@ -197,6 +197,7 @@ class WindowManager {
         if (this.debugWindow) {
             const actualBounds = tab.view.getBounds();
             this.debugWindow.log(`Actual view bounds AFTER setBounds: x=${actualBounds.x}, y=${actualBounds.y}, w=${actualBounds.width}, h=${actualBounds.height}`, 'info');
+            this.debugWindow.log(`View top-left at screen coordinates: Screen Y = ${bounds.y + actualBounds.y}`, 'info');
         }
 
         this.activeTabId = tabId;
