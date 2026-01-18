@@ -376,6 +376,29 @@
             let connectionStartTime = null;
             let connectionEstablishedTime = null;
 
+            // EMERGENCY DEBUGGER
+            window.onerror = function (message, source, lineno, colno, error) {
+                const term = document.getElementById('terminal');
+                if (term) {
+                    const div = document.createElement('div');
+                    div.style.color = 'red';
+                    div.style.backgroundColor = '#330000';
+                    div.style.padding = '5px';
+                    div.textContent = `JS ERROR: ${message} (${lineno}:${colno})`;
+                    term.appendChild(div);
+                }
+            };
+
+            function appLog(msg) {
+                const term = document.getElementById('terminal');
+                if (term) {
+                    const div = document.createElement('div');
+                    div.style.color = 'yellow';
+                    div.textContent = `[SYS] ${msg}`;
+                    term.appendChild(div);
+                }
+            }
+
             const terminal = document.getElementById('terminal');
             const serialInput = document.getElementById('command-input');
             const sendBtn = document.getElementById('send-btn');
@@ -606,6 +629,7 @@
 
             ipcRenderer.on('tab:init', async (event, data) => {
                 tabId = data.tabId;
+                appLog(`Tab Init: ID=${tabId}`);
                 await debugLog(`Tab initialized with tabId: ${tabId}`, 'info');
                 lastRxTime = Date.now();
                 lastTxTime = Date.now();
@@ -622,6 +646,7 @@
             });
 
             ipcRenderer.on('serial:connected', async (event, connected) => {
+                appLog(`Event: serial:connected=${connected}`);
                 isConnected = connected;
                 sendBtn.disabled = !connected;
                 serialInput.disabled = !connected;
