@@ -36,12 +36,24 @@ async function loadPorts() {
     try {
         const ports = await ipcRenderer.invoke('serial:listPorts');
         portList.innerHTML = '';
+
+        let hasPorts = false;
         ports.forEach(port => {
             const option = document.createElement('option');
             option.value = port.path;
             option.label = `${port.path} (${port.manufacturer || 'Unknown'})`;
             portList.appendChild(option);
+            hasPorts = true;
         });
+
+        // Set default value if ports exist and input is empty or current value is invalid
+        if (hasPorts) {
+            // Check if current value matches any port
+            const currentMatch = ports.find(p => p.path === portInput.value.trim());
+            if (!currentMatch && ports.length > 0) {
+                portInput.value = ports[0].path;
+            }
+        }
     } catch (error) {
         console.error('Failed to load ports:', error);
         showError('Failed to load ports');
