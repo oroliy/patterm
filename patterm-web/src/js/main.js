@@ -354,4 +354,5 @@ class PattermApp {
 }
 
 const app = new PattermApp();
+window.app = app;  // Expose for testing
 app.init();
