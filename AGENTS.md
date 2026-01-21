@@ -29,9 +29,11 @@ npm run dist:linux    # Build for Linux
 # bash scripts/test.sh -h # Show test script options
 # bash scripts/test.sh -k # Keep virtual port running after exit
 # bash scripts/test.sh -c # Cleanup existing virtual ports
-# bash scripts/create-virtual-port.sh /tmp/ttyV0    # Create virtual port only
-# bash scripts/quick-virtual-serial.sh         # Quick echo server
-# python3 scripts/virtual-serial.py            # Python-based virtual port
+# bash scripts/create-virtual-port.sh /tmp/ttyV0    # Create virtual port only (Linux/macOS)
+# bash scripts/quick-virtual-serial.sh         # Quick echo server (Linux/macOS)
+# python3 scripts/virtual-serial.py            # Python-based virtual port (Linux/macOS)
+# scripts\setup-com0com.bat                    # Windows virtual port setup
+# python scripts\virtual-serial-win.py         # Windows PySerial bridge
 ```
 
 ## Code Style Guidelines
@@ -157,12 +159,18 @@ src/
 - Releases: Automatic on tagged commits
 
 ### Virtual Serial Port Testing
+**Linux/macOS:**
 - Use `scripts/create-virtual-port.sh /tmp/ttyV0` to create virtual port
 - Connect Patterm to `/tmp/ttyV0`
 - Send test data via `telnet localhost 12345` or `nc localhost 12345`
+- Clean up with `killall socat` after testing
+
+**Windows:**
+- Use `scripts\setup-com0com.bat` for automated com0com configuration
+- Or use `python scripts\virtual-serial-win.py` for PySerial-based bridge
+
 - Always keep Debug Console open (Ctrl+Shift+D) when testing
 - See scripts/README.md for detailed testing guide
-- Clean up with `killall socat` after testing
 
 ## Important Notes
 - node_modules/ is gitignored - use npm ci to install
@@ -178,14 +186,16 @@ When making changes to the project, you MUST keep documentation in sync:
 ### Files to Update Together
 - **README.md** - English documentation
 - **README_zh.md** - Chinese documentation (MUST mirror README.md)
-- **CHANGELOG.md** - Version history and changes
+- **CHANGELOG.md** - Complete version history and changes
+- **CHANGELOG_LATEST.md** - Latest release highlights (for quick reference)
 
 ### When to Update Documentation
-1. **Every release**: Update CHANGELOG.md with version changes
+1. **Every release**: Update CHANGELOG.md with version changes AND CHANGELOG_LATEST.md with highlights
 2. **Badge changes**: Update badges in BOTH README.md and README_zh.md
-3. **New features**: Document in both README files
+3. **New features**: Document in both README files and CHANGELOG_LATEST.md
 4. **Configuration changes**: Update build info in both README files
 5. **Test changes**: Update testing sections in both README files
+6. **Context menu/IPC changes**: Update CLAUDE.md for AI agent reference
 
 ### Version Sync Requirements
 - package.json version MUST match release tag (e.g., v0.3.0)

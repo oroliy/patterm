@@ -69,14 +69,33 @@ src/
 **3. IPC Communication (Promise-based)**
 - Main → Renderer: `ipcMain.handle('namespace:action', handler)`
 - Renderer → Main: `ipcRenderer.invoke('namespace:action', data)`
-- Namespaces: `serial:*`, `window:*`, `log:*`, `app:*`
+- Namespaces: `serial:*`, `window:*`, `log:*`, `app:*`, `tab:*`, `debug:*`, `theme:*`
 - Always validate IPC arguments in main process before processing
+
+**Key IPC Handlers**:
+- `serial:*`: open, close, write, listPorts, disconnect, reconnect
+- `window:*`: newTab, closeTab, switchTab, showTabContextMenu, showTerminalContextMenu, saveTabOutput, getTabContent
+- `tab:*`: init, rxActivity, txActivity, updateRates, scrollStateChanged
+- `debug:*`: log (to debug window)
+- `theme:*`: get, set, toggle
 
 **4. Debug Console**
 - Separate debug window with real-time logging
 - Color-coded levels: info (blue), warn (yellow), error (red), debug (gray)
 - Toggle with `Ctrl/Cmd + Shift + D`
 - Clear logs with `Ctrl/Cmd + L`
+
+**5. Context Menus**
+- Tab right-click menu: Close Tab, Disconnect/Reconnect, Clear Screen, Save Output, Start/Stop Logging, Copy All Text, Rename Tab, Show Connection Settings
+- Terminal right-click menu: Clear Screen, Save Output, Copy All Text
+
+**6. Status Bar (Per Tab)**
+- Connection status with visual indicator (●/○)
+- Port configuration display (e.g., `/tmp/ttyV0 @ 115200 8N1`)
+- RX/TX byte counters with auto-scaling (B, KB, MB, GB)
+- Real-time data rate indicators (B/s) with animated pulse effect
+- Connection duration timer
+- Created time and current time display
 
 ### Code Style (from AGENTS.md)
 
@@ -100,6 +119,7 @@ src/
 
 Development relies on virtual serial ports since physical hardware may not be available:
 
+**Linux/macOS:**
 1. **Socat method** (recommended):
    ```bash
    bash scripts/create-virtual-port.sh /tmp/ttyV0
@@ -114,6 +134,19 @@ Development relies on virtual serial ports since physical hardware may not be av
    ```
 
 3. **Python emulator**: Interactive virtual serial with send/receive capabilities
+
+**Windows:**
+1. **com0com setup** (recommended):
+   ```cmd
+   scripts\setup-com0com.bat
+   # Follow wizard to install and configure virtual port pair
+   ```
+
+2. **PySerial bridge**:
+   ```cmd
+   python scripts\virtual-serial-win.py
+   # Creates virtual port pair for testing
+   ```
 
 See `scripts/README.md` for detailed testing guide with troubleshooting.
 

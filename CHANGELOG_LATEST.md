@@ -1,104 +1,85 @@
-# Changelog - Version 0.3.0 (January 17, 2026)
+# Changelog - Version 0.5.0 (January 18, 2026)
 
-## ✨ New Features
+## New Features
 
-### Multi-Tab Interface
-- **Per-Tab Serial Connections**: Manage multiple independent serial connections simultaneously with a modern multi-tab UI
-- **Connection Dialog Modal**: Easy-to-use connection setup with all serial configuration options (baud rate, data bits, stop bits, parity)
-- **Custom Tab Naming**: Name your connections for easy identification
-- **Connection Status Indicators**: Visual ●/○ indicators show connection status at a glance (green when connected, gray when disconnected)
+### Context Menus
+- **Tab Right-Click Menu**: Comprehensive context menu with quick actions:
+  - Close Tab - Close current tab and disconnect
+  - Disconnect/Reconnect - Toggle connection without closing tab
+  - Clear Screen - Clear terminal output
+  - Save Output - Save terminal content to file
+  - Start/Stop Logging - Toggle session logging
+  - Copy All Text - Copy all terminal text to clipboard
+  - Rename Tab - Change tab name
+  - Show Connection Settings - View current serial configuration
+- **Terminal Right-Click Menu**: Quick terminal actions:
+  - Clear Screen - Clear terminal output
+  - Save Output - Save terminal content to file
+  - Copy All Text - Copy all terminal text to clipboard
 
-### Debug Console
-- **Real-Time Debug Logging**: Dedicated debug console window for troubleshooting
-- **Color-Coded Log Levels**: INFO (blue), WARN (yellow), ERROR (red), DEBUG (gray)
-- **Toggle Shortcut**: Press `Ctrl/Cmd + Shift + D` to show/hide debug console
-- **Clear Logs**: Press `Ctrl/Cmd + L` to clear the debug console
+### Enhanced Status Bar
+- **Compact Configuration Display**: Serial port settings shown in compact format (e.g., `/tmp/ttyV0 @ 115200 8N1`)
+- **Connection Duration**: Shows time elapsed since connection was established
+- **Connection Created Time**: Displays when the connection was first created
+- **Current Time**: Real-time clock display
+- **Cleaner RX/TX Indicators**: Icon-only badges with animated pulse effect on data transfer
 
-### Testing Tools
-- **One-Click E2E Testing**: Run `npm run test:e2e` to launch automated testing with virtual serial ports
-- **Virtual Serial Port Scripts**: Create virtual serial ports for testing without hardware
-  - `scripts/create-virtual-port.sh` - Socat-based virtual port creation
-  - `scripts/quick-virtual-serial.sh` - Simple echo server
-  - `scripts/random-logger.sh` - Random log generator with colored output for stress testing
-
-### Toolbar Controls
-- **Disconnect Button**: Disconnect without closing the tab, with Reconnect option
-- **Auto-Scroll Toggle**: Control automatic scrolling to the latest data
-- **Log Button**: Start/stop session logging to file
-
-## 🔧 Improvements
-
-### Terminal Display
-- **Colored Terminal Output**: Received data displays in cyan, transmitted data in orange
-- **Text Wrapping**: Long lines now wrap properly for better readability
-- **Auto-Scroll Control**: Toggle auto-scroll on/off to read historical data
-- **Connection Status in Terminal**: Visual status indicator shows current connection state
+## Improvements
 
 ### User Interface
-- **Enhanced Toolbar Layout**: All controls organized in the main toolbar
-- **Default Port Pre-Filled**: Connection dialog now defaults to `/tmp/ttyV0` for faster testing
-- **Better Error Messages**: Selectable error text in connection dialog for easy copying
-- **Improved Button States**: Buttons properly enable/disable based on connection and tab state
-- **Bottom Spacing Fix**: Input bar buttons no longer obscured by window border
+- Cleaner status bar layout with organized sections separated by visual dividers
+- Animated pulse effect on RX/TX badges when data is transferred
+- Improved visual hierarchy with color-coded status indicators
+- Better information density - more data in less space
 
-### Electron Upgrade
-- **Upgraded to Electron 40.0.0**: Latest Electron version with improved stability and performance
-- **Removed Deprecated APIs**: Cleaned up deprecated `remote` module usage
+### Developer Experience
+- Updated AGENTS.md to require lint and tests before committing
+- New IPC handlers for context menu actions
 
-## 🐛 Bug Fixes
+---
 
-### Display Issues
-- **Fixed Toolbar Visibility**: BrowserView now correctly calculates layout metrics before rendering
-- **Fixed Tab Content Visibility**: Removed white background overlay that was hiding terminal content
-- **Fixed Tab Status Display**: Increased font size (12px → 16px) for better visibility of connection indicators
+## Version 0.4.0 Features (January 18, 2026)
 
-### Connection Issues
-- **Fixed Initial Connection Status**: Removed false "Disconnected" message when connecting
-- **Fixed Reconnection**: Preserved connection configuration for easy reconnect after disconnect
+### Timestamp Display
+- Millisecond-precision timestamps on all serial data lines
+- Format: `[HH:MM:SS.mmm]` for precise timing analysis
+- Consistent timestamp color coding for easy identification
 
-### Build & CI/CD
-- **Fixed Linux .deb Build**: Added author email to package.json
-- **Fixed GitHub Actions**: Resolved script errors and improved artifact handling
-- **Fixed Release Artifacts**: Configured to only upload installers (not intermediate files)
-- **Security Fix**: Upgraded tar to version 7.5.3 to address GHSA-8qq5-rm4j-mr97
+### Enhanced Newline Handling
+- Proper support for CRLF (\\r\\n) line endings (Windows standard)
+- Proper support for CR (\\r) line endings
+- Normalized display for consistent rendering across platforms
 
-### Testing
-- **Fixed Virtual Port Creation**: Corrected socat syntax for TCP listening
-- **Fixed Manual Port Input**: Now allows typing custom port paths manually
+### RX/TX Byte Counters and Rates
+- Real-time byte counters for received (RX) and transmitted (TX) data
+- Data rate display in bytes per second (B/s)
+- Auto-scaling byte display (B, KB, MB, GB)
+- Animated badges with color coding (cyan for RX, orange for TX)
 
-## 📝 Documentation
+### Comprehensive Status Bar
+- Port name and connection status indicator
+- RX/TX byte totals with auto-scaling
+- Real-time data rate indicators with pulse animation
+- Connection duration timer
+- Created time and current time display
 
-- **Added CLAUDE.md**: Comprehensive guide for AI agents working on this codebase
-- **Updated README**: Added GitHub badges and improved styling
-- **Added AGENTS.md**: Project architecture and coding guidelines
-- **Updated Testing Guide**: Virtual serial port testing documentation with troubleshooting
-
-## 🔄 Refactoring
-
-- **Simplified IPC Communication**: Cleaner data flow between main and renderer processes
-- **Removed Unnecessary References**: Cleaned up redundant BrowserView references
-- **Improved Debug Logging**: Enhanced logging throughout the application
-
-## 🔨 Developer Experience
-
-- **Jest Test Framework**: Added unit testing infrastructure with basic test cases
-- **Build Variants**: Added portable and ARM64 build options (Windows ARM64 removed due to native module issues)
-- **Improved Error Handling**: Better error messages and debugging capabilities
+### Windows Virtual Serial Support
+- `scripts/setup-com0com.bat` - Automated com0com configuration wizard
+- `scripts/virtual-serial-win.py` - PySerial-based virtual serial bridge for Windows testing
 
 ---
 
 ## Upgrade Notes
 
 ### For Users
-- No migration needed - your settings and configurations are preserved
-- The debug console can be toggled with `Ctrl/Cmd + Shift + D`
-- Use `npm run test:e2e` for quick testing with virtual serial ports
+- Right-click on tabs or terminal to access context menus
+- Status bar now shows comprehensive connection information at a glance
+- Use the context menu for quick actions without memorizing keyboard shortcuts
 
 ### For Developers
-- Project now uses Electron 40.0.0
-- Debug window is available via `Ctrl/Cmd + Shift + D` for development
-- See `CLAUDE.md` for project architecture and coding guidelines
-- Virtual serial ports are recommended for development without physical hardware
+- Context menu actions are handled via new IPC handlers in main process
+- Status bar updates are now more efficient with consolidated update function
+- See AGENTS.md for updated development workflow requirements
 
 ---
 

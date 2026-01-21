@@ -5,15 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-01-17
+## [Unreleased]
+
+---
+
+## [0.5.0] - 2026-01-18
 
 ### Added
-- One-click E2E test script for streamlined testing workflow
-- AGENTS.md with detailed requirements and code style guidelines
+- **Tab Right-Click Context Menu**:
+  - Close Tab, Disconnect/Reconnect, Clear Screen
+  - Save Output to file, Start/Stop Logging
+  - Copy All Text, Rename Tab, Show Connection Settings
+- **Terminal Right-Click Context Menu**:
+  - Clear Screen, Save Output, Copy All Text
+- **Status Bar Improvements**:
+  - Full serial port configuration in compact format (e.g., '115200 8N1')
+  - Connection Duration display (shows time since connection established)
+  - Connection Created time display
+  - Current real-time clock
+- **IPC Handlers**: New context menu actions and tab operations
+
+### Changed
+- Removed duplicate RX/TX rate text sections, keeping icon-only badges for cleaner UI
+- Status bar now displays all key metrics in a compact, organized layout
+
+### Developer
+- Updated AGENTS.md to require running lint and tests before committing
+
+---
+
+## [0.4.0] - 2026-01-18
+
+### Added
+- **Timestamp Display**: Millisecond-precision timestamps on all serial data lines
+- **Enhanced Newline Handling**: Proper support for CRLF (\\r\\n) and CR (\\r) line endings
+- **RX/TX Byte Counters**: Real-time byte counters for received and transmitted data
+- **Status Bar**: Comprehensive status bar with:
+  - Port name and connection status
+  - RX/TX byte totals
+  - Data rate indicators (B/s) with animated badges
+  - Connection duration
+  - Created time and current time
+- **Windows Virtual Serial Support**:
+  - `scripts/setup-com0com.bat` - Automated com0com configuration
+  - `scripts/virtual-serial-win.py` - PySerial-based virtual serial bridge
+- **In-App Debug Logging**: Enhanced debug logging for renderer diagnostics
+
+### Changed
+- Optimized terminal rendering to handle partial data chunks correctly
+- Robust reconnect logic with preserved connection configuration
 
 ### Fixed
-- Corrected socat syntax for TCP listening in virtual serial port scripts
-- Synchronized documentation between AGENTS.md and CLAUDE.md
+- Serial data now displays as text instead of numeric arrays
+- Connection dialog port dropdown now works correctly (removed default value interference)
+- Restored missing `updateConnectionStatus` function in tab renderer
+- Removed reference to deleted `tabDuration` element to prevent crash loop
+- Raw serial data support enabled with proper buffer handling
+- Input placeholder visibility restored
 
 ---
 

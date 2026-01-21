@@ -45,6 +45,24 @@
 
 ### Real-Time Serial I/O
 - Send and receive data with minimal latency
+- Millisecond-precision timestamps on all data lines
+- Support for CRLF, CR, and LF line endings
+
+### Context Menus
+- **Tab Right-Click Menu**: Quick access to:
+  - Close Tab, Disconnect/Reconnect
+  - Clear Screen, Save Output, Copy All Text
+  - Rename Tab, Show Connection Settings
+- **Terminal Right-Click Menu**:
+  - Clear Screen, Save Output, Copy All Text
+
+### Status Bar
+- Connection status with visual indicator
+- Port configuration display (e.g., `/tmp/ttyV0 @ 115200 8N1`)
+- RX/TX byte counters with auto-scaling
+- Real-time data rate indicators (B/s)
+- Connection duration timer
+- Created time and current time display
 
 ### Debug Console
 - Real-time logging of application events
