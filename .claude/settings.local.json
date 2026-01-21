@@ -31,7 +31,11 @@
       "Bash(killall:*)",
       "Bash(pkill:*)",
       "Bash(pgrep:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(test:*)",
+      "WebSearch",
+      "Bash(git checkout:*)",
+      "Bash(npm run build:*)"
     ]
   },
   "outputStyle": "default"

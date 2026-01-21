@@ -11,9 +11,9 @@ export class ConnectionDialog {
     show() {
         return new Promise((resolve) => {
             this.createDialog();
-            this.onConnect = (config, tabName) => {
+            this.onConnect = (config, tabName, port) => {
                 this.hide();
-                resolve({ confirmed: true, config, tabName });
+                resolve({ confirmed: true, config, tabName, port });
             };
             this.onCancel = () => {
                 this.hide();
