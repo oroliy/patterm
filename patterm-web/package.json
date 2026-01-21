@@ -1,0 +1,17 @@
+{
+    "name": "patterm-web",
+    "version": "0.1.0",
+    "description": "Patterm Web Serial Terminal - PWA Version",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "serve": "vite preview --https"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0",
+        "@vitejs/plugin-basic-ssl": "^1.0.0"
+    },
+    "dependencies": {}
+}
