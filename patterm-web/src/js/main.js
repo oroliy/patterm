@@ -51,14 +51,14 @@ class PattermApp {
         document.getElementById('theme-toggle-btn')?.addEventListener('click', () => this.toggleTheme());
         document.getElementById('about-btn')?.addEventListener('click', () => this.showAbout());
 
-        globalEvents.on('tab:created', (event) => this.onTabCreated(event.detail));
-        globalEvents.on('tab:connected', (event) => this.onTabConnected(event.detail));
-        globalEvents.on('tab:disconnected', (event) => this.onTabDisconnected(event.detail));
-        globalEvents.on('tab:closed', (event) => this.onTabClosed(event.detail));
-        globalEvents.on('tab:switched', (event) => this.onTabSwitched(event.detail));
-        globalEvents.on('tab:data', (event) => this.onTabData(event.detail));
-        globalEvents.on('tab:error', (event) => this.onTabError(event.detail));
-        globalEvents.on('tab:ratesUpdated', (event) => this.onTabRatesUpdated(event.detail));
+        globalEvents.on('tab:created', (data) => this.onTabCreated(data));
+        globalEvents.on('tab:connected', (data) => this.onTabConnected(data));
+        globalEvents.on('tab:disconnected', (data) => this.onTabDisconnected(data));
+        globalEvents.on('tab:closed', (data) => this.onTabClosed(data));
+        globalEvents.on('tab:switched', (data) => this.onTabSwitched(data));
+        globalEvents.on('tab:data', (data) => this.onTabData(data));
+        globalEvents.on('tab:error', (data) => this.onTabError(data));
+        globalEvents.on('tab:ratesUpdated', (data) => this.onTabRatesUpdated(data));
 
         document.addEventListener('click', () => this.hideContextMenu());
 
@@ -103,7 +103,10 @@ class PattermApp {
     }
 
     onTabCreated(tabState) {
-        console.log('[App] onTabCreated called for:', tabState.id);
+        console.log('[App] onTabCreated called with tabState:', tabState);
+        console.log('[App] tabState.id:', tabState?.id);
+        console.log('[App] tabState keys:', Object.keys(tabState || {}));
+
         const component = new TabComponent(tabState, {
             onClose: (tabId) => this.closeTab(tabId),
             onSwitch: (tabId) => this.switchTab(tabId),
@@ -128,7 +131,14 @@ class PattermApp {
         console.log('[App] onTabCreated completed');
     }
 
-    onTabConnected({ tabId }) {
+    onTabConnected(data) {
+        console.log('[App] onTabConnected called with data:', data);
+        console.log('[App] data type:', typeof data);
+        console.log('[App] data keys:', data ? Object.keys(data) : 'data is null/undefined');
+
+        const tabId = data?.tabId;
+        console.log('[App] Extracted tabId:', tabId);
+
         const component = this.tabComponents.get(tabId);
         if (component) {
             component.updateConnectionState(true);
