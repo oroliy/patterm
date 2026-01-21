@@ -129,16 +129,12 @@ export class SerialService {
         }
 
         try {
+            const encoder = new TextEncoder();
+            const encodedData = encoder.encode(data);
             const writer = this.port.writable.getWriter();
-            const encoder = new TextEncoderStream();
-            const writableStreamClosed = encoder.readable.pipeTo(this.port.writable);
-            const inputStream = encoder.writable;
-            const streamWriter = inputStream.getWriter();
-
-            await streamWriter.write(data);
+            await writer.write(encodedData);
+            writer.releaseLock();
             console.log('[SerialService] Data written successfully');
-
-            streamWriter.releaseLock();
         } catch (error) {
             console.error('[SerialService] Write error:', error);
             this.emit('error', error);

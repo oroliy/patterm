@@ -4,7 +4,7 @@ import { MAX_TERMINAL_LINES } from '../utils/constants.js';
 export class TerminalComponent {
     constructor(container, options = {}) {
         this.container = container;
-        this.terminal = container.querySelector('.terminal-display');
+        this.terminal = container;
         this.autoScroll = options.autoScroll ?? true;
         this.showTimestamps = options.showTimestamps ?? true;
         this.lastLogLine = null;
