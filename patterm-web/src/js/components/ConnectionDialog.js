@@ -180,7 +180,7 @@ export class ConnectionDialog {
         return 'Port selected';
     }
 
-    handleConnect() {
+    async handleConnect() {
         if (!this.selectedPort) {
             this.showError('Please select a serial port first');
             return;
@@ -188,8 +188,10 @@ export class ConnectionDialog {
 
         const config = this.getFormConfig();
         const tabName = this.getTabName();
+        const port = this.selectedPort;
 
-        this.onConnect(config, tabName, this.selectedPort);
+        console.log('[ConnectionDialog] Connecting with:', { config, tabName, port });
+        this.onConnect(config, tabName, port);
     }
 
     getFormConfig() {

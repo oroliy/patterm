@@ -41,6 +41,8 @@ export class SerialService {
     }
 
     async open(config) {
+        console.log('[SerialService] open() called with port:', this.port, 'config:', config);
+
         if (!this.port) {
             throw new Error('No port selected. Call requestPort() first.');
         }
@@ -54,10 +56,15 @@ export class SerialService {
             flowControl: config.flowControl || 'none'
         };
 
+        console.log('[SerialService] Opening port with options:', options);
         await this.port.open(options);
+        console.log('[SerialService] Port opened successfully');
+
         this.config = config;
         this.isConnected = true;
         this.emit('open', { config });
+
+        console.log('[SerialService] Starting read loop');
         this.startReading();
     }
 

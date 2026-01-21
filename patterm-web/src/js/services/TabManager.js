@@ -44,28 +44,34 @@ export class TabManager {
     }
 
     async connectTab(tabId, service) {
+        console.log('[TabManager] connectTab called with tabId:', tabId);
         const tab = this.tabs.get(tabId);
         if (!tab) {
             throw new Error(`Tab ${tabId} not found`);
         }
+        console.log('[TabManager] Tab found, setting up service listeners');
 
         tab.service = service;
         tab.connected = true;
         tab.startTime = new Date();
 
         service.on('data', (data) => {
+            console.log('[TabManager] Data received:', data);
             this.onDataReceived(tabId, data);
         });
 
         service.on('error', (error) => {
+            console.error('[TabManager] Service error:', error);
             globalEvents.emit('tab:error', { tabId, error });
         });
 
         service.on('close', () => {
+            console.log('[TabManager] Service closed');
             tab.connected = false;
             globalEvents.emit('tab:disconnected', { tabId });
         });
 
+        console.log('[TabManager] Emitting tab:connected event');
         globalEvents.emit('tab:connected', { tabId });
     }
 

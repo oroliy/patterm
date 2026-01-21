@@ -77,21 +77,33 @@ class PattermApp {
     }
 
     async createConnection(config, tabName, port) {
+        console.log('[App] createConnection called with:', { config, tabName, port });
+
+        if (!port) {
+            this.showError('No port selected. Please select a serial port first.');
+            return;
+        }
+
         const tabState = this.tabManager.createTab(config, tabName || `Port ${config.baudRate}`);
         const service = new SerialService();
         service.port = port;
 
+        console.log('[App] About to open port with config:', config);
+
         try {
             await service.open(config);
+            console.log('[App] Port opened successfully');
             await this.tabManager.connectTab(tabState.id, service);
         } catch (error) {
+            console.error('[App] Connection failed:', error);
             this.tabManager.closeTab(tabState.id);
-            this.showError(`Failed to connect: ${error.message}`);
+            this.showError(`Failed to connect: ${error.message}\n\n${error.stack}`);
             return;
         }
     }
 
     onTabCreated(tabState) {
+        console.log('[App] onTabCreated called for:', tabState.id);
         const component = new TabComponent(tabState, {
             onClose: (tabId) => this.closeTab(tabId),
             onSwitch: (tabId) => this.switchTab(tabId),
@@ -105,12 +117,15 @@ class PattermApp {
 
         const tabsContainer = document.getElementById('tabs-container');
         tabsContainer.appendChild(component.tabElement);
+        console.log('[App] Tab element appended to tabs-container');
 
         const tabsContent = document.getElementById('tabs-content');
         tabsContent.appendChild(component.element);
+        console.log('[App] Tab content appended to tabs-content');
 
         this.switchTab(tabState.id);
         this.updateEmptyState();
+        console.log('[App] onTabCreated completed');
     }
 
     onTabConnected({ tabId }) {

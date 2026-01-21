@@ -12,9 +12,11 @@ export class TabComponent {
     }
 
     create() {
+        console.log('[TabComponent] Creating component for tab:', this.tabState.id);
         this.createTabElement();
         this.createTabContent();
         this.attachEventListeners();
+        console.log('[TabComponent] Component created');
         return this;
     }
 
