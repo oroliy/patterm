@@ -36,7 +36,11 @@
       "WebSearch",
       "Bash(git checkout:*)",
       "Bash(npm run build:*)",
-      "Bash(npx playwright test:*)"
+      "Bash(npx playwright test:*)",
+      "Bash(npm run test:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs:*)",
+      "Bash(npm run web:dev:*)"
     ]
   },
   "outputStyle": "default"

@@ -4,18 +4,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Patterm** is a cross-platform serial terminal application built with Electron. It provides multi-tab support for managing multiple serial port connections simultaneously, similar to PuTTY or Tera Term but with modern multi-tabbed UI.
+**Patterm** is a cross-platform serial terminal application available in two versions:
+- **Desktop App**: Electron-based with multi-tab support for managing multiple serial connections simultaneously
+- **Web PWA**: Browser-based version using Web Serial API for modern browsers
 
-**Tech Stack**: Electron 40.0.0, Node.js 18.x/20.x, SerialPort.js 12.0.0, vanilla JavaScript (no TypeScript), Electron Builder for packaging.
+**Tech Stack**:
+- Desktop: Electron 40.0.0, Node.js 18.x/20.x, SerialPort.js 12.0.0, vanilla JavaScript
+- Web: Vite 5.x, Web Serial API, vanilla JavaScript ES modules
 
 ## Common Commands
 
 ```bash
-# Development
+# Electron Desktop App
 npm start              # Start Electron app (no hot reload)
 npm run dev           # Start with hot reload using concurrently
 
-# Building
+# Web PWA Version
+npm run web:dev       # Start Vite dev server (HTTPS, localhost:5173)
+npm run web:build     # Build web version for production
+npm run web:test      # Run Playwright E2E tests
+
+# Building Desktop App
 npm run dist          # Build distribution packages for current platform
 npm run dist:win      # Build for Windows (NSIS installer)
 npm run dist:mac      # Build for macOS (DMG)
@@ -47,10 +56,24 @@ src/
 │   ├── index.html/main.js  # Main window shell
 │   ├── tab.html            # Template for tab content (each tab = separate BrowserView)
 │   ├── connection-dialog.* # Connection setup modal
-│   └── debug-window.html   # Debug console UI
-└── services/               # Business Logic (loaded by main process)
-    ├── serial-service.js           # Handles single serial port operations
-    └── serial-service-manager.js   # Manages multiple SerialService instances
+│   ├── debug-window.html   # Debug console UI
+│   └── theme-manager.js    # Theme switching logic
+├── services/               # Business Logic (loaded by main process)
+│   ├── serial-service.js           # Handles single serial port operations
+│   └── serial-service-manager.js   # Manages multiple SerialService instances
+└── web/                    # Web Version Source (PWA)
+    ├── js/
+    │   ├── main.js        # Web app entry point
+    │   ├── components/    # UI components (ConnectionDialog, TabComponent, TerminalComponent)
+    │   ├── services/      # Web Serial API services (SerialService, TabManager, LogManager)
+    │   └── utils/         # Utilities (constants, helpers)
+    └── css/
+        └── styles.css
+web/                        # Web Version Entry
+    ├── index.html         # Web app HTML
+    ├── vite.config.js     # Vite build config
+    ├── public/            # Static assets (icons, manifest, service worker)
+    └── tests/             # Playwright E2E tests
 ```
 
 ### Key Architectural Patterns

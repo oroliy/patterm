@@ -3,9 +3,16 @@
 ## Build Commands
 
 ```bash
-# Development
+# Electron Desktop App
 npm start              # Start Electron app
 npm run dev           # Start with hot reload
+
+# Web Version (PWA)
+npm run web:dev       # Start Vite dev server (HTTPS, localhost:5173)
+npm run web:build     # Build web version for production
+npm run web:preview   # Preview production build
+npm run web:serve     # Serve production build with HTTPS
+npm run web:test      # Run Playwright E2E tests
 
 # Building
 npm run build         # Build renderer and main
@@ -105,7 +112,7 @@ src/
 │   ├── main.js     # Application entry point
 │   ├── window-manager.js  # Multi-window and tab management
 │   └── debug-window.js     # Debug console management
-├── renderer/       # UI/frontend code
+├── renderer/       # UI/frontend code for Electron
 │   ├── index.html  # Main window HTML
 │   ├── main.js     # Main window JavaScript
 │   ├── tab.html    # Tab content HTML
@@ -113,11 +120,34 @@ src/
 │   ├── connection-dialog.js    # Connection dialog logic
 │   ├── debug-window.html     # Debug console HTML
 │   ├── about.html  # About dialog HTML
+│   ├── theme-manager.js  # Theme switching logic
 │   └── styles.css  # Global CSS styles
-├── services/       # Business logic
+├── services/       # Business logic for Electron
 │   ├── serial-service.js  # Single serial port handling
 │   └── serial-service-manager.js  # Multi-connection management
-└── scripts/        # Testing and utility scripts
+└── web/            # Web version source code (PWA)
+    ├── js/
+    │   ├── main.js  # Web app entry point
+    │   ├── components/  # UI components
+    │   │   ├── ConnectionDialog.js
+    │   │   ├── TabComponent.js
+    │   │   └── TerminalComponent.js
+    │   ├── services/  # Web Serial API services
+    │   │   ├── SerialService.js
+    │   │   ├── TabManager.js
+    │   │   ├── LogManager.js
+    │   │   └── EventManager.js
+    │   └── utils/  # Utilities
+    │       ├── constants.js
+    │       └── helpers.js
+    └── css/
+        └── styles.css
+web/                # Web version entry and config
+    ├── index.html  # Web app HTML
+    ├── vite.config.js  # Vite build config
+    ├── public/     # Static assets (icons, manifest, sw.js)
+    └── tests/      # Playwright E2E tests
+scripts/            # Testing and utility scripts
     ├── create-virtual-port.sh    # Virtual port creation
     ├── quick-virtual-serial.sh     # Quick echo server
     └── virtual-serial.py        # Python virtual serial
