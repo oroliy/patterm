@@ -201,6 +201,12 @@ class PattermApp {
             await tab.service.write(data);
             tab.terminal.appendTransmitted(data);
             this.tabManager.onDataSent(tabId, data);
+            
+            // Update status bar to reflect new TX bytes
+            const component = this.tabComponents.get(tabId);
+            if (component) {
+                component.updateStatusBar();
+            }
         } catch (error) {
             tab.terminal.appendError(error.message);
         }

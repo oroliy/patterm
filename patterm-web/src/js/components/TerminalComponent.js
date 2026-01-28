@@ -42,7 +42,7 @@ export class TerminalComponent {
         if (this.lastLogLine && this.canAppendToLastLine(type)) {
             const textNode = document.createTextNode(text);
             this.lastLogLine.appendChild(textNode);
-        } else if (text.length > 0 || (hasNewline && !this.lastLogLine)) {
+        } else if (text.length > 0 || hasNewline) {
             if (this.showTimestamps) {
                 const tsSpan = this.createTimestampSpan();
                 line.appendChild(tsSpan);

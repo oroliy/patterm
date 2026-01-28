@@ -298,7 +298,7 @@ body {
 
 /* Tab Content Environment */
 .tab-content {
-    flex: 1;
+    height: 100%;
     background: var(--bg-secondary);
     position: relative;
 }
