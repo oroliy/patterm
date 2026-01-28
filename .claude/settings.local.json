@@ -40,7 +40,8 @@
       "Bash(npm run test:*)",
       "Bash(lsof:*)",
       "Bash(xargs:*)",
-      "Bash(npm run web:dev:*)"
+      "Bash(npm run web:dev:*)",
+      "Bash(wc:*)"
     ]
   },
   "outputStyle": "default"
