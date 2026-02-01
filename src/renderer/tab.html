@@ -413,6 +413,8 @@
             let rxBytes = 0;
             let txBytes = 0;
             let rateUpdateInterval = null;
+            let rxRateDecayTimeout = null;
+            let txRateDecayTimeout = null;
 
             async function debugLog(message, level = 'info') {
                 try {
@@ -500,15 +502,50 @@
                 updateStatusBar();
             }
 
+            function resetRateDecay(type) {
+                const timeout = type === 'rx' ? rxRateDecayTimeout : txRateDecayTimeout;
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+                // Set rate to 0 after 2 seconds of no activity
+                const newTimeout = setTimeout(() => {
+                    if (type === 'rx') {
+                        rxRate = 0;
+                        rxRateDecayTimeout = null;
+                    } else {
+                        txRate = 0;
+                        txRateDecayTimeout = null;
+                    }
+                    updateStatusBar();
+                }, 2000);
+                if (type === 'rx') {
+                    rxRateDecayTimeout = newTimeout;
+                } else {
+                    txRateDecayTimeout = newTimeout;
+                }
+            }
+
             function startRateCalculation() {
                 stopRateCalculation();
-                rateUpdateInterval = setInterval(updateRates, 1000);
+                // Rates now update in real-time when data arrives
+                // Only sync to main process every second
+                rateUpdateInterval = setInterval(() => {
+                    ipcRenderer.send('tab:updateRates', tabId, rxRate, txRate);
+                }, 1000);
             }
 
             function stopRateCalculation() {
                 if (rateUpdateInterval) {
                     clearInterval(rateUpdateInterval);
                     rateUpdateInterval = null;
+                }
+                if (rxRateDecayTimeout) {
+                    clearTimeout(rxRateDecayTimeout);
+                    rxRateDecayTimeout = null;
+                }
+                if (txRateDecayTimeout) {
+                    clearTimeout(txRateDecayTimeout);
+                    txRateDecayTimeout = null;
                 }
             }
 
@@ -613,6 +650,7 @@
                     } else if (rxBytes > 0 && timeDiff > 0) {
                         rxRate = Math.round(rxBytes / Math.max(timeDiff, 0.1));
                     }
+                    resetRateDecay('rx');
                     triggerRxPulse();
                     ipcRenderer.send('tab:rxActivity', tabId);
                 }
@@ -627,6 +665,7 @@
                     } else if (txBytes > 0 && timeDiff > 0) {
                         txRate = Math.round(txBytes / Math.max(timeDiff, 0.1));
                     }
+                    resetRateDecay('tx');
                     triggerTxPulse();
                     ipcRenderer.send('tab:txActivity', tabId);
                 }

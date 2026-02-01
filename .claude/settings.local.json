@@ -61,7 +61,8 @@
       "Bash(python3:*)",
       "Bash(find:*)",
       "Bash(gh issue create:*)",
-      "Bash(gh label:*)"
+      "Bash(gh label:*)",
+      "Bash(git branch:*)"
     ]
   },
   "outputStyle": "default"
