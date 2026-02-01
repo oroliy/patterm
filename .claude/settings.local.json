@@ -41,7 +41,15 @@
       "Bash(lsof:*)",
       "Bash(xargs:*)",
       "Bash(npm run web:dev:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(node:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(npm show:*)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)"
     ]
   },
   "outputStyle": "default"

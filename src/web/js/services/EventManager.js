@@ -1,3 +1,5 @@
+import { debug } from '../utils/debug.js';
+
 export class EventManager {
     constructor() {
         this.events = {};
@@ -8,7 +10,7 @@ export class EventManager {
             this.events[event] = [];
         }
         this.events[event].push(callback);
-        console.log('[EventManager] Registered callback for event:', event, 'Total callbacks:', this.events[event].length);
+        debug.log('[EventManager] Registered callback for event:', event, 'Total callbacks:', this.events[event].length);
         return () => this.off(event, callback);
     }
 
@@ -27,8 +29,8 @@ export class EventManager {
     }
 
     emit(event, data) {
-        console.log('[EventManager] Emitting event:', event, 'with data:', data);
-        console.log('[EventManager] Registered callbacks for', event, ':', this.events[event]?.length || 0);
+        debug.log('[EventManager] Emitting event:', event, 'with data:', data);
+        debug.log('[EventManager] Registered callbacks for', event, ':', this.events[event]?.length || 0);
         if (!this.events[event]) {
             console.warn('[EventManager] No callbacks registered for event:', event);
             return;
@@ -36,7 +38,7 @@ export class EventManager {
         const eventObj = data instanceof Event ? data : new CustomEvent(event, { detail: data });
         this.events[event].forEach(callback => {
             try {
-                console.log('[EventManager] Calling callback for', event, 'with:', eventObj.detail || eventObj);
+                debug.log('[EventManager] Calling callback for', event, 'with:', eventObj.detail || eventObj);
                 callback(eventObj.detail || eventObj);
             } catch (error) {
                 console.error(`Error in ${event} callback:`, error);

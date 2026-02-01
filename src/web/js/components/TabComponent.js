@@ -1,5 +1,6 @@
 import { TerminalComponent } from './TerminalComponent.js';
 import { formatTime, formatDuration, formatBytes, formatRate } from '../utils/helpers.js';
+import { debug } from '../utils/debug.js';
 
 export class TabComponent {
     constructor(tabState, options = {}) {
@@ -12,11 +13,11 @@ export class TabComponent {
     }
 
     create() {
-        console.log('[TabComponent] Creating component for tab:', this.tabState.id);
+        debug.log('[TabComponent] Creating component for tab:', this.tabState.id);
         this.createTabElement();
         this.createTabContent();
         this.attachEventListeners();
-        console.log('[TabComponent] Component created');
+        debug.log('[TabComponent] Component created');
         return this;
     }
 

@@ -1,3 +1,5 @@
+import { debug } from '../utils/debug.js';
+
 export class SerialService {
     constructor() {
         this.port = null;
@@ -41,7 +43,7 @@ export class SerialService {
     }
 
     async open(config) {
-        console.log('[SerialService] open() called with port:', this.port, 'config:', config);
+        debug.log('[SerialService] open() called with port:', this.port, 'config:', config);
 
         if (!this.port) {
             throw new Error('No port selected. Call requestPort() first.');
@@ -56,24 +58,24 @@ export class SerialService {
             flowControl: config.flowControl || 'none'
         };
 
-        console.log('[SerialService] Opening port with options:', options);
+        debug.log('[SerialService] Opening port with options:', options);
         await this.port.open(options);
-        console.log('[SerialService] Port opened successfully');
+        debug.log('[SerialService] Port opened successfully');
 
         this.config = config;
         this.isConnected = true;
         this.emit('open', { config });
 
-        console.log('[SerialService] Starting read loop');
+        debug.log('[SerialService] Starting read loop');
         this.startReading();
     }
 
     async startReading() {
-        console.log('[SerialService] startReading() called, port:', this.port, 'readable:', this.port?.readable);
+        debug.log('[SerialService] startReading() called, port:', this.port, 'readable:', this.port?.readable);
 
         if (!this.port?.readable) {
             const error = 'Port opened but not readable. This may indicate a connection issue.';
-            console.error('[SerialService]', error);
+            debug.error('[SerialService]', error);
             this.emit('error', new Error(error));
             return;
         }
@@ -87,13 +89,13 @@ export class SerialService {
             const inputStream = textDecoder.readable;
             const reader = inputStream.getReader();
 
-            console.log('[SerialService] Read loop started');
+            debug.log('[SerialService] Read loop started');
 
             while (!signal.aborted) {
                 try {
                     const { value, done } = await reader.read();
                     if (done || signal.aborted) {
-                        console.log('[SerialService] Read loop done');
+                        debug.log('[SerialService] Read loop done');
                         break;
                     }
                     if (value) {
@@ -101,7 +103,7 @@ export class SerialService {
                     }
                 } catch (readError) {
                     if (!signal.aborted) {
-                        console.error('[SerialService] Read error:', readError);
+                        debug.error('[SerialService] Read error:', readError);
                         this.emit('error', readError);
                     }
                     break;
@@ -109,22 +111,22 @@ export class SerialService {
             }
         } catch (error) {
             if (!signal.aborted) {
-                console.error('[SerialService] StartReading error:', error);
+                debug.error('[SerialService] StartReading error:', error);
                 this.emit('error', error);
             }
         } finally {
-            console.log('[SerialService] Read loop ended');
+            debug.log('[SerialService] Read loop ended');
             this.isConnected = false;
             this.emit('close');
         }
     }
 
     async write(data) {
-        console.log('[SerialService] write() called with data:', data, 'isConnected:', this.isConnected, 'writable:', this.port?.writable);
+        debug.log('[SerialService] write() called with data:', data, 'isConnected:', this.isConnected, 'writable:', this.port?.writable);
 
         if (!this.isConnected || !this.port?.writable) {
             const error = this.isConnected ? 'Port not writable' : 'Port is not open. Call open() first.';
-            console.error('[SerialService]', error);
+            debug.error('[SerialService]', error);
             throw new Error(error);
         }
 
@@ -134,9 +136,9 @@ export class SerialService {
             const writer = this.port.writable.getWriter();
             await writer.write(encodedData);
             writer.releaseLock();
-            console.log('[SerialService] Data written successfully');
+            debug.log('[SerialService] Data written successfully');
         } catch (error) {
-            console.error('[SerialService] Write error:', error);
+            debug.error('[SerialService] Write error:', error);
             this.emit('error', error);
             throw error;
         }
@@ -160,28 +162,28 @@ export class SerialService {
     }
 
     async disconnect() {
-        console.log('[SerialService] disconnect() called');
+        debug.log('[SerialService] disconnect() called');
 
         if (this.readLoopController) {
-            console.log('[SerialService] Aborting read loop');
+            debug.log('[SerialService] Aborting read loop');
             this.readLoopController.abort();
         }
 
         if (this.reader) {
             try {
                 await this.reader.cancel();
-                console.log('[SerialService] Reader cancelled');
+                debug.log('[SerialService] Reader cancelled');
             } catch (e) {
-                console.error('[SerialService] Error cancelling reader:', e);
+                debug.error('[SerialService] Error cancelling reader:', e);
             }
         }
 
         if (this.writer) {
             try {
                 await this.writer.close();
-                console.log('[SerialService] Writer closed');
+                debug.log('[SerialService] Writer closed');
             } catch (e) {
-                console.error('[SerialService] Error closing writer:', e);
+                debug.error('[SerialService] Error closing writer:', e);
             }
             this.writer = null;
         }
@@ -189,9 +191,9 @@ export class SerialService {
         if (this.port) {
             try {
                 await this.port.close();
-                console.log('[SerialService] Port closed');
+                debug.log('[SerialService] Port closed');
             } catch (e) {
-                console.error('[SerialService] Error closing port:', e);
+                debug.error('[SerialService] Error closing port:', e);
             }
         }
 
@@ -228,7 +230,7 @@ export class SerialService {
                 try {
                     callback(data);
                 } catch (error) {
-                    console.error(`Error in ${event} callback:`, error);
+                    debug.error(`Error in ${event} callback:`, error);
                 }
             });
         }
@@ -255,7 +257,7 @@ export async function listAvailablePorts() {
         const ports = await navigator.serial.getPorts();
         return ports.map(port => port.getInfo());
     } catch (error) {
-        console.error('Failed to list ports:', error);
+        debug.error('Failed to list ports:', error);
         return [];
     }
 }

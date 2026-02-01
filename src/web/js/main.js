@@ -6,6 +6,7 @@ import { ConnectionDialog } from './components/ConnectionDialog.js';
 import { TabComponent } from './components/TabComponent.js';
 import { STORAGE_KEYS, DEFAULT_SERIAL_CONFIG, THEME_OPTIONS } from './utils/constants.js';
 import { applyTheme, getEffectiveTheme, saveToLocalStorage, loadFromLocalStorage } from './utils/helpers.js';
+import { debug } from './utils/debug.js';
 
 class PattermApp {
     constructor() {
@@ -77,7 +78,7 @@ class PattermApp {
     }
 
     async createConnection(config, tabName, port) {
-        console.log('[App] createConnection called with:', { config, tabName, port });
+        debug.log('[App] createConnection called with:', { config, tabName, port });
 
         if (!port) {
             this.showError('No port selected. Please select a serial port first.');
@@ -88,14 +89,14 @@ class PattermApp {
         const service = new SerialService();
         service.port = port;
 
-        console.log('[App] About to open port with config:', config);
+        debug.log('[App] About to open port with config:', config);
 
         try {
             await service.open(config);
-            console.log('[App] Port opened successfully');
+            debug.log('[App] Port opened successfully');
             await this.tabManager.connectTab(tabState.id, service);
         } catch (error) {
-            console.error('[App] Connection failed:', error);
+            debug.error('[App] Connection failed:', error);
             this.tabManager.closeTab(tabState.id);
             this.showError(`Failed to connect: ${error.message}\n\n${error.stack}`);
             return;
@@ -103,9 +104,9 @@ class PattermApp {
     }
 
     onTabCreated(tabState) {
-        console.log('[App] onTabCreated called with tabState:', tabState);
-        console.log('[App] tabState.id:', tabState?.id);
-        console.log('[App] tabState keys:', Object.keys(tabState || {}));
+        debug.log('[App] onTabCreated called with tabState:', tabState);
+        debug.log('[App] tabState.id:', tabState?.id);
+        debug.log('[App] tabState keys:', Object.keys(tabState || {}));
 
         const component = new TabComponent(tabState, {
             onClose: (tabId) => this.closeTab(tabId),
@@ -120,24 +121,24 @@ class PattermApp {
 
         const tabsContainer = document.getElementById('tabs-container');
         tabsContainer.appendChild(component.tabElement);
-        console.log('[App] Tab element appended to tabs-container');
+        debug.log('[App] Tab element appended to tabs-container');
 
         const tabsContent = document.getElementById('tabs-content');
         tabsContent.appendChild(component.element);
-        console.log('[App] Tab content appended to tabs-content');
+        debug.log('[App] Tab content appended to tabs-content');
 
         this.switchTab(tabState.id);
         this.updateEmptyState();
-        console.log('[App] onTabCreated completed');
+        debug.log('[App] onTabCreated completed');
     }
 
     onTabConnected(data) {
-        console.log('[App] onTabConnected called with data:', data);
-        console.log('[App] data type:', typeof data);
-        console.log('[App] data keys:', data ? Object.keys(data) : 'data is null/undefined');
+        debug.log('[App] onTabConnected called with data:', data);
+        debug.log('[App] data type:', typeof data);
+        debug.log('[App] data keys:', data ? Object.keys(data) : 'data is null/undefined');
 
         const tabId = data?.tabId;
-        console.log('[App] Extracted tabId:', tabId);
+        debug.log('[App] Extracted tabId:', tabId);
 
         const component = this.tabComponents.get(tabId);
         if (component) {
@@ -303,7 +304,7 @@ class PattermApp {
         try {
             await component.terminal.copyAll();
         } catch (error) {
-            console.error('Failed to copy:', error);
+            debug.error('Failed to copy:', error);
         }
     }
 
@@ -352,8 +353,8 @@ class PattermApp {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(() => console.log('[SW] Registered'))
-                    .catch((error) => console.error('[SW] Registration failed:', error));
+                    .then(() => debug.log('[SW] Registered'))
+                    .catch((error) => debug.error('[SW] Registration failed:', error));
             });
         }
     }
