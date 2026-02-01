@@ -154,8 +154,8 @@
     flex-shrink: 0;
     height: 28px;
     min-height: 28px;
-    padding: 0 12px;
-    background: var(--glass-surface);
+    padding: 0;
+    background: transparent;
 }
 
 .tab-status-bar .status-bar-section {
@@ -171,6 +171,14 @@
 
 .tab-status-bar .status-bar-section:first-child::before {
     content: none;
+}
+
+.tab-status-bar .status-bar-section:first-child {
+    padding-left: 12px;
+}
+
+.tab-status-bar .status-bar-section:last-child {
+    padding-right: 12px;
 }
 
 .tab-status-bar .status-label {
