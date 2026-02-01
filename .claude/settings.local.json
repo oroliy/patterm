@@ -62,7 +62,9 @@
       "Bash(find:*)",
       "Bash(gh issue create:*)",
       "Bash(gh label:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh run watch:*)"
     ]
   },
   "outputStyle": "default"
