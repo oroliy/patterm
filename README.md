@@ -91,12 +91,41 @@ A Progressive Web App version is also available, featuring:
 - Same feature set as desktop version (multi-tab, all UART configs, logging)
 - **HTTPS required** for Web Serial API (localhost exempt)
 
+**Web Development Commands:**
+```bash
+npm run web:dev      # Start Vite dev server (HTTPS, localhost:5173)
+npm run web:build    # Build for production
+npm run web:preview  # Preview production build
+npm run web:serve    # Serve production build with HTTPS
+npm run web:test     # Run Playwright E2E tests
+```
+
+**Browser Support**: Chrome 89+, Edge 89+, Opera 75+ (Web Serial API required)
+*Firefox and Safari are not supported.*
+
 ### Keyboard Shortcuts
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl/Cmd + N` | New connection |
 | `Ctrl/Cmd + W` | Close window |
 | `Ctrl/Cmd + Shift + D` | Toggle debug console |
+
+---
+
+## Download
+
+### Latest Release: v0.6.0
+
+**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.6.0)**
+
+Choose your platform:
+- **Windows**: [Patterm-0.6.0.exe](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0.exe) or [Patterm.Setup.0.6.0.exe](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm.Setup.0.6.0.exe)
+- **macOS**: [Patterm-0.6.0.dmg](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0.dmg) (Intel) or [Patterm-0.6.0-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0-arm64.dmg) (Apple Silicon)
+- **Linux**: [Patterm-0.6.0.AppImage](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0.AppImage) (Universal) or [deb packages](https://github.com/oroliy/patterm/releases/tag/v0.6.0)
+
+**Web Version**: Open https://patterm-web.vercel.app/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
+
+[View all releases](https://github.com/oroliy/patterm/releases)
 
 ---
 
@@ -161,38 +190,57 @@ patterm/
 │   │   ├── index.html  # Main window HTML
 │   │   ├── main.js     # Main window JavaScript
 │   │   ├── tab.html    # Tab content HTML
-│   │   ├── connection-dialog.html  # Connection dialog HTML
-│   │   ├── connection-dialog.js    # Connection dialog logic
-│   │   ├── about.html  # About dialog HTML
-│   │   └── styles.css  # Global CSS styles
+│   │   ├── connection-dialog.*  # Connection dialog
+│   │   ├── debug-window.html  # Debug console UI
+│   │   └── theme-manager.js  # Theme switching logic
 │   ├── services/       # Business logic
-│   │   ├── serial-service.js  # Single serial port handling
+│   │   ├── serial-service.js  # Single serial port operations
 │   │   └── serial-service-manager.js  # Multi-connection management
-│   └── public/         # Static assets
-├── tests/              # Jest test suites
+│   ├── shared/         # Shared code (desktop + web)
+│   │   ├── css/        # Common CSS variables and reset
+│   │   └── js/         # Shared utilities (constants, formatters, theme, utils)
+│   └── web/            # Web version source (PWA)
+│       ├── js/         # Web app entry and components
+│       │   ├── components/  # UI components (ConnectionDialog, Tab, Terminal)
+│       │   ├── services/  # Web Serial API services
+│       │   └── utils/     # Utility modules
+│       ├── css/        # Web-specific styles
+│       └── public/      # PWA assets (manifest, icons, service worker)
+├── web/                # Web version entry and build config
+│   ├── index.html     # Web app HTML
+│   ├── vite.config.js  # Vite build configuration
+│   ├── public/        # Static assets
+│   └── tests/         # Playwright E2E tests
+├── scripts/           # Utility scripts
+├── tests/             # Jest test suites
 ├── .github/workflows/  # CI/CD configuration
 ├── package.json
-├── AGENTS.md           # Development guidelines
-└── CLAUDE.md           # AI agent guidance
+├── AGENTS.md          # Development guidelines
+└── CLAUDE.md          # AI agent guidance
 ```
 
 ### Development Commands
 
 ```bash
-# Start development server with hot reload
-npm run dev
+# Desktop App Development
+npm run dev            # Start development server with hot reload
+npm start              # Start Electron (no hot reload)
+npm run dist           # Build distribution packages for current platform
+npm run dist:win       # Windows only
+npm run dist:mac       # macOS only
+npm run dist:linux     # Linux only
 
-# Start Electron (no hot reload)
-npm start
+# Web PWA Development
+npm run web:dev        # Start Vite dev server (HTTPS, localhost:5173)
+npm run web:build      # Build web version for production
+npm run web:preview    # Preview production build
+npm run web:serve      # Serve with HTTPS
+npm run web:test       # Run Playwright E2E tests
 
-# Build the application
-npm run build
-
-# Build distribution packages
-npm run dist
-npm run dist:win    # Windows only
-npm run dist:mac    # macOS only
-npm run dist:linux  # Linux only
+# Testing
+npm test               # Run Jest unit tests
+npm run test:e2e       # Quick E2E test with virtual serial port
+npm run lint           # Run linter
 ```
 
 ### Testing
@@ -364,10 +412,12 @@ For issues, questions, or contributions:
 
 Built with:
 
-- [![Electron](https://img.shields.io/badge/Electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org/)
-- [![SerialPort.js](https://img.shields.io/badge/SerialPort-12.0.0-00A98F?logo=node.js)](https://serialport.io/)
+- [![Electron](https://img.shields.io/badge/electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org/)
+- [![SerialPort.js](https://img.shields.io/badge/SerialPort-13.0.0-00A98F?logo=node.js)](https://serialport.io/)
 - [![Electron Builder](https://img.shields.io/badge/Electron%20Builder-24.9.1-475A86?logo=electron)](https://www.electron.build/)
 - [![Jest](https://img.shields.io/badge/Jest-29.7.0-C21325?logo=jest)](https://jestjs.io/)
+- [![Vite](https://img.shields.io/badge/vite-5.0.0-646FFA?logo=vite)](https://vitejs.org/)
+- [![Playwright](https://img.shields.io/badge/playwright-1.57.0-2EADAD?logo=playwright)](https://playwright.dev/)
 
 ---
 
