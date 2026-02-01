@@ -49,7 +49,19 @@
       "Bash(gh pr checks:*)",
       "Bash(npm show:*)",
       "Bash(grep:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(git fetch:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git pull:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(python3 -m base64:*)",
+      "Bash(python3:*)",
+      "Bash(find:*)",
+      "Bash(gh issue create:*)",
+      "Bash(gh label:*)"
     ]
   },
   "outputStyle": "default"
