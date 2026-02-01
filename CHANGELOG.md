@@ -9,6 +9,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0] - 2026-02-01
+
+### Added
+- **Patterm Web (PWA)**: Browser-based serial terminal using Web Serial API
+  - Progressive Web App with offline support
+  - Installable as desktop app from browser
+  - Service worker for offline functionality
+  - Responsive UI matching desktop version
+  - Browser support: Chrome 89+, Edge 89+, Opera 75+
+- **Code Refactoring**: Shared modules to reduce duplication
+  - `src/shared/css/base.css`: 500 lines of shared styles
+  - `src/shared/js/constants.js`, `formatters.js`, `theme.js`, `utils.js`
+  - Desktop CSS reduced by 78%, web CSS by 52%
+- **E2E Testing**: Playwright test suite with virtual serial integration
+- **GitHub Automation**: Dependabot and Opencode workflow configuration
+- **Conditional Debug Logging**: Debug utility with localStorage/URL toggle
+- **Rate Decay**: Status bar rates reset to 0 B/s after 2 seconds of inactivity
+
+### Changed
+- **Node.js Requirement**: Minimum version now 20.x (serialport 13.0.0 drops Node 16/18)
+- **Status Bar**: Full width, no padding gaps, transparent background, real-time updates
+- **electron**: Updated to 40.0.0 (latest stable)
+
+### Fixed
+- Security vulnerabilities: tar (7.5.3→7.5.7), lodash (4.17.21→4.17.23)
+- Status bar positioning cut-off at viewport edge
+- Duplicate `.main-content` CSS definition removed
+- Real-time rate updates now trigger immediately on data transfer
+- Serial port opening with proper async handling
+- Web Serial API error handling and debugging improvements
+
+### New NPM Scripts
+```bash
+npm run web:dev      # Start Vite dev server (HTTPS, localhost:5173)
+npm run web:build    # Build web version for production
+npm run web:preview  # Preview production build
+npm run web:serve    # Serve with HTTPS
+npm run web:test     # Run Playwright E2E tests
+```
+
+---
+
 ## [0.5.0] - 2026-01-18
 
 ### Added

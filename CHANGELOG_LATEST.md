@@ -1,85 +1,124 @@
-# Changelog - Version 0.5.0 (January 18, 2026)
+# Changelog - Version 0.6.0 (February 1, 2026)
 
-## New Features
+## Major New Features
 
-### Context Menus
-- **Tab Right-Click Menu**: Comprehensive context menu with quick actions:
-  - Close Tab - Close current tab and disconnect
-  - Disconnect/Reconnect - Toggle connection without closing tab
-  - Clear Screen - Clear terminal output
-  - Save Output - Save terminal content to file
-  - Start/Stop Logging - Toggle session logging
-  - Copy All Text - Copy all terminal text to clipboard
-  - Rename Tab - Change tab name
-  - Show Connection Settings - View current serial configuration
-- **Terminal Right-Click Menu**: Quick terminal actions:
-  - Clear Screen - Clear terminal output
-  - Save Output - Save terminal content to file
-  - Copy All Text - Copy all terminal text to clipboard
+### Patterm Web (PWA) 🌐
+- **Progressive Web App**: Browser-based serial terminal using Web Serial API
+- **Offline Support**: Service worker for offline functionality
+- **Installable**: Can be installed as desktop app from browser
+- **Responsive UI**: Design matching desktop version
+- **Browser Support**: Chrome 89+, Edge 89+, Opera 75+
 
-### Enhanced Status Bar
-- **Compact Configuration Display**: Serial port settings shown in compact format (e.g., `/tmp/ttyV0 @ 115200 8N1`)
-- **Connection Duration**: Shows time elapsed since connection was established
-- **Connection Created Time**: Displays when the connection was first created
-- **Current Time**: Real-time clock display
-- **Cleaner RX/TX Indicators**: Icon-only badges with animated pulse effect on data transfer
+### Code Refactoring 🏗️
+- **Shared Code Modules**: Extracted common CSS and JavaScript to reduce duplication
+  - `src/shared/css/base.css`: 500 lines of shared styles
+  - `src/shared/js/constants.js`: Serial port and theme constants
+  - `src/shared/js/formatters.js`: Data formatting functions
+  - `src/shared/js/theme.js`: Theme utilities
+  - `src/shared/js/utils.js`: General utility functions
+- **Reduced CSS Duplication**: Desktop CSS -78%, web CSS -52%
+
+### E2E Testing 🧪
+- **Playwright Test Suite**: Comprehensive E2E tests for web version
+- **Virtual Serial Integration**: Tests with mock echo port
+- **Test Coverage**: Connection flow, send/receive operations, debug features
+
+### GitHub Automation 🤖
+- **Dependabot**: Automated dependency updates configuration
+- **Opencode Workflow**: AI-powered PR/issue comment handling
 
 ## Improvements
 
 ### User Interface
-- Cleaner status bar layout with organized sections separated by visual dividers
-- Animated pulse effect on RX/TX badges when data is transferred
-- Improved visual hierarchy with color-coded status indicators
-- Better information density - more data in less space
+- **Status Bar Visual Design**: Full width, no padding gaps, transparent background
+- **Status Bar Positioning**: Fixed cut-off issue with proper CSS padding
+- **Real-time Rate Updates**: Status bar rates update immediately on data transfer
+- **Rate Decay**: Rates reset to 0 B/s after 2 seconds of inactivity
 
 ### Developer Experience
-- Updated AGENTS.md to require lint and tests before committing
-- New IPC handlers for context menu actions
+- **Conditional Debug Logging**: Debug utility with localStorage/URL toggle
+- **Improved Serial Port Opening**: Better async handling with proper event ordering
+- **Enhanced Error Messages**: More descriptive errors with context
 
----
+## Bug Fixes
 
-## Version 0.4.0 Features (January 18, 2026)
+### Security 🔒
+- **tar**: 7.5.3 → 7.5.7 (high severity vulnerabilities)
+- **lodash**: 4.17.21 → 4.17.23 (moderate severity vulnerability)
+- **electron**: 40.0.0 (kept at latest stable)
 
-### Timestamp Display
-- Millisecond-precision timestamps on all serial data lines
-- Format: `[HH:MM:SS.mmm]` for precise timing analysis
-- Consistent timestamp color coding for easy identification
+### Serial Port
+- Fixed port selection not being passed to connection handler
+- Improved error handling in SerialService for Web Serial API
+- Added proper stream cleanup on disconnect
+- Enhanced validation and debugging
 
-### Enhanced Newline Handling
-- Proper support for CRLF (\\r\\n) line endings (Windows standard)
-- Proper support for CR (\\r) line endings
-- Normalized display for consistent rendering across platforms
+### Status Bar
+- Removed duplicate `.main-content` CSS definition
+- Fixed terminal display updates on data send
+- Resolved positioning cut-off at viewport edge
 
-### RX/TX Byte Counters and Rates
-- Real-time byte counters for received (RX) and transmitted (TX) data
-- Data rate display in bytes per second (B/s)
-- Auto-scaling byte display (B, KB, MB, GB)
-- Animated badges with color coding (cyan for RX, orange for TX)
+## Dependency Updates
 
-### Comprehensive Status Bar
-- Port name and connection status indicator
-- RX/TX byte totals with auto-scaling
-- Real-time data rate indicators with pulse animation
-- Connection duration timer
-- Created time and current time display
+### Production Dependencies
+- **@serialport/parser-delimiter**: 12.0.0 → 13.0.0
+- **@serialport/parser-readline**: 12.0.0 → 13.0.0
+- **serialport**: 12.0.0 → 13.0.0
 
-### Windows Virtual Serial Support
-- `scripts/setup-com0com.bat` - Automated com0com configuration wizard
-- `scripts/virtual-serial-win.py` - PySerial-based virtual serial bridge for Windows testing
+**Breaking Change**: SerialPort 13.0.0 drops Node 16 and 18 support (requires Node 20+)
 
----
+### New Dev Dependencies
+- **@playwright/test**: ^1.57.0 (E2E testing)
+- **@vitejs/plugin-basic-ssl**: ^1.0.0 (HTTPS dev server)
+- **vite**: ^5.0.0 (Web build tool)
 
-## Upgrade Notes
+## New NPM Scripts
 
-### For Users
-- Right-click on tabs or terminal to access context menus
-- Status bar now shows comprehensive connection information at a glance
-- Use the context menu for quick actions without memorizing keyboard shortcuts
+```bash
+npm run web:dev      # Start Vite dev server (HTTPS, localhost:5173)
+npm run web:build    # Build web version for production
+npm run web:preview  # Preview production build
+npm run web:serve    # Serve with HTTPS
+npm run web:test     # Run Playwright E2E tests
+```
+
+## Documentation
+
+- Updated CLAUDE.md with context menu and IPC patterns
+- Updated AGENTS.md with testing workflows
+- Added VIRTUAL_SERIAL_README.md for testing with virtual serial ports
+- Removed TODO_STATUS_BAR.md (converted to GitHub issues, all resolved)
+
+## Migration Notes
+
+### For Desktop Users
+- No breaking changes for desktop application
+- All existing features preserved
+
+### For Web Users
+- Requires browser with Web Serial API support (Chrome, Edge, Opera)
+- HTTPS required for Web Serial API (localhost is exempt)
+- Service worker enabled for offline support
 
 ### For Developers
-- Context menu actions are handled via new IPC handlers in main process
-- Status bar updates are now more efficient with consolidated update function
-- See AGENTS.md for updated development workflow requirements
+- Minimum Node.js version: 20.x (due to serialport 13.0.0)
+- Shared code modules should be used instead of duplicating code
+- Debug logging can be enabled via `localStorage.setItem('patterm_debug', 'true')`
+
+---
+
+## Version 0.5.0 Features (January 18, 2026)
+
+### Context Menus
+- **Tab Right-Click Menu**: Comprehensive context menu with quick actions
+- **Terminal Right-Click Menu**: Quick terminal actions
+
+### Enhanced Status Bar
+- Compact configuration display (e.g., `/tmp/ttyV0 @ 115200 8N1`)
+- Connection duration timer
+- Connection created time display
+- Current real-time clock
+- Cleaner RX/TX indicators with animated pulse effect
 
 ---
 
