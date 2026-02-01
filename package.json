@@ -77,13 +77,13 @@
       "target": [
         {"target": "nsis", "arch": "x64"},
         {"target": "portable", "arch": "x64"}
-      ],
-      "nsis": {
-        "artifactName": "Patterm-${version}-x64-setup.${ext}"
-      },
-      "portable": {
-        "artifactName": "Patterm-${version}-x64-portable.${ext}"
-      }
+      ]
+    },
+    "nsis": {
+      "artifactName": "Patterm-${version}-x64-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "Patterm-${version}-x64-portable.${ext}"
     },
     "linux": {
       "artifactName": "Patterm-${version}-${arch}.${ext}",
