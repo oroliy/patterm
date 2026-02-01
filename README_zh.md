@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/oroliy/patterm/blob/master/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm)](https://github.com/oroliy/patterm/issues)
 [![GitHub Stars](https://img.shields.io/github/stars/oroliy/patterm?style=social)](https://github.com/oroliy/patterm/stargazers)
-[![Node.js](https://img.shields.io/badge/node-18%20%7C%2020-339933?logo=node.js)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-20+-339933?logo=node.js)](https://nodejs.org)
 [![Electron](https://img.shields.io/badge/electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org)
 
 [功能特性](#功能特性) • [安装](#安装) • [使用方法](#使用方法) • [开发](#开发) • [贡献指南](#贡献指南)
@@ -61,6 +61,25 @@
 - ![Windows](https://img.shields.io/badge/Windows-x64-0078D4?logo=windows) NSIS + Portable
 - ![macOS](https://img.shields.io/badge/macOS-x64%20%7C%20ARM64-999999?logo=apple) DMG
 - ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux) AppImage + deb
+- ![Web](https://img.shields.io/badge/Web-PWA-02569B?logo=googlechrome) Chrome 89+
+
+### Web 版本（PWA）🌐
+同时提供基于浏览器的渐进式 Web 应用版本：
+- **基于 Web Serial API 的浏览器串口终端**
+- **离线支持**通过 Service Worker 实现
+- **可安装**为桌面应用（从浏览器安装）
+- 功能与桌面版相同（多标签、完整 UART 配置、日志记录等）
+
+运行 Web 版本：
+```bash
+npm run web:dev      # 启动 Vite 开发服务器（HTTPS，localhost:5173）
+npm run web:build    # 构建生产版本
+npm run web:serve    # 使用 HTTPS 提供生产构建
+npm run web:test     # 运行 Playwright E2E 测试
+```
+
+**浏览器支持**：Chrome 89+、Edge 89+、Opera 75+（需要 Web Serial API）
+*Firefox 和 Safari 不支持。*
 
 ### 键盘快捷键
 | 快捷键 | 操作 |
@@ -75,7 +94,7 @@
 
 ### 环境要求
 
-- Node.js 18.x 或 20.x
+- Node.js 20.x 或更高版本
 - npm（随 Node.js 一起安装）
 
 ### 安装依赖

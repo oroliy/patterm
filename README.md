@@ -10,7 +10,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/oroliy/patterm/blob/master/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/oroliy/patterm)](https://github.com/oroliy/patterm/issues)
 [![GitHub Stars](https://img.shields.io/github/stars/oroliy/patterm?style=social)](https://github.com/oroliy/patterm/stargazers)
-[![Node.js](https://img.shields.io/badge/node-18%20%7C%2020-339933?logo=node.js)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-20+-339933?logo=node.js)](https://nodejs.org)
 [![Electron](https://img.shields.io/badge/electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org)
 
 [Features](#features) • [Installation](#installation) • [Usage](#usage) • [Development](#development) • [Contributing](#contributing)
@@ -81,6 +81,15 @@
 - ![Windows](https://img.shields.io/badge/Windows-x64-0078D4?logo=windows) NSIS + Portable
 - ![macOS](https://img.shields.io/badge/macOS-x64%20%7C%20ARM64-999999?logo=apple) DMG
 - ![Linux](https://img.shields.io/badge/Linux-x64%20%7C%20ARM64-FCC624?logo=linux) AppImage + deb
+- ![Web](https://img.shields.io/badge/Web-PWA-02569B?logo=googlechrome) Chrome 89+
+
+### Web Version (PWA) 🌐
+A Progressive Web App version is also available, featuring:
+- **Browser-based serial terminal** using Web Serial API
+- **Offline support** via service worker
+- **Installable** as desktop app from browser
+- Same feature set as desktop version (multi-tab, all UART configs, logging)
+- **HTTPS required** for Web Serial API (localhost exempt)
 
 ### Keyboard Shortcuts
 | Shortcut | Action |
@@ -95,7 +104,7 @@
 
 ### Prerequisites
 
-- Node.js 18.x or 20.x
+- Node.js 20.x or higher
 - npm (comes with Node.js)
 
 ### Install Dependencies
