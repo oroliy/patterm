@@ -21,7 +21,7 @@
             flex-direction: column;
             overflow: hidden;
             margin: 0;
-            padding: 0 0 2px 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
@@ -189,6 +189,21 @@
             padding: 0;
             background: transparent;
             margin-top: var(--spacing-sm);
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .tab-status-bar::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tab-status-bar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tab-status-bar::-webkit-scrollbar-thumb {
+            background: var(--glass-border, rgba(255, 255, 255, 0.2));
+            border-radius: 2px;
         }
 
         .tab-status-bar .status-bar-section {
