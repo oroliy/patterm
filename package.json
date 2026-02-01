@@ -49,9 +49,9 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
-    "@serialport/parser-delimiter": "^12.0.0",
-    "@serialport/parser-readline": "^12.0.0",
-    "serialport": "^12.0.0"
+    "@serialport/parser-delimiter": "^13.0.0",
+    "@serialport/parser-readline": "^13.0.0",
+    "serialport": "^13.0.0"
   },
   "build": {
     "appId": "com.patterm.app",
