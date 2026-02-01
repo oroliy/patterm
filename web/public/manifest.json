@@ -1,0 +1,42 @@
+{
+    "name": "Patterm Web Serial Terminal",
+    "short_name": "Patterm",
+    "description": "Professional Serial Terminal for Web with multi-tab support",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#3b82f6",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["utilities", "developer"],
+    "shortcuts": [
+        {
+            "name": "New Connection",
+            "short_name": "Connect",
+            "description": "Create a new serial connection",
+            "url": "/?action=new",
+            "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshots/main.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        }
+    ]
+}

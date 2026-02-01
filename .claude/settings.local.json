@@ -31,7 +31,25 @@
       "Bash(killall:*)",
       "Bash(pkill:*)",
       "Bash(pgrep:*)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(test:*)",
+      "WebSearch",
+      "Bash(git checkout:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(npm run test:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs:*)",
+      "Bash(npm run web:dev:*)",
+      "Bash(wc:*)",
+      "Bash(node:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(npm show:*)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)"
     ]
   },
   "outputStyle": "default"

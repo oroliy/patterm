@@ -12,3 +12,8 @@ dist/
 !.claude/settings.local.json
 coverage/
 .nyc_output/
+# Web test artifacts
+web/test-output/
+web/test-results/
+web/playwright-report/
+web/.cache/

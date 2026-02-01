@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Patterm Web - Professional Serial Terminal for Web">
+    <meta name="theme-color" content="#3b82f6">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <title>Patterm Web Serial Terminal</title>
+    <link rel="stylesheet" href="/src/web/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <img src="/icons/icon-192.png" alt="Patterm" width="32" height="32">
+                    <span class="app-name">Patterm</span>
+                    <span class="app-version">Web</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="tabs-container" id="tabs-container"></div>
+                <button id="new-tab-btn" class="btn btn-icon" title="New Connection" aria-label="New Connection">
+                    <span>+</span>
+                </button>
+            </div>
+
+            <div class="header-right">
+                <button id="theme-toggle-btn" class="btn btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+                    <span class="theme-icon">🌓</span>
+                </button>
+                <button id="about-btn" class="btn btn-icon" title="About" aria-label="About">
+                    <span>ℹ️</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div id="tabs-content" class="tabs-content"></div>
+            <div id="empty-state" class="empty-state">
+                <div class="empty-state-content">
+                    <div class="empty-icon">🔌</div>
+                    <h2>No Serial Connections</h2>
+                    <p>Click the <strong>+ New Connection</strong> button to create a new serial connection.</p>
+                    <div class="browser-support-info">
+                        <h3>Browser Support</h3>
+                        <p>This application requires a browser that supports the <strong>Web Serial API</strong>:</p>
+                        <ul class="supported-browsers">
+                            <li>✓ Google Chrome 89+</li>
+                            <li>✓ Microsoft Edge 89+</li>
+                            <li>✓ Opera 75+</li>
+                            <li>✗ Firefox (not supported)</li>
+                            <li>✗ Safari (not supported)</li>
+                        </ul>
+                        <p class="https-note"><strong>Note:</strong> Web Serial API only works over HTTPS (or localhost).</p>
+                    </div>
+                    <button id="empty-new-connection-btn" class="btn btn-primary">
+                        <span class="btn-icon">+</span>
+                        New Connection
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="context-menu" class="context-menu" style="display: none;">
+        <div class="context-menu-items"></div>
+    </div>
+
+    <script type="module" src="/src/web/js/main.js"></script>
+</body>
+</html>

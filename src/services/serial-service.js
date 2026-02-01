@@ -55,29 +55,39 @@ class SerialService {
         this.config = { ...this.getDefaultConfig(), ...config };
 
         try {
-            this.port = new SerialPort({
-                path: this.config.path,
-                baudRate: this.config.baudRate,
-                dataBits: this.config.dataBits,
-                stopBits: this.config.stopBits,
-                parity: this.config.parity
-            });
+            return new Promise((resolve, reject) => {
+                this.port = new SerialPort({
+                    path: this.config.path,
+                    baudRate: this.config.baudRate,
+                    dataBits: this.config.dataBits,
+                    stopBits: this.config.stopBits,
+                    parity: this.config.parity,
+                    autoOpen: false
+                });
 
-            // Use raw data mode instead of ReadlineParser to support all data types
-            this.port.on('data', (data) => {
-                this.emitData(data);
-                this.writeToLog(data);
-            });
+                this.port.once('open', () => {
+                    this.port.on('data', (data) => {
+                        this.emitData(data);
+                        this.writeToLog(data);
+                    });
 
-            this.port.on('error', (error) => {
-                this.emitError(error.message);
-            });
+                    this.port.on('error', (error) => {
+                        this.emitError(error.message);
+                    });
 
-            this.port.on('close', () => {
-                this.emitError('Port closed');
-            });
+                    this.port.on('close', () => {
+                        this.emitError('Port closed');
+                    });
 
-            return true;
+                    resolve(true);
+                });
+
+                this.port.once('error', (error) => {
+                    reject(error);
+                });
+
+                this.port.open();
+            });
         } catch (error) {
             this.emitError(error.message);
             throw error;
