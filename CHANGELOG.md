@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Web SerialService now returns a null config before connection to avoid state access errors
+- Corrected python3-ptyprocess package name in the virtual serial script message
+- Synced README_zh web command list with the English documentation
+- Removed CHANGELOG_LATEST.md to keep a single changelog source
+
+### Tests
+- Added logging lifecycle coverage for SerialService
+
 ---
 
 ## [0.6.0] - 2026-02-01

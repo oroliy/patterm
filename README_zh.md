@@ -74,6 +74,7 @@
 ```bash
 npm run web:dev      # 启动 Vite 开发服务器（HTTPS，localhost:5173）
 npm run web:build    # 构建生产版本
+npm run web:preview  # 预览生产构建
 npm run web:serve    # 使用 HTTPS 提供生产构建
 npm run web:test     # 运行 Playwright E2E 测试
 ```
