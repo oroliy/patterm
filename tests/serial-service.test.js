@@ -149,12 +149,18 @@ describe('SerialService', () => {
 
             try {
                 await service.startLogging(filePath, 'manual');
+                await new Promise((resolve, reject) => {
+                    service.logging.stream.once('open', resolve);
+                    service.logging.stream.once('error', reject);
+                });
                 expect(service.getLoggingStatus()).toEqual({
                     enabled: true,
                     filePath,
                     mode: 'manual'
                 });
+                const stream = service.logging.stream;
                 service.stopLogging();
+                await new Promise(resolve => stream.once('close', resolve));
                 expect(fs.existsSync(filePath)).toBe(true);
                 expect(service.getLoggingStatus()).toEqual({
                     enabled: false,
