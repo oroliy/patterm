@@ -237,7 +237,7 @@ export class SerialService {
     }
 
     getConfig() {
-        return { ...this.config };
+        return this.config ? { ...this.config } : null;
     }
 
     getState() {

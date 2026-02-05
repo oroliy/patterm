@@ -1,3 +1,7 @@
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
 const SerialService = require('../src/services/serial-service');
 
 describe('SerialService', () => {
@@ -135,6 +139,37 @@ describe('SerialService', () => {
                 filePath: null,
                 mode: 'manual'
             });
+        });
+    });
+
+    describe('logging lifecycle', () => {
+        test('should create log file and reset status on stop', async () => {
+            const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'patterm-log-'));
+            const filePath = path.join(tmpDir, 'log.txt');
+
+            try {
+                await service.startLogging(filePath, 'manual');
+                await new Promise((resolve, reject) => {
+                    service.logging.stream.once('open', resolve);
+                    service.logging.stream.once('error', reject);
+                });
+                expect(service.getLoggingStatus()).toEqual({
+                    enabled: true,
+                    filePath,
+                    mode: 'manual'
+                });
+                const stream = service.logging.stream;
+                service.stopLogging();
+                await new Promise(resolve => stream.once('close', resolve));
+                expect(fs.existsSync(filePath)).toBe(true);
+                expect(service.getLoggingStatus()).toEqual({
+                    enabled: false,
+                    filePath: null,
+                    mode: 'manual'
+                });
+            } finally {
+                fs.rmSync(tmpDir, { recursive: true, force: true });
+            }
         });
     });
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Web SerialService now returns a null config before connection to avoid state access errors
+- Fixed typo in virtual serial script error message (removed space before "process")
+- Synced README_zh web command list with the English documentation
+
+### Tests
+- Added logging lifecycle coverage for SerialService
+
 ---
 
 ## [0.6.0] - 2026-02-01
