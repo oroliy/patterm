@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Web SerialService now returns a null config before connection to avoid state access errors
-- Corrected python3-ptyprocess package name in the virtual serial script message
+- Fixed typo in virtual serial script error message (removed space before "process")
 - Synced README_zh web command list with the English documentation
 
 ### Tests
