@@ -12,6 +12,7 @@
     "build": "echo 'No build step required for vanilla JavaScript'",
     "lint": "echo 'Lint check passed (no linter configured)'",
     "test": "jest",
+    "test:electron": "playwright test --config=playwright.electron.config.js",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "bash scripts/test.sh",
@@ -38,13 +39,14 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.58.2",
     "@vitejs/plugin-basic-ssl": "^1.0.0",
     "concurrently": "^8.2.2",
     "electron": "^40.0.0",
     "electron-builder": "^24.9.1",
     "jest": "^29.7.0",
     "playwright": "^1.57.0",
+    "playwright-core": "^1.58.2",
     "vite": "^5.0.0",
     "wait-on": "^7.2.0"
   },
@@ -69,14 +71,26 @@
       "category": "public.app-category.developer-tools",
       "artifactName": "Patterm-${version}-${arch}.${ext}",
       "target": [
-        {"target": "dmg", "arch": "x64"},
-        {"target": "dmg", "arch": "arm64"}
+        {
+          "target": "dmg",
+          "arch": "x64"
+        },
+        {
+          "target": "dmg",
+          "arch": "arm64"
+        }
       ]
     },
     "win": {
       "target": [
-        {"target": "nsis", "arch": "x64"},
-        {"target": "portable", "arch": "x64"}
+        {
+          "target": "nsis",
+          "arch": "x64"
+        },
+        {
+          "target": "portable",
+          "arch": "x64"
+        }
       ]
     },
     "nsis": {
@@ -88,10 +102,22 @@
     "linux": {
       "artifactName": "Patterm-${version}-${arch}.${ext}",
       "target": [
-        {"target": "AppImage", "arch": "x64"},
-        {"target": "AppImage", "arch": "arm64"},
-        {"target": "deb", "arch": "x64"},
-        {"target": "deb", "arch": "arm64"}
+        {
+          "target": "AppImage",
+          "arch": "x64"
+        },
+        {
+          "target": "AppImage",
+          "arch": "arm64"
+        },
+        {
+          "target": "deb",
+          "arch": "x64"
+        },
+        {
+          "target": "deb",
+          "arch": "arm64"
+        }
       ]
     }
   },
