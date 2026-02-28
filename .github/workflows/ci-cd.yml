@@ -92,9 +92,50 @@ jobs:
       env:
         ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
-    - name: Run tests (if available)
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: Run Jest Unit Tests
       run: npm test || echo "No test script configured"
       continue-on-error: true
+
+    - name: Run Web E2E Tests
+      run: cd web && npx vite --port 5173 & VITE_PID=$!; sleep 5; cd web && npx playwright test tests/send-receive.spec.js tests/direct-flow-test.spec.js tests/simple.spec.js tests/trace-click.spec.js --config=playwright.config.no-server.js; kill $VITE_PID || true
+      continue-on-error: true
+
+    - name: Run Electron E2E Tests
+      uses: coactions/setup-xvfb@v1
+      with:
+        run: npm run test:electron
+      continue-on-error: true
+
+  deploy-web:
+    name: Deploy Web PWA
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build Web App
+      run: npm run web:build
+
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy web/dist --project-name=patterm
 
   release:
     name: Create Release
