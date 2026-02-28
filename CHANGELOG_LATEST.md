@@ -1,5 +1,15 @@
 # Changelog - Version 0.6.0 (February 1, 2026)
 
+## Unreleased
+
+### Fixed
+- Web SerialService now returns a null config before connection to avoid state access errors
+- Fixed typo in virtual serial script error message (removed space before "process")
+- Synced README_zh web command list with the English documentation
+
+### Tests
+- Added logging lifecycle coverage for SerialService
+
 ## Major New Features
 
 ### Patterm Web (PWA) 🌐

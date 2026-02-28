@@ -97,7 +97,7 @@ def main():
     print()
 
     if not PTY_AVAILABLE:
-        print("Error: pty module not available. Please install python3-pty process")
+        print("Error: pty module not available. Please install python3-ptyprocess")
         print("  Ubuntu/Debian: sudo apt install python3-ptyprocess")
         sys.exit(1)
 
