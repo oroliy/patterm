@@ -8,6 +8,7 @@ let windowManager;
 let serialServiceManager;
 let debugWindow;
 let currentTheme = 'system';
+let tabCounter = 0;
 
 function createWindow() {
     debugWindow = new DebugWindow();
@@ -37,68 +38,31 @@ function setupIpcHandlers() {
         try {
             debugWindow.log(`connection:create called with config: ${JSON.stringify(config)}, tabName: ${tabName}`, 'info');
 
-            const tabId = ++windowManager.tabCounter;
+            const tabId = ++tabCounter;
             debugWindow.log(`Generated tabId: ${tabId}`, 'info');
 
             const result = await serialServiceManager.openConnection(tabId, config, tabName);
             debugWindow.log(`Serial connection opened: ${JSON.stringify(result)}`, 'info');
 
-            const tab = await windowManager.createNewTab(tabId, result.tabName);
-            debugWindow.log(`Tab created: ${JSON.stringify(tab)}`, 'info');
-
             serialServiceManager.onData(tabId, (data) => {
-                const tabInfo = windowManager.getTab(tabId);
-                if (tabInfo && tabInfo.view) {
-                    tabInfo.view.webContents.send('serial:data', data);
+                const mainWindow = windowManager.getMainWindow();
+                if (mainWindow) {
+                    mainWindow.webContents.send('serial:data', tabId, data);
                 }
             });
 
             serialServiceManager.onError(tabId, (error) => {
-                const tabInfo = windowManager.getTab(tabId);
-                if (tabInfo && tabInfo.view) {
-                    tabInfo.view.webContents.send('serial:error', error);
+                const mainWindow = windowManager.getMainWindow();
+                if (mainWindow) {
+                    mainWindow.webContents.send('serial:error', tabId, error);
                 }
             });
 
-            const tabInfo = windowManager.getTab(tabId);
-
-            debugWindow.log(`Tab info from manager: ${JSON.stringify(tabInfo)}`, 'info');
-
-            const portInfo = {
-                path: config.path,
-                baudRate: config.baudRate,
-                dataBits: config.dataBits,
-                stopBits: config.stopBits,
-                parity: config.parity
-            };
-
-            if (tabInfo && tabInfo.view) {
-                debugWindow.log(`Sending serial:connected event to tab ${tabId}`, 'info');
-                tabInfo.view.webContents.send('serial:connected', true);
-                tabInfo.view.webContents.send('serial:portInfo', tabId, portInfo);
-
-                tabInfo.view.webContents.on('ipc-message', (event, channel, ...args) => {
-                    if (channel === 'tab:scrollStateChanged') {
-                        const mainWindow = windowManager.getMainWindow();
-                        if (mainWindow) {
-                            mainWindow.webContents.send('tab:scrollStateChanged', ...args);
-                        }
-                    }
-                });
-            }
-
             const mainWindow = windowManager.getMainWindow();
-            debugWindow.log(`Main window: ${mainWindow ? 'found' : 'not found'}`, 'info');
-
             if (mainWindow) {
-                debugWindow.log(`Sending tab:created event to main window`, 'info');
-                mainWindow.webContents.send('tab:created', {
-                    id: tabId,
-                    tabName: result.tabName,
-                    connected: true,
-                    shouldActivate: tab.shouldActivate
-                });
-                mainWindow.webContents.send('serial:portInfo', tabId, portInfo);
+                // Not sending tab:created here anymore because the Renderer spawns the tab locally using TabManager!
+                // But we send back the tabId via the handle result so IpcSerialProvider knows its ID.
+                mainWindow.webContents.send('serial:connected', tabId, true);
             }
 
             return {
@@ -116,8 +80,7 @@ function setupIpcHandlers() {
     });
 
     ipcMain.handle('serial:close', async (event, tabId) => {
-        const result = await serialServiceManager.closeConnection(tabId);
-        return result;
+        return serialServiceManager.closeConnection(tabId);
     });
 
     ipcMain.handle('serial:write', async (event, tabId, data) => {
@@ -126,13 +89,9 @@ function setupIpcHandlers() {
 
     ipcMain.handle('serial:disconnect', async (event, tabId) => {
         const result = await serialServiceManager.closeConnection(tabId);
-        const tabInfo = windowManager.getTab(tabId);
-        if (tabInfo && tabInfo.view) {
-            tabInfo.view.webContents.send('serial:connected', false);
-        }
         const mainWindow = windowManager.getMainWindow();
         if (mainWindow) {
-            mainWindow.webContents.send('tab:statusChanged', tabId, false);
+            mainWindow.webContents.send('serial:connected', tabId, false);
         }
         return result;
     });
@@ -143,13 +102,9 @@ function setupIpcHandlers() {
             throw new Error('No previous connection configuration found');
         }
         const result = await serialServiceManager.openConnection(tabId, tabData.config, tabData.tabName);
-        const tabInfo = windowManager.getTab(tabId);
-        if (tabInfo && tabInfo.view) {
-            tabInfo.view.webContents.send('serial:connected', true);
-        }
         const mainWindow = windowManager.getMainWindow();
         if (mainWindow) {
-            mainWindow.webContents.send('tab:statusChanged', tabId, true);
+            mainWindow.webContents.send('serial:connected', tabId, true);
         }
         return result;
     });
@@ -158,60 +113,17 @@ function setupIpcHandlers() {
         return serialServiceManager.getConfig(tabId);
     });
 
-    ipcMain.handle('window:newTab', async (event, tabId, title) => {
-        return windowManager.createNewTab(tabId, title);
-    });
-
-    ipcMain.handle('window:closeTab', async (event, tabId) => {
-        const result = windowManager.closeTab(tabId);
-        await serialServiceManager.removeConnection(tabId);
-        return result;
-    });
-
-    ipcMain.handle('window:switchTab', async (event, tabId) => {
-        return windowManager.switchTab(tabId);
-    });
-
-    ipcMain.handle('window:resize', async () => {
-        return windowManager.resize();
-    });
-
-    ipcMain.handle('window:recalcLayout', async () => {
-        await windowManager.updateLayoutMetrics();
-        return windowManager.resize();
-    });
-
-    ipcMain.handle('window:showConnectionDialog', async () => {
-        return showConnectionDialog();
-    });
-
-    ipcMain.handle('window:updateTabTitle', async (event, tabId, title) => {
-        serialServiceManager.updateTabName(tabId, title);
-        return windowManager.updateTabTitle(tabId, title);
-    });
-
-    ipcMain.handle('tab:toggleScroll', async (event, tabId) => {
-        const tabInfo = windowManager.getTab(tabId);
-        if (tabInfo && tabInfo.view) {
-            tabInfo.view.webContents.send('tab:toggleScroll');
-            return { success: true };
-        }
-        return { success: false };
-    });
+    // We can remove window:newTab, window:switchTab, etc because UI handles it natively
 
     ipcMain.handle('log:start', async (event, tabId, filePath, mode) => {
         const tabData = serialServiceManager.getService(tabId);
-        if (!tabData) {
-            throw new Error('Service not found for tab');
-        }
+        if (!tabData) throw new Error('Service not found for tab');
         return tabData.service.startLogging(filePath, mode);
     });
 
     ipcMain.handle('log:stop', async (event, tabId) => {
         const tabData = serialServiceManager.getService(tabId);
-        if (!tabData) {
-            throw new Error('Service not found for tab');
-        }
+        if (!tabData) throw new Error('Service not found for tab');
         return tabData.service.stopLogging();
     });
 
@@ -235,192 +147,13 @@ function setupIpcHandlers() {
 
     ipcMain.handle('theme:changed', async (event, originalTheme, effectiveTheme) => {
         currentTheme = originalTheme;
-        nativeTheme.themeSource = originalTheme; // Use original ('system', 'light', or 'dark')
-        windowManager.broadcastToTabs('theme:update', effectiveTheme); // Send effective theme to tabs
+        nativeTheme.themeSource = originalTheme;
+        windowManager.broadcastToTabs('theme:update', effectiveTheme);
         return true;
     });
 
     ipcMain.handle('theme:get', async () => {
         return currentTheme;
-    });
-
-    ipcMain.handle('window:clearTabScreen', async (event, tabId) => {
-        const tabInfo = windowManager.getTab(tabId);
-        if (tabInfo && tabInfo.view) {
-            tabInfo.view.webContents.executeJavaScript(`
-                const terminal = document.getElementById('terminal');
-                if (terminal) {
-                    terminal.innerHTML = '';
-                }
-            `);
-        }
-    });
-
-    ipcMain.handle('window:saveTabOutput', async (event, tabId) => {
-        const tabInfo = windowManager.getTab(tabId);
-        if (!tabInfo || !tabInfo.view) {
-            return { success: false, error: 'Tab not found' };
-        }
-
-        const terminalContent = await tabInfo.view.webContents.executeJavaScript(`
-            const terminal = document.getElementById('terminal');
-            return terminal ? terminal.innerText : '';
-        `);
-
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const defaultPath = `patterm-export-${timestamp}.txt`;
-
-        const mainWindow = windowManager.getMainWindow();
-        if (!mainWindow) {
-            return { success: false, error: 'Main window not available' };
-        }
-
-        const { filePath } = await dialog.showSaveDialog(mainWindow, {
-            defaultPath: defaultPath,
-            filters: [
-                { name: 'Text Files', extensions: ['txt'] },
-                { name: 'All Files', extensions: ['*'] }
-            ]
-        });
-
-        if (filePath) {
-            const fs = require('fs');
-            fs.writeFileSync(filePath, terminalContent, 'utf8');
-            return { success: true, filePath };
-        }
-
-        return { success: false, error: 'No file selected' };
-    });
-
-    ipcMain.handle('window:renameTab', async (event, tabId, newName) => {
-        const tabInfo = windowManager.getTab(tabId);
-        if (tabInfo) {
-            tabInfo.title = newName;
-            const mainWindow = windowManager.getMainWindow();
-            if (mainWindow) {
-                mainWindow.webContents.send('tab:titleUpdated', tabId, newName);
-            }
-            return { success: true };
-        }
-        return { success: false, error: 'Tab not found' };
-    });
-
-    ipcMain.handle('window:getTabConfig', async (event, tabId) => {
-        const config = serialServiceManager.getConfig(tabId);
-        return config || null;
-    });
-
-    ipcMain.handle('window:getTabContent', async (event, tabId) => {
-        const tabInfo = windowManager.getTab(tabId);
-        if (!tabInfo || !tabInfo.view) {
-            return { success: false, error: 'Tab not found' };
-        }
-
-        const terminalContent = await tabInfo.view.webContents.executeJavaScript(`
-            const terminal = document.getElementById('terminal');
-            return terminal ? terminal.innerText : '';
-        `);
-
-        return { success: true, content: terminalContent };
-    });
-
-    ipcMain.handle('window:showTabContextMenu', async (event, tabId, connected, title) => {
-        return new Promise((resolve) => {
-            const menu = Menu.buildFromTemplate([
-                {
-                    label: 'Close Tab',
-                    click: () => { resolve('close'); }
-                },
-                { type: 'separator' },
-                {
-                    label: connected ? 'Disconnect' : 'Reconnect',
-                    click: () => { resolve(connected ? 'disconnect' : 'reconnect'); }
-                },
-                { type: 'separator' },
-                {
-                    label: 'Clear Screen',
-                    click: () => { resolve('clear'); }
-                },
-                {
-                    label: 'Save Current Output...',
-                    click: () => { resolve('save'); }
-                },
-                {
-                    label: 'Start/Stop Logging...',
-                    click: () => { resolve('logging'); }
-                },
-                { type: 'separator' },
-                {
-                    label: 'Copy All Text',
-                    click: () => { resolve('copy'); }
-                },
-                {
-                    label: 'Rename Tab...',
-                    click: () => { resolve('rename'); }
-                },
-                {
-                    label: 'Show Connection Settings',
-                    click: () => { resolve('settings'); }
-                }
-            ]);
-
-            menu.popup(BrowserWindow.getFocusedWindow(), () => {
-                resolve(null);
-            });
-        });
-    });
-
-    ipcMain.handle('window:showTerminalContextMenu', async (event, tabId) => {
-        return new Promise((resolve) => {
-            const menu = Menu.buildFromTemplate([
-                {
-                    label: 'Clear Screen',
-                    click: () => { resolve('clear'); }
-                },
-                { type: 'separator' },
-                {
-                    label: 'Save Current Output...',
-                    click: () => { resolve('save'); }
-                },
-                {
-                    label: 'Copy All Text',
-                    click: () => { resolve('copy'); }
-                }
-            ]);
-
-            menu.popup(BrowserWindow.getFocusedWindow(), () => {
-                resolve(null);
-            });
-        });
-    });
-}
-
-function showConnectionDialog() {
-    return new Promise((resolve) => {
-        const dialogWindow = new BrowserWindow({
-            width: 500,
-            height: 620,
-            minHeight: 550,
-            resizable: true,
-            modal: true,
-            parent: BrowserWindow.getFocusedWindow(),
-            autoHideMenuBar: true,
-            webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false
-            },
-            show: false
-        });
-
-        dialogWindow.once('ready-to-show', () => {
-            dialogWindow.show();
-        });
-
-        dialogWindow.loadFile(path.join(__dirname, '../renderer/connection-dialog.html'));
-
-        dialogWindow.on('closed', () => {
-            resolve();
-        });
     });
 }
 
@@ -432,16 +165,17 @@ function setupMenu() {
                 {
                     label: 'New Connection',
                     accelerator: 'CmdOrCtrl+N',
-                    click: () => showConnectionDialog()
+                    click: () => {
+                        const mainWindow = windowManager.getMainWindow();
+                        if (mainWindow) mainWindow.webContents.send('menu:new-connection');
+                    }
                 },
                 {
                     label: 'Close Window',
                     accelerator: 'CmdOrCtrl+W',
                     click: () => {
                         const focusedWindow = BrowserWindow.getFocusedWindow();
-                        if (focusedWindow) {
-                            focusedWindow.close();
-                        }
+                        if (focusedWindow) focusedWindow.close();
                     }
                 },
                 { type: 'separator' },
@@ -515,24 +249,6 @@ function setupMenu() {
                         debugWindow.toggle();
                         debugWindow.flush();
                     }
-                },
-                { type: 'separator' },
-                {
-                    label: 'About',
-                    click: () => {
-                        const aboutWindow = new BrowserWindow({
-                            width: 400,
-                            height: 300,
-                            parent: BrowserWindow.getFocusedWindow(),
-                            modal: true,
-                            autoHideMenuBar: true,
-                            webPreferences: {
-                                nodeIntegration: true,
-                                contextIsolation: false
-                            }
-                        });
-                        aboutWindow.loadFile(path.join(__dirname, '../renderer/about.html'));
-                    }
                 }
             ]
         }
@@ -545,13 +261,9 @@ function setupMenu() {
 app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
+    if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

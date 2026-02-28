@@ -1,538 +1,291 @@
-const { ipcRenderer } = require('electron');
+import { TabManager } from '../web/js/services/TabManager.js';
+import { globalEvents } from '../web/js/services/EventManager.js';
+import { TabComponent } from '../web/js/components/TabComponent.js';
+import { STORAGE_KEYS, THEME_OPTIONS } from '../web/js/utils/constants.js';
+import { applyTheme, saveToLocalStorage, loadFromLocalStorage } from '../web/js/utils/helpers.js';
+import { ElectronConnectionDialog } from './ElectronConnectionDialog.js';
+import { IpcSerialProvider } from './services/IpcSerialProvider.js';
 
-let tabs = new Map();
-let activeTabId = null;
+const { ipcRenderer } = window.require('electron');
 
-let newTabBtn, loggingBtn, disconnectBtn, scrollBtn, tabsContainer, tabContent;
-
-async function debugLog(message, level = 'info') {
-    try {
-        await ipcRenderer.invoke('debug:log', message, level);
-    } catch (error) {
-        console.error('[Renderer] Failed to log to debug window:', error);
+class PattermElectronApp {
+    constructor() {
+        this.tabManager = new TabManager();
+        this.tabComponents = new Map();
+        this.theme = loadFromLocalStorage(STORAGE_KEYS.THEME, 'system');
+        this.contextMenu = null;
     }
-}
 
-async function showConnectionDialog() {
-    await debugLog('showConnectionDialog called', 'info');
-    try {
-        await ipcRenderer.invoke('window:showConnectionDialog');
-    } catch (error) {
-        await debugLog(`Failed to show connection dialog: ${error.message}`, 'error');
+    async init() {
+        this.initTheme();
+        this.registerEventHandlers();
+        this.initContextMenu();
+        this.updateEmptyState();
+        
+        // Let main process know we are ready
+        ipcRenderer.on('menu:new-connection', () => this.showConnectionDialog());
+        ipcRenderer.on('theme:set', (event, theme) => {
+            this.theme = theme;
+            saveToLocalStorage(STORAGE_KEYS.THEME, this.theme);
+            applyTheme(this.theme);
+        });
     }
-}
 
-async function addTab(tabId, tabName, connected, shouldActivate = false) {
-    debugLog(`addTab called with tabId=${tabId}, tabName=${tabName}, connected=${connected}, shouldActivate=${shouldActivate}`, 'info');
+    initTheme() {
+        applyTheme(this.theme);
+    }
 
-    const tab = document.createElement('div');
-    tab.className = 'tab';
-    tab.dataset.tabId = tabId;
+    registerEventHandlers() {
+        document.getElementById('new-tab-btn')?.addEventListener('click', () => this.showConnectionDialog());
+        document.getElementById('empty-new-connection-btn')?.addEventListener('click', () => this.showConnectionDialog());
+        document.getElementById('theme-toggle-btn')?.addEventListener('click', () => this.toggleTheme());
 
-    const statusIcon = connected ? '●' : '○';
-    const statusColor = connected ? '#4caf50' : '#999';
-    tab.innerHTML = `
-        <span class="tab-status" style="color: ${statusColor}">${statusIcon}</span>
-        <span class="tab-title">${tabName}</span>
-        <button class="tab-close" data-tab-id="${tabId}">×</button>
-    `;
+        globalEvents.on('tab:created', (data) => this.onTabCreated(data));
+        globalEvents.on('tab:connected', (data) => this.onTabConnected(data));
+        globalEvents.on('tab:disconnected', (data) => this.onTabDisconnected(data));
+        globalEvents.on('tab:closed', (data) => this.onTabClosed(data));
+        globalEvents.on('tab:switched', (data) => this.onTabSwitched(data));
+        globalEvents.on('tab:data', (data) => this.onTabData(data));
+        globalEvents.on('tab:error', (data) => this.onTabError(data));
+        globalEvents.on('tab:ratesUpdated', (data) => this.onTabRatesUpdated(data));
 
-    tab.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('tab-close')) {
-            switchTab(tabId);
+        document.addEventListener('click', () => this.hideContextMenu());
+    }
+
+    async showConnectionDialog() {
+        const dialog = new ElectronConnectionDialog();
+        const result = await dialog.show();
+
+        if (result.confirmed) {
+            await this.createConnection(result.config, result.tabName);
         }
-    });
-
-    tabs.set(tabId, {
-        element: tab,
-        title: tabName,
-        connected: connected
-    });
-
-    tabsContainer.appendChild(tab);
-
-    debugLog(`Tab element appended to container, children count: ${tabsContainer.children.length}`, 'info');
-    debugLog(`Tab element dimensions: ${tab.offsetWidth}x${tab.offsetHeight}`, 'debug');
-
-    await ipcRenderer.invoke('window:recalcLayout');
-
-    if (shouldActivate) {
-        switchTab(tabId);
-    }
-}
-
-function updateTabStatus(tabId, connected) {
-    const tab = tabs.get(tabId);
-    if (!tab) return;
-
-    tab.connected = connected;
-    const statusIcon = connected ? '●' : '○';
-    const statusElement = tab.element.querySelector('.tab-status');
-    if (statusElement) {
-        statusElement.textContent = statusIcon;
-        statusElement.style.color = connected ? '#4caf50' : '#999';
-    }
-}
-
-async function closeTab(tabId) {
-    try {
-        const tab = tabs.get(tabId);
-        if (tab && tab.connected) {
-            const confirmed = confirm('The connection is still active. Do you want to close this tab and disconnect?');
-            if (!confirmed) {
-                return;
-            }
-        }
-
-        await ipcRenderer.invoke('window:closeTab', tabId);
-        if (tab) {
-            tab.element.remove();
-            tabs.delete(tabId);
-
-            if (activeTabId === tabId) {
-                const remainingTabs = Array.from(tabs.keys());
-                if (remainingTabs.length > 0) {
-                    switchTab(remainingTabs[0]);
-                } else {
-                    activeTabId = null;
-                    tabContent.innerHTML = `
-                        <div class="empty-state">
-                            <div style="text-align: center;">
-                                <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2">⚡</div>
-                                <p>Create a new connection to start</p>
-                            </div>
-                        </div>
-                    `;
-                    tabContent.classList.remove('has-active-tab');
-                    loggingBtn.disabled = true;
-                    updateUIState();
-                    updateStatusBar();
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Failed to close tab:', error);
-    }
-}
-
-async function startLogging() {
-    if (!activeTabId) {
-        alert('Please select a tab first');
-        return;
     }
 
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    const fileName = `patterm-log-${timestamp}.txt`;
-
-    const filePath = await ipcRenderer.invoke('dialog:saveFile', {
-        defaultPath: fileName,
-        filters: [
-            { name: 'Text Files', extensions: ['txt'] },
-            { name: 'All Files', extensions: ['*'] }
-        ]
-    });
-
-    if (filePath) {
+    async createConnection(config, tabName) {
+        const tabState = this.tabManager.createTab(config, tabName || config.path);
+        const service = new IpcSerialProvider();
+        
         try {
-            await ipcRenderer.invoke('log:start', activeTabId, filePath, 'continuous');
-            loggingBtn.textContent = 'Stop Log';
-            loggingBtn.classList.add('btn-warning');
+            await service.open(config, tabName);
+            await this.tabManager.connectTab(tabState.id, service);
         } catch (error) {
-            alert(`Failed to start logging: ${error.message}`);
+            console.error('[App] Connection failed:', error);
+            this.tabManager.closeTab(tabState.id);
+            this.showError(`Failed to connect: ${error.message}`);
         }
     }
-}
 
-async function stopLogging() {
-    if (!activeTabId) return;
+    onTabCreated(tabState) {
+        const component = new TabComponent(tabState, {
+            onClose: (tabId) => this.closeTab(tabId),
+            onSwitch: (tabId) => this.switchTab(tabId),
+            onSend: (tabId, data) => this.sendData(tabId, data),
+            onClear: (tabId) => this.clearTerminal(tabId),
+            onContextMenu: (tabId, event) => this.showTabContextMenu(tabId, event)
+        });
 
-    try {
-        await ipcRenderer.invoke('log:stop', activeTabId);
-        loggingBtn.textContent = 'Log';
-        loggingBtn.classList.remove('btn-warning');
-    } catch (error) {
-        alert(`Failed to stop logging: ${error.message}`);
+        component.create();
+        this.tabComponents.set(tabState.id, component);
+
+        document.getElementById('tabs-container').appendChild(component.tabElement);
+        document.getElementById('tabs-content').appendChild(component.element);
+
+        this.switchTab(tabState.id);
+        this.updateEmptyState();
     }
-}
 
-// Initialize DOM elements and event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    newTabBtn = document.getElementById('new-connection-btn');
-    loggingBtn = document.getElementById('log-btn');
-    disconnectBtn = document.getElementById('disconnect-btn');
-    scrollBtn = document.getElementById('auto-scroll-btn');
-    tabsContainer = document.getElementById('tabs-container');
-    tabContent = document.getElementById('tab-content');
+    onTabConnected(data) {
+        const tabId = data?.tabId;
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            component.updateConnectionState(true);
+            const config = this.tabManager.getTabConfig(tabId);
+            component.updatePortName(config);
+        }
+    }
 
-    mainStatusIndicator = document.getElementById('main-status-indicator');
-    mainPortName = document.getElementById('main-port-name');
-    mainDuration = document.getElementById('main-duration');
-    mainCreatedTime = document.getElementById('main-created-time');
-    mainCurrentTime = document.getElementById('main-current-time');
-    mainRxRate = document.getElementById('main-rx-rate');
-    mainTxRate = document.getElementById('main-tx-rate');
-    mainRxBadge = document.getElementById('main-rx-badge');
-    mainTxBadge = document.getElementById('main-tx-badge');
+    onTabDisconnected({ tabId }) {
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            component.updateConnectionState(false);
+        }
+    }
 
-    newTabBtn.addEventListener('click', showConnectionDialog);
+    onTabClosed({ tabId }) {
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            component.destroy();
+            this.tabComponents.delete(tabId);
+        }
+        this.updateEmptyState();
+    }
 
-    loggingBtn.addEventListener('click', () => {
-        if (loggingBtn.textContent === 'Log') {
-            startLogging();
+    onTabSwitched({ tabId }) {
+        this.tabComponents.forEach((component, id) => {
+            component.setActive(id === tabId);
+        });
+    }
+
+    onTabData({ tabId, data }) {
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            component.terminal.appendData(data, 'rx');
+            component.updateStatusBar();
+        }
+    }
+
+    onTabError({ tabId, error }) {
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            component.terminal.appendError(error.message || String(error));
+        }
+    }
+
+    onTabRatesUpdated({ tabId, rxRate, txRate }) {
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            component.updateRates(rxRate, txRate);
+        }
+    }
+
+    async sendData(tabId, data) {
+        const tab = this.tabManager.getTab(tabId);
+        if (!tab || !tab.service) return;
+
+        try {
+            await tab.service.write(data);
+            tab.terminal.appendTransmitted(data);
+            this.tabManager.onDataSent(tabId, data);
+            
+            const component = this.tabComponents.get(tabId);
+            if (component) component.updateStatusBar();
+        } catch (error) {
+            tab.terminal.appendError(error.message);
+        }
+    }
+
+    closeTab(tabId) {
+        this.tabManager.closeTab(tabId);
+    }
+
+    switchTab(tabId) {
+        this.tabManager.switchTab(tabId);
+    }
+
+    clearTerminal(tabId) {
+        this.tabManager.clearTerminal(tabId);
+    }
+
+    toggleTheme() {
+        const currentIndex = THEME_OPTIONS.findIndex(opt => opt.value === this.theme);
+        const nextIndex = (currentIndex + 1) % THEME_OPTIONS.length;
+        this.theme = THEME_OPTIONS[nextIndex].value;
+        saveToLocalStorage(STORAGE_KEYS.THEME, this.theme);
+        applyTheme(this.theme);
+        ipcRenderer.invoke('theme:changed', this.theme, this.theme);
+    }
+
+    updateEmptyState() {
+        const emptyState = document.getElementById('empty-state');
+        const tabsContent = document.getElementById('tabs-content');
+
+        if (this.tabComponents.size === 0) {
+            emptyState.style.display = 'flex';
+            tabsContent.style.display = 'none';
         } else {
-            stopLogging();
+            emptyState.style.display = 'none';
+            tabsContent.style.display = 'block';
         }
-    });
+    }
 
-    disconnectBtn.addEventListener('click', async () => {
-        if (!activeTabId) return;
-        try {
-            const tab = tabs.get(activeTabId);
-            if (tab && tab.connected) {
-                await ipcRenderer.invoke('serial:disconnect', activeTabId);
-            } else {
-                await ipcRenderer.invoke('serial:reconnect', activeTabId);
-            }
-        } catch (error) {
-            debugLog(`Disconnect/reconnect failed: ${error.message}`, 'error');
-        }
-    });
+    initContextMenu() {
+        this.contextMenu = document.getElementById('context-menu');
+    }
 
-    scrollBtn.addEventListener('click', async () => {
-        if (!activeTabId) return;
-        try {
-            await ipcRenderer.invoke('tab:toggleScroll', activeTabId);
-        } catch (error) {
-            debugLog(`Toggle scroll failed: ${error.message}`, 'error');
-        }
-    });
+    showTabContextMenu(tabId, event) {
+        const items = [
+            { label: 'Clear Screen', action: () => this.clearTerminal(tabId) },
+            { label: 'Copy All Text', action: () => this.copyTabContent(tabId) },
+            { label: 'Disconnect/Reconnect', action: () => this.toggleConnection(tabId) }
+        ];
 
-    tabsContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tab-close')) {
-            const tabId = parseInt(e.target.dataset.tabId);
-            debugLog(`Closing tab ${tabId}`, 'info');
-            closeTab(tabId);
-        }
-    });
+        this.showContextMenu(event, items);
+    }
 
-    tabsContainer.addEventListener('contextmenu', async (e) => {
-        const tabElement = e.target.closest('.tab');
-        if (!tabElement) return;
-
-        const tabId = parseInt(tabElement.dataset.tabId);
-        const tab = tabs.get(tabId);
+    async toggleConnection(tabId) {
+        const tab = this.tabManager.getTab(tabId);
         if (!tab) return;
+        
+        if (tab.connected) {
+            await this.tabManager.disconnectTab(tabId);
+        } else {
+            await this.tabManager.reconnectTab(tabId);
+        }
+    }
 
-        e.preventDefault();
-        e.stopPropagation();
+    showContextMenu(event, items) {
+        if (!this.contextMenu) return;
+
+        const menuItems = this.contextMenu.querySelector('.context-menu-items');
+        menuItems.innerHTML = '';
+
+        items.forEach(item => {
+            const menuItem = document.createElement('div');
+            menuItem.className = 'context-menu-item';
+            menuItem.textContent = item.label;
+            menuItem.addEventListener('click', () => {
+                item.action();
+                this.hideContextMenu();
+            });
+            menuItems.appendChild(menuItem);
+        });
+
+        this.contextMenu.style.display = 'block';
+        this.contextMenu.style.left = `${event.pageX}px`;
+        this.contextMenu.style.top = `${event.pageY}px`;
+    }
+
+    hideContextMenu() {
+        if (this.contextMenu) {
+            this.contextMenu.style.display = 'none';
+        }
+    }
+
+    async copyTabContent(tabId) {
+        const component = this.tabComponents.get(tabId);
+        if (!component) return;
 
         try {
-            const action = await ipcRenderer.invoke('window:showTabContextMenu', tabId, tab.connected, tab.title);
-            if (action) {
-                if (action === 'close') {
-                    closeTab(tabId);
-                } else if (action === 'disconnect' || action === 'reconnect') {
-                    if (tab.connected) {
-                        await ipcRenderer.invoke('serial:disconnect', tabId);
-                    } else {
-                        await ipcRenderer.invoke('serial:reconnect', tabId);
-                    }
-                } else if (action === 'clear') {
-                    await ipcRenderer.invoke('window:clearTabScreen', tabId);
-                } else if (action === 'save') {
-                    const result = await ipcRenderer.invoke('window:saveTabOutput', tabId);
-                    if (!result.success) {
-                        alert(`Failed to save: ${result.error}`);
-                    }
-                } else if (action === 'logging') {
-                    if (!activeTabId) return;
-                    if (loggingBtn.textContent === 'Log') {
-                        startLogging();
-                    } else {
-                        stopLogging();
-                    }
-                } else if (action === 'copy') {
-                    const result = await ipcRenderer.invoke('window:getTabContent', tabId);
-                    if (result.success) {
-                        await navigator.clipboard.writeText(result.content);
-                    }
-                } else if (action === 'rename') {
-                    const newName = prompt('Enter new tab name:', tab.title);
-                    if (newName && newName.trim()) {
-                        const result = await ipcRenderer.invoke('window:renameTab', tabId, newName.trim());
-                        if (result.success) {
-                            const titleElement = tab.element.querySelector('.tab-title');
-                            if (titleElement) {
-                                titleElement.textContent = newName.trim();
-                            }
-                            tab.title = newName.trim();
-                        }
-                    }
-                } else if (action === 'settings') {
-                    const config = await ipcRenderer.invoke('window:getTabConfig', tabId);
-                    if (config) {
-                        alert(`Connection Settings:\nPort: ${config.path}\nBaud Rate: ${config.baudRate}\nData Bits: ${config.dataBits}\nStop Bits: ${config.stopBits}\nParity: ${config.parity}`);
-                    } else {
-                        alert('Unable to retrieve connection settings');
-                    }
-                }
-            }
+            await component.terminal.copyAll();
         } catch (error) {
-            console.error('Failed to show context menu:', error);
+            console.error('Failed to copy:', error);
         }
-    });
+    }
 
-    // Initialize UI
-    tabContent.innerHTML = `
-        <div class="empty-state">
-            <div style="text-align: center;">
-                <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2">⚡</div>
-                <p>Create a new connection to start</p>
+    showError(message) {
+        const overlay = document.createElement('div');
+        overlay.className = 'error-overlay';
+        overlay.innerHTML = `
+            <div class="error-dialog" style="background: var(--glass-surface); padding: 20px; border-radius: 8px; border: 1px solid var(--glass-border); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                ${message}
+                <br><br>
+                <button class="btn btn-primary" onclick="this.closest('.error-overlay').remove()">Close</button>
             </div>
-        </div>
-    `;
-    updateUIState();
-});
-
-ipcRenderer.on('tab:created', (event, tabData) => {
-    debugLog(`tab:created event received: ${JSON.stringify(tabData)}`, 'info');
-    tabCreatedTimes.set(tabData.id, new Date());
-    addTab(tabData.id, tabData.tabName, tabData.connected, tabData.shouldActivate);
-});
-
-ipcRenderer.on('tab:titleUpdated', (event, tabId, newName) => {
-    const tab = tabs.get(tabId);
-    if (tab) {
-        tab.title = newName;
-        const titleElement = tab.element.querySelector('.tab-title');
-        if (titleElement) {
-            titleElement.textContent = newName;
-        }
-    }
-});
-
-ipcRenderer.on('tab:statusChanged', (event, tabId, connected) => {
-    updateTabStatus(tabId, connected);
-    if (tabId === activeTabId) {
-        updateUIState();
-        updateStatusBar();
-    }
-});
-
-ipcRenderer.on('tab:scrollStateChanged', (event, tabId, autoScroll) => {
-    if (tabId === activeTabId) {
-        scrollBtn.textContent = autoScroll ? 'Auto Scroll' : 'Hold Scroll';
-        if (autoScroll) {
-            scrollBtn.classList.add('btn-success');
-            scrollBtn.classList.remove('btn-secondary');
-        } else {
-            scrollBtn.classList.remove('btn-success');
-            scrollBtn.classList.add('btn-secondary');
-        }
-    }
-});
-
-ipcRenderer.on('serial:error', (event, error) => {
-    debugLog(`Serial Error: ${error}`, 'error');
-});
-
-window.addEventListener('load', () => {
-    debugLog('Main window loaded', 'info');
-    startTimeTimer();
-});
-
-window.addEventListener('resize', () => {
-    ipcRenderer.invoke('window:resize');
-});
-
-function updateUIState() {
-    const tab = activeTabId ? tabs.get(activeTabId) : null;
-    const connected = tab?.connected || false;
-
-    loggingBtn.disabled = !connected;
-    disconnectBtn.disabled = !activeTabId;
-    scrollBtn.disabled = !activeTabId;
-
-    if (activeTabId && connected) {
-        disconnectBtn.textContent = 'Disconnect';
-        disconnectBtn.classList.remove('btn-success');
-        disconnectBtn.classList.add('btn-danger');
-    } else if (activeTabId) {
-        disconnectBtn.textContent = 'Reconnect';
-        disconnectBtn.classList.remove('btn-danger');
-        disconnectBtn.classList.add('btn-success');
+        `;
+        
+        Object.assign(overlay.style, {
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+        });
+        
+        document.body.appendChild(overlay);
     }
 }
 
-let mainStatusIndicator;
-let mainPortName;
-let mainDuration;
-let mainCreatedTime;
-let mainCurrentTime;
-let mainRxRate;
-let mainTxRate;
-let mainRxBadge;
-let mainTxBadge;
-
-let tabCreatedTimes = new Map();
-let tabConnectionStartTimes = new Map();
-let tabRxRates = new Map();
-let tabTxRates = new Map();
-let tabPortInfo = new Map();
-
-function formatTime(date) {
-    return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
-
-function formatDuration(startTime) {
-    const now = Date.now();
-    const diff = Math.floor((now - startTime) / 1000);
-    const hours = Math.floor(diff / 3600);
-    const minutes = Math.floor((diff % 3600) / 60);
-    const seconds = diff % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function updateCurrentTime() {
-    if (mainCurrentTime && activeTabId) {
-        mainCurrentTime.textContent = formatTime(new Date());
-    }
-    // If no active tab, keep it empty (cleared by updateStatusBar)
-}
-
-function startTimeTimer() {
-    setInterval(updateCurrentTime, 1000);
-    updateCurrentTime();
-}
-
-function updateStatusBar() {
-    if (!mainStatusIndicator || !mainPortName || !mainDuration || !mainCreatedTime || !mainCurrentTime || !mainRxRate || !mainTxRate) {
-        return;
-    }
-
-    // Hide/show status bar sections based on whether there's an active tab
-    const sections = document.querySelectorAll('.status-bar-section[data-section]');
-    sections.forEach(section => {
-        if (activeTabId) {
-            section.style.display = 'flex';
-        } else {
-            section.style.display = 'none';
-        }
-    });
-
-    if (!activeTabId) {
-        mainStatusIndicator.className = 'status-indicator-mini disconnected';
-        mainPortName.textContent = '';
-        return;
-    }
-
-    const tab = tabs.get(activeTabId);
-    if (!tab) return;
-
-    const connected = tab.connected || false;
-    mainStatusIndicator.className = `status-indicator-mini ${connected ? 'connected' : 'disconnected'}`;
-
-    const portInfo = tabPortInfo.get(activeTabId);
-    if (portInfo) {
-        const parityChar = portInfo.parity === 'none' ? 'N' : portInfo.parity.charAt(0).toUpperCase();
-        mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200} ${portInfo.dataBits || 8}${parityChar}${portInfo.stopBits || 1}`;
-    }
-
-    if (connected && tabConnectionStartTimes.has(activeTabId)) {
-        mainDuration.textContent = formatDuration(tabConnectionStartTimes.get(activeTabId));
-    } else {
-        mainDuration.textContent = '--:--:--';
-    }
-
-    if (tabCreatedTimes.has(activeTabId)) {
-        mainCreatedTime.textContent = formatTime(tabCreatedTimes.get(activeTabId));
-    }
-
-    mainRxRate.textContent = formatRate(tabRxRates.get(activeTabId) || 0);
-    mainTxRate.textContent = formatRate(tabTxRates.get(activeTabId) || 0);
-}
-
-function formatRate(bytesPerSecond) {
-    if (bytesPerSecond === 0) return '0 B/s';
-    if (bytesPerSecond < 1024) return `${bytesPerSecond} B/s`;
-    if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
-    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
-}
-
-function triggerRxPulse() {
-    if (mainRxBadge) {
-        mainRxBadge.classList.add('active');
-        setTimeout(() => mainRxBadge.classList.remove('active'), 200);
-    }
-}
-
-function triggerTxPulse() {
-    if (mainTxBadge) {
-        mainTxBadge.classList.add('active');
-        setTimeout(() => mainTxBadge.classList.remove('active'), 200);
-    }
-}
-
-ipcRenderer.on('tab:updateRates', (event, tabId, rxRate, txRate) => {
-    tabRxRates.set(tabId, rxRate);
-    tabTxRates.set(tabId, txRate);
-    if (tabId === activeTabId && mainRxRate && mainTxRate) {
-        mainRxRate.textContent = formatRate(rxRate);
-        mainTxRate.textContent = formatRate(txRate);
-    }
-});
-
-ipcRenderer.on('tab:rxActivity', (event, tabId) => {
-    if (tabId === activeTabId) {
-        triggerRxPulse();
-    }
-});
-
-ipcRenderer.on('tab:txActivity', (event, tabId) => {
-    if (tabId === activeTabId) {
-        triggerTxPulse();
-    }
-});
-
-ipcRenderer.on('serial:portInfo', (event, tabId, portInfo) => {
-    tabPortInfo.set(tabId, portInfo);
-    if (tabId === activeTabId && mainPortName) {
-        mainPortName.textContent = `${portInfo.path} @ ${portInfo.baudRate || 115200}`;
-    }
-});
-
-ipcRenderer.on('serial:connected', (event, tabId, connected) => {
-    if (connected) {
-        tabConnectionStartTimes.set(tabId, Date.now());
-    } else {
-        tabConnectionStartTimes.delete(tabId);
-    }
-    if (tabId === activeTabId) {
-        updateStatusBar();
-    }
-});
-
-async function switchTab(tabId) {
-    debugLog(`switchTab called with tabId=${tabId}, activeTabId=${activeTabId}`, 'info');
-
-    if (activeTabId === tabId) return;
-
-    const tab = tabs.get(tabId);
-    if (!tab) {
-        debugLog(`Tab ${tabId} not found in tabs map`, 'warn');
-        return;
-    }
-
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.element.classList.add('active');
-
-    ipcRenderer.invoke('window:switchTab', tabId);
-    activeTabId = tabId;
-
-    tabContent.innerHTML = '';
-    tabContent.classList.add('has-active-tab');
-    updateUIState();
-    updateStatusBar();
-    await ipcRenderer.invoke('window:recalcLayout');
-    debugLog(`Switched to tab ${tabId}`, 'info');
-}
+const app = new PattermElectronApp();
+app.init();

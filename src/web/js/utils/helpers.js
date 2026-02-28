@@ -6,7 +6,7 @@ export {
     formatDuration,
     formatConnectionStatus,
     formatPortName
-} from '/src/shared/js/formatters.js';
+} from '../../../shared/js/formatters.js';
 
 export {
     getEffectiveTheme,
@@ -14,7 +14,7 @@ export {
     cycleTheme,
     saveTheme,
     loadTheme
-} from '/src/shared/js/theme.js';
+} from '../../../shared/js/theme.js';
 
 export {
     debounce,
@@ -34,4 +34,4 @@ export {
     getElementOffset,
     scrollToBottom,
     isScrolledToBottom
-} from '/src/shared/js/utils.js';
+} from '../../../shared/js/utils.js';

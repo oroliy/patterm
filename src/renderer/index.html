@@ -1,58 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patterm - Serial Terminal</title>
-    <link rel="stylesheet" href="styles.css">
+    <!-- Use the new shared CSS -->
+    <link rel="stylesheet" href="../web/css/styles.css">
+    <style>
+        /* Electron specific overrides if needed */
+        .app-header {
+            -webkit-app-region: drag; /* Make header draggable in frameless mode if needed */
+        }
+        .btn, .tabs-container, .context-menu {
+            -webkit-app-region: no-drag;
+        }
+    </style>
 </head>
-
 <body>
     <div class="app-container">
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <button id="new-connection-btn" class="btn btn-primary">
-                    <span class="icon">+</span> New Connection
-                </button>
-                <div class="separator" style="opacity: 0.2"></div>
-                <button id="disconnect-btn" class="btn btn-danger" disabled>
-                    Disconnect
-                </button>
-            </div>
-
-            <div class="toolbar-center">
-                <button id="auto-scroll-btn" class="btn active">
-                    Auto Scroll
-                </button>
-            </div>
-
-            <div class="toolbar-right">
-                <button id="log-btn" class="btn">
-                    Log
-                </button>
-            </div>
-        </div>
-
-        <div id="tabs-container" class="tabs-container">
-            <!-- Tabs will be dynamically added here -->
-        </div>
-
-        <div id="tab-content" class="tab-content">
-            <div class="empty-state">
-                <div style="text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2">⚡</div>
-                    <p>Create a new connection to start</p>
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <img src="../../assets/icon.png" alt="Patterm" width="32" height="32" onerror="this.style.display='none'">
+                    <span class="app-name">Patterm</span>
                 </div>
             </div>
-        </div>
+
+            <div class="header-center">
+                <div class="tabs-container" id="tabs-container"></div>
+                <button id="new-tab-btn" class="btn btn-icon" title="New Connection" aria-label="New Connection">
+                    <span>+</span>
+                </button>
+            </div>
+
+            <div class="header-right">
+                <button id="theme-toggle-btn" class="btn btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+                    <span class="theme-icon">🌓</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div id="tabs-content" class="tabs-content"></div>
+            <div id="empty-state" class="empty-state">
+                <div class="empty-state-content">
+                    <div class="empty-icon">⚡</div>
+                    <h2>No Connections</h2>
+                    <p>Click the <strong>+ New Connection</strong> button to start.</p>
+                    <button id="empty-new-connection-btn" class="btn btn-primary" style="margin-top: 20px;">
+                        <span class="btn-icon">+</span>
+                        New Connection
+                    </button>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <script src="theme-manager.js"></script>
-    <script src="main.js"></script>
-    <script>
-        // Theme initialization is handled by theme-manager.js
-    </script>
-</body>
+    <div id="context-menu" class="context-menu" style="display: none;">
+        <div class="context-menu-items"></div>
+    </div>
 
+    <!-- Use type="module" to enable ES imports -->
+    <script type="module" src="main.js"></script>
+</body>
 </html>

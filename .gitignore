@@ -17,3 +17,5 @@ web/test-output/
 web/test-results/
 web/playwright-report/
 web/.cache/
+test-results/
+playwright-report/

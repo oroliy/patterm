@@ -10,4 +10,4 @@ export {
     RATE_CALCULATION_INTERVAL,
     TIMESTAMP_FORMAT,
     STORAGE_KEYS
-} from '/src/shared/js/constants.js';
+} from '../../../shared/js/constants.js';

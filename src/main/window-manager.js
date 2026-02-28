@@ -1,14 +1,9 @@
-const { BrowserWindow, BrowserView } = require('electron');
+const { BrowserWindow } = require('electron');
 const path = require('path');
 
 class WindowManager {
     constructor(debugWindow) {
         this.mainWindow = null;
-        this.tabs = new Map();
-        this.activeTabId = null;
-        this.tabCounter = 0;
-        this.toolbarHeight = 0;
-        this.tabsHeight = 0;
         this.debugWindow = debugWindow;
     }
 
@@ -33,296 +28,24 @@ class WindowManager {
 
         this.mainWindow.once('ready-to-show', () => {
             this.mainWindow.show();
-            setTimeout(() => this.updateLayoutMetrics(), 100);
-            setTimeout(() => this.updateLayoutMetrics(), 500);
         });
 
         this.mainWindow.on('closed', () => {
-            this.closeAll();
-        });
-
-        this.mainWindow.on('resize', () => {
-            this.resize();
+            this.mainWindow = null;
         });
 
         return this.mainWindow;
     }
 
-    async createNewTab(tabId = null, title = null) {
-        if (this.debugWindow) {
-            this.debugWindow.log(`createNewTab called with tabId=${tabId}, title=${title}`, 'info');
-        }
-
-        // Set default values first, before async operations
-        if (this.toolbarHeight === 0) {
-            this.toolbarHeight = 50;
-        }
-        if (this.tabsHeight === 0) {
-            this.tabsHeight = 40;
-        }
-
-        const actualTabId = tabId || ++this.tabCounter;
-        const view = new BrowserView({
-            webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false
-            }
-        });
-
-        await this.updateLayoutMetrics();
-
-        const bounds = this.mainWindow.getContentBounds();
-        const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
-        const viewHeight = Math.floor(bounds.height - yOffset);
-
-        if (this.debugWindow) {
-            this.debugWindow.log(`Tab bounds: x=0, y=${yOffset}, width=${bounds.width}, height=${viewHeight}`, 'debug');
-            this.debugWindow.log(`BrowserView will occupy from y=${yOffset} to y=${yOffset + viewHeight} (total ${viewHeight}px)`, 'debug');
-        }
-
-        view.setBounds({
-            x: 0,
-            y: yOffset,
-            width: bounds.width,
-            height: viewHeight
-        });
-
-        // Store tab before loading
-        this.tabs.set(actualTabId, {
-            id: actualTabId,
-            view: view,
-            title: title || `Port ${actualTabId}`
-        });
-
-        const result = {
-            id: actualTabId,
-            title: title || `Port ${actualTabId}`,
-            shouldActivate: !this.activeTabId
-        };
-
-        // Return a promise that resolves when the tab is fully loaded
-        return new Promise((resolve) => {
-            view.webContents.loadFile(require('path').join(__dirname, '../renderer/tab.html'));
-
-            view.webContents.on('did-finish-load', async () => {
-                view.webContents.send('tab:init', { tabId: actualTabId });
-
-                await this.updateLayoutMetrics();
-                const newBounds = this.mainWindow.getContentBounds();
-                const newYOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
-                const newViewHeight = Math.floor(newBounds.height - newYOffset);
-
-                if (this.debugWindow) {
-                    this.debugWindow.log(`Re-calculating tab bounds after load: y=${newYOffset}, h=${newViewHeight}`, 'info');
-                    this.debugWindow.log(`Expected: BrowserView from ${newYOffset} to ${newYOffset + newViewHeight}`, 'info');
-                }
-
-                view.setBounds({
-                    x: 0,
-                    y: newYOffset,
-                    width: newBounds.width,
-                    height: newViewHeight
-                });
-
-                if (this.debugWindow) {
-                    this.debugWindow.log(`Sent tab:init event to tab ${actualTabId}`, 'info');
-                    this.debugWindow.log(`Actual view bounds: x=${view.getBounds().x}, y=${view.getBounds().y}, w=${view.getBounds().width}, h=${view.getBounds().height}`, 'info');
-
-                    setTimeout(async () => {
-                        try {
-                            const docInfo = await view.webContents.executeJavaScript(`
-                                (function() {
-                                    return {
-                                        bodyHeight: document.body.offsetHeight,
-                                        bodyScrollHeight: document.body.scrollHeight,
-                                        innerHeight: window.innerHeight,
-                                        outerHeight: window.outerHeight,
-                                        htmlHeight: document.documentElement.offsetHeight
-                                    };
-                                })()
-                            `);
-                            this.debugWindow.log(`Tab doc info: body=${docInfo.bodyHeight}px, scroll=${docInfo.bodyScrollHeight}px, innerH=${docInfo.innerHeight}px`, 'info');
-                        } catch (err) {
-                            this.debugWindow.error(`Failed to get doc info: ${err.message}`);
-                        }
-                    }, 500);
-                }
-
-                if (this.debugWindow) {
-                    this.debugWindow.log(`Tab created and fully loaded: ${JSON.stringify(result)}`, 'info');
-                }
-
-                resolve(result);
-            });
-        });
-    }
-
-    closeTab(tabId) {
-        const tab = this.tabs.get(tabId);
-        if (!tab) return false;
-
-        tab.view.webContents.destroy();
-        this.tabs.delete(tabId);
-
-        if (this.activeTabId === tabId) {
-            const remainingTabs = Array.from(this.tabs.keys());
-            if (remainingTabs.length > 0) {
-                this.switchTab(remainingTabs[0]);
-            } else {
-                this.activeTabId = null;
-            }
-        }
-
-        return true;
-    }
-
-    async switchTab(tabId) {
-        const tab = this.tabs.get(tabId);
-        if (!tab) {
-            return false;
-        }
-
-        const bounds = this.mainWindow.getContentBounds();
-
-        await this.updateLayoutMetrics();
-        const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
-        const viewHeight = Math.floor(bounds.height - yOffset);
-
-        if (this.activeTabId && this.activeTabId !== tabId) {
-            const prevTab = this.tabs.get(this.activeTabId);
-            if (prevTab) {
-                this.mainWindow.removeBrowserView(prevTab.view);
-            }
-        }
-
-        if (this.debugWindow) {
-            this.debugWindow.log(`Setting view bounds BEFORE adding: x=0, y=${yOffset}, w=${bounds.width}, h=${viewHeight}`, 'info');
-            this.debugWindow.log(`toolbarHeight=${this.toolbarHeight}, tabsHeight=${this.tabsHeight}, windowHeight=${bounds.height}`, 'info');
-        }
-
-        tab.view.setBounds({
-            x: 0,
-            y: yOffset,
-            width: bounds.width,
-            height: viewHeight
-        });
-
-        this.mainWindow.addBrowserView(tab.view);
-
-        this.mainWindow.setTopBrowserView(tab.view);
-
-        if (this.debugWindow) {
-            const actualBounds = tab.view.getBounds();
-            this.debugWindow.log(`Actual view bounds AFTER setBounds: x=${actualBounds.x}, y=${actualBounds.y}, w=${actualBounds.width}, h=${actualBounds.height}`, 'info');
-            this.debugWindow.log(`View top-left at screen coordinates: Screen Y = ${bounds.y + actualBounds.y}`, 'info');
-        }
-
-        this.activeTabId = tabId;
-
-        return true;
-    }
-
-    updateTabTitle(tabId, title) {
-        const tab = this.tabs.get(tabId);
-        if (tab) {
-            tab.title = title;
-            return true;
-        }
-        return false;
-    }
-
-    getTab(tabId) {
-        return this.tabs.get(tabId);
-    }
-
-    getAllTabs() {
-        return Array.from(this.tabs.values()).map(tab => ({
-            id: tab.id,
-            title: tab.title
-        }));
-    }
-
-    getActiveTab() {
-        return this.tabs.get(this.activeTabId);
-    }
-
     closeAll() {
-        for (const [tabId, tab] of this.tabs) {
-            tab.view.webContents.destroy();
-        }
-        this.tabs.clear();
-        this.activeTabId = null;
-    }
-
-    resize() {
-        if (!this.mainWindow || !this.activeTabId) return;
-
-        this.updateLayoutMetrics();
-
-        const bounds = this.mainWindow.getContentBounds();
-        const activeTab = this.tabs.get(this.activeTabId);
-        if (activeTab) {
-            const yOffset = Math.floor(this.toolbarHeight + this.tabsHeight);
-            const viewHeight = Math.floor(bounds.height - yOffset);
-
-            if (this.debugWindow) {
-                this.debugWindow.log(`Resize: Setting view bounds to y=${yOffset}, h=${viewHeight}`, 'info');
-            }
-
-            activeTab.view.setBounds({
-                x: 0,
-                y: yOffset,
-                width: bounds.width,
-                height: viewHeight
-            });
+        if (this.mainWindow) {
+            this.mainWindow.close();
         }
     }
 
-    async updateLayoutMetrics() {
-        if (!this.mainWindow || !this.mainWindow.webContents) return;
-
-        const bounds = this.mainWindow.getBounds();
-        try {
-            const result = await this.mainWindow.webContents.executeJavaScript(`
-                (function() {
-                    const toolbar = document.querySelector('.toolbar');
-                    const tabsContainer = document.querySelector('.tabs-container');
-                    const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
-                    const tabsHeight = tabsContainer ? tabsContainer.offsetHeight : 0;
-                    return {
-                        toolbarHeight,
-                        tabsHeight
-                    };
-                })()
-            `);
-            if (this.debugWindow) {
-                this.debugWindow.log(`Layout metrics: toolbar=${result.toolbarHeight}px, tabs=${result.tabsHeight}px`, 'info');
-            }
-            if (result.toolbarHeight > 0) this.toolbarHeight = result.toolbarHeight;
-            if (result.tabsHeight > 0) this.tabsHeight = result.tabsHeight;
-        } catch (err) {
-            if (this.debugWindow) {
-                this.debugWindow.error(`Failed to get layout metrics: ${err.message}`);
-            }
-            this.toolbarHeight = 50;
-            this.tabsHeight = 40;
-        }
-    }
     broadcastToTabs(channel, ...args) {
-        if (this.debugWindow) {
-            this.debugWindow.log(`Broadcasting to ${this.tabs.size} tabs: ${channel}`, 'info');
-        }
-        for (const tab of this.tabs.values()) {
-            try {
-                if (tab.view && tab.view.webContents && !tab.view.webContents.isDestroyed()) {
-                    tab.view.webContents.send(channel, ...args);
-                    if (this.debugWindow) {
-                        this.debugWindow.log(`Sent ${channel} to tab ${tab.id}`, 'debug');
-                    }
-                }
-            } catch (error) {
-                console.error(`Failed to send to tab ${tab.id}:`, error);
-            }
+        if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+            this.mainWindow.webContents.send(channel, ...args);
         }
     }
 }
