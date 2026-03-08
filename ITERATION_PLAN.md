@@ -4,6 +4,7 @@
 - [x] 统一串口提供者契约：新增共享 `BaseSerialProvider` 与 `normalizeSerialConfig`
 - [x] Electron 渲染层切换到 `ElectronSerialProvider`，沿用共享配置归一化
 - [x] Web 端串口服务切换到 `WebSerialProvider`，沿用共享配置归一化
+- [x] 连接对话框收敛为共享主体 + Electron 端口枚举适配
 - [ ] 继续收敛 Electron 渲染层残余专用 UI 逻辑
 - [ ] 为共享串口抽象补单元测试
 - [ ] 将双端 E2E 纳入统一 CI 流程

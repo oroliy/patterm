@@ -7,6 +7,7 @@ export class ConnectionDialog {
         this.onCancel = options.onCancel || (() => {});
         this.dialog = null;
         this.overlay = null;
+        this.selectedPort = null;
     }
 
     show() {
@@ -32,7 +33,7 @@ export class ConnectionDialog {
 
         this.dialog = this.overlay.querySelector('.connection-dialog');
         this.attachEventListeners();
-        this.preSelectFirstPort();
+        this.afterDialogCreated();
     }
 
     getDialogHTML() {
@@ -51,14 +52,7 @@ export class ConnectionDialog {
 
                         <div class="form-group">
                             <label for="port-select">Serial Port</label>
-                            <div class="port-selector">
-                                <button type="button" id="select-port-btn" class="btn btn-primary">
-                                    <span class="btn-icon">🔌</span>
-                                    Select Port
-                                </button>
-                                <span id="selected-port-info" class="selected-port-info"></span>
-                            </div>
-                            <p class="form-hint">Click "Select Port" to choose a serial device from the browser</p>
+                            ${this.getPortSelectionMarkup()}
                         </div>
 
                         <div class="config-grid">
@@ -119,19 +113,30 @@ export class ConnectionDialog {
         `;
     }
 
+    getPortSelectionMarkup() {
+        return `
+            <div class="port-selector">
+                <button type="button" id="select-port-btn" class="btn btn-primary">
+                    <span class="btn-icon">🔌</span>
+                    Select Port
+                </button>
+                <span id="selected-port-info" class="selected-port-info"></span>
+            </div>
+            <p class="form-hint">Click "Select Port" to choose a serial device from the browser</p>
+        `;
+    }
+
     attachEventListeners() {
         debug.log('[ConnectionDialog] attachEventListeners called');
         const closeBtn = this.dialog.querySelector('.dialog-close-btn');
         const cancelBtn = this.dialog.querySelector('#cancel-btn');
         const connectBtn = this.dialog.querySelector('#connect-btn');
-        const selectPortBtn = this.dialog.querySelector('#select-port-btn');
         const overlay = this.overlay;
 
         debug.log('[ConnectionDialog] Elements found:', {
             closeBtn: !!closeBtn,
             cancelBtn: !!cancelBtn,
-            connectBtn: !!connectBtn,
-            selectPortBtn: !!selectPortBtn
+            connectBtn: !!connectBtn
         });
 
         closeBtn.addEventListener('click', () => {
@@ -155,11 +160,6 @@ export class ConnectionDialog {
             e.stopPropagation();
         });
 
-        selectPortBtn.addEventListener('click', () => {
-            debug.log('[ConnectionDialog] Select Port button clicked');
-            this.selectPort();
-        });
-
         connectBtn.addEventListener('click', () => {
             debug.log('[ConnectionDialog] Connect button clicked, calling handleConnect');
             debug.log('[ConnectionDialog] selectedPort:', this.selectedPort);
@@ -172,6 +172,24 @@ export class ConnectionDialog {
                 this.onCancel();
             }
         });
+
+        this.attachPortEventListeners();
+    }
+
+    attachPortEventListeners() {
+        const selectPortBtn = this.dialog.querySelector('#select-port-btn');
+        if (!selectPortBtn) {
+            return;
+        }
+
+        selectPortBtn.addEventListener('click', () => {
+            debug.log('[ConnectionDialog] Select Port button clicked');
+            this.selectPort();
+        });
+    }
+
+    afterDialogCreated() {
+        this.preSelectFirstPort();
     }
 
     async selectPort() {
@@ -185,8 +203,7 @@ export class ConnectionDialog {
             infoSpan.textContent = infoText;
             infoSpan.classList.add('port-selected');
 
-            const connectBtn = this.dialog.querySelector('#connect-btn');
-            connectBtn.disabled = false;
+            this.setConnectEnabled(true);
 
             this.clearError();
         } catch (error) {
@@ -209,15 +226,15 @@ export class ConnectionDialog {
         debug.log('[ConnectionDialog] handleConnect() called');
         debug.log('[ConnectionDialog] selectedPort:', this.selectedPort);
 
-        if (!this.selectedPort) {
+        if (!this.canConnect()) {
             debug.log('[ConnectionDialog] No port selected, showing error');
-            this.showError('Please select a serial port first');
+            this.showError(this.getMissingSelectionMessage());
             return;
         }
 
         const config = this.getFormConfig();
-        const tabName = this.getTabName();
-        const port = this.selectedPort;
+        const tabName = this.getTabName(this.getDefaultTabName(config));
+        const port = this.getSelectedPort();
 
         debug.log('[ConnectionDialog] Connecting with:', { config, tabName, port });
         debug.log('[ConnectionDialog] Calling onConnect callback');
@@ -235,9 +252,32 @@ export class ConnectionDialog {
         };
     }
 
-    getTabName() {
+    getTabName(defaultName = null) {
         const input = this.dialog.querySelector('#tab-name');
-        return input.value.trim() || null;
+        return input.value.trim() || defaultName;
+    }
+
+    canConnect() {
+        return Boolean(this.selectedPort);
+    }
+
+    getSelectedPort() {
+        return this.selectedPort;
+    }
+
+    getMissingSelectionMessage() {
+        return 'Please select a serial port first';
+    }
+
+    getDefaultTabName() {
+        return null;
+    }
+
+    setConnectEnabled(enabled) {
+        const connectBtn = this.dialog.querySelector('#connect-btn');
+        if (connectBtn) {
+            connectBtn.disabled = !enabled;
+        }
     }
 
     showError(message) {
