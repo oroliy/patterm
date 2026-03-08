@@ -162,7 +162,7 @@ patterm/
 │   │   └── serial-service-manager.js  # 多连接管理
 │   ├── shared/         # 双端共享代码
 │   │   ├── css/        # 公共样式变量与基础样式
-│   │   └── js/         # 公共工具与串口提供者抽象
+│   │   └── js/         # 公共工具、应用壳层与串口提供者抽象
 │   └── public/         # 静态资源
 ├── tests/              # Jest 测试套件
 ├── .github/workflows/  # CI/CD 配置
@@ -199,6 +199,12 @@ npm run test:electron  # 运行 Electron Playwright E2E
 npm run web:test       # 运行 Web 端 Playwright E2E
 npm run lint           # 运行代码检查
 ```
+
+CI 现在会在构建和部署前强制通过四个阶段：
+- `lint`
+- `unit-test`
+- `web-test`
+- `electron-test`
 
 #### 快速端到端测试（推荐）
 

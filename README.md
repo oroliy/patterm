@@ -199,7 +199,7 @@ patterm/
 │   │   └── serial-service-manager.js  # Multi-connection management
 │   ├── shared/         # Shared code (desktop + web)
 │   │   ├── css/        # Common CSS variables and reset
-│   │   └── js/         # Shared utilities and serial provider abstractions
+│   │   └── js/         # Shared utilities, app shell, and serial abstractions
 │   └── web/            # Web version source (PWA)
 │       ├── js/         # Web app entry and components
 │       │   ├── components/  # UI components (ConnectionDialog, Tab, Terminal)
@@ -247,6 +247,12 @@ npm run lint           # Run linter
 ```
 
 ### Testing
+
+CI now enforces four stages before build and deploy:
+- `lint`
+- `unit-test`
+- `web-test`
+- `electron-test`
 
 #### Quick E2E Test (Recommended)
 

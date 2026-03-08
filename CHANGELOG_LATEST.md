@@ -6,6 +6,8 @@
 - Added shared serial provider abstractions for Web and Electron renderer flows
 - Normalized serial config defaults through a shared helper before tab creation and connection
 - Refactored the connection dialog to share one UI shell across Web and Electron flows
+- Extracted a shared renderer app shell so Electron and Web reuse the same tab and menu controller logic
+- CI now runs required unit, Web E2E, and Electron E2E stages before build and deploy
 - Recorded the current v0.7.0 priority order in `ITERATION_PLAN.md`
 
 ### Fixed
@@ -15,6 +17,7 @@
 
 ### Tests
 - Added logging lifecycle coverage for SerialService
+- Added unit coverage for shared serial abstractions
 
 ## Major New Features
 
