@@ -130,6 +130,17 @@ jobs:
     - name: Build Electron app
       run: npm run build
 
+    - name: Prepare dmg-builder bundle for macOS
+      if: matrix.os == 'macos-15-intel'
+      run: |
+        mkdir -p .ci/dmgbuild
+        curl -L \
+          -o .ci/dmgbuild/dmgbuild-bundle-x86_64-75c8a6c.tar.gz \
+          https://github.com/electron-userland/electron-builder-binaries/releases/download/dmg-builder@1.2.0/dmgbuild-bundle-x86_64-75c8a6c.tar.gz
+        tar -xzf .ci/dmgbuild/dmgbuild-bundle-x86_64-75c8a6c.tar.gz -C .ci/dmgbuild
+        chmod +x .ci/dmgbuild/dmgbuild
+        echo "CUSTOM_DMGBUILD_PATH=${GITHUB_WORKSPACE}/.ci/dmgbuild/dmgbuild" >> $GITHUB_ENV
+
     - name: Build distribution
       run: npm run dist
 
