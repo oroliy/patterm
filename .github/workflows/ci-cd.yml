@@ -170,7 +170,21 @@ jobs:
     - name: Build Web App
       run: npm run web:build
 
+    - name: Check Cloudflare deployment secrets
+      id: cloudflare-secrets
+      run: |
+        if [[ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" && -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+          echo "configured=true" >> $GITHUB_OUTPUT
+        else
+          echo "configured=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Skip Cloudflare Pages deploy when secrets are unavailable
+      if: steps.cloudflare-secrets.outputs.configured != 'true'
+      run: echo "Cloudflare Pages deploy skipped because CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not configured."
+
     - name: Deploy to Cloudflare Pages
+      if: steps.cloudflare-secrets.outputs.configured == 'true'
       uses: cloudflare/wrangler-action@v3
       with:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

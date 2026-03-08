@@ -14,6 +14,7 @@
 - Web SerialService now returns a null config before connection to avoid state access errors
 - Fixed typo in virtual serial script error message (removed space before "process")
 - Synced README_zh web command list with the English documentation
+- Cloudflare Pages deploy now skips cleanly when CI secrets are not configured instead of failing the whole workflow
 
 ### Tests
 - Added logging lifecycle coverage for SerialService
