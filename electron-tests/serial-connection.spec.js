@@ -1,16 +1,23 @@
 const { test, expect, _electron: electron } = require('@playwright/test');
 const path = require('path');
 
+async function launchElectronApp() {
+    return electron.launch({
+        args: [path.join(__dirname, '../src/main/main.js')],
+        env: {
+            ...process.env,
+            PATTERM_E2E: '1',
+            PATTERM_OPEN_DEVTOOLS: '0'
+        }
+    });
+}
+
 test.describe('Patterm Electron - Serial Interactions', () => {
     let electronApp;
     let window;
 
     test.beforeAll(async () => {
-        // Launch Electron app
-        electronApp = await electron.launch({
-            args: [path.join(__dirname, '../src/main/main.js')]
-        });
-        
+        electronApp = await launchElectronApp();
         window = await electronApp.firstWindow();
         await window.waitForLoadState('domcontentloaded');
     });

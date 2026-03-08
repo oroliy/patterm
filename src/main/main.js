@@ -10,6 +10,12 @@ let debugWindow;
 let currentTheme = 'system';
 let tabCounter = 0;
 
+if (process.env.CI === 'true' || process.env.PATTERM_E2E === '1') {
+    app.commandLine.appendSwitch('no-sandbox');
+    app.commandLine.appendSwitch('disable-gpu');
+    app.commandLine.appendSwitch('disable-dev-shm-usage');
+}
+
 function shouldOpenDevTools() {
     return process.env.PATTERM_OPEN_DEVTOOLS === '1';
 }
