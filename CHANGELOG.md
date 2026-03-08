@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
 - Pinned `cacache -> glob` to `10.5.0` to clear the remaining high-severity glob advisory
 - Configured the CI workflow with an `electron-builder-binaries` mirror so macOS packaging can fetch DMG tooling reliably
+- Pinned the macOS build runner to `macos-15-intel` so DMG packaging uses the supported x64 toolchain on GitHub Actions
 
 ### Tests
 - Added logging lifecycle coverage for SerialService
