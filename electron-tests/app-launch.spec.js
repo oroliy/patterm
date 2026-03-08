@@ -3,9 +3,10 @@ const path = require('path');
 
 async function launchElectronApp() {
     return electron.launch({
-        args: [path.join(__dirname, '../src/main/main.js')],
+        args: ['--no-sandbox', path.join(__dirname, '../src/main/main.js')],
         env: {
             ...process.env,
+            ELECTRON_DISABLE_SANDBOX: '1',
             PATTERM_E2E: '1',
             PATTERM_OPEN_DEVTOOLS: '0'
         }

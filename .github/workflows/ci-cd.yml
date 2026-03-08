@@ -105,6 +105,8 @@ jobs:
 
     - name: Run Electron E2E Tests
       uses: coactions/setup-xvfb@v1
+      env:
+        ELECTRON_DISABLE_SANDBOX: '1'
       with:
         run: npm run test:electron
 
