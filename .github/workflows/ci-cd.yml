@@ -141,7 +141,12 @@ jobs:
         chmod +x .ci/dmgbuild/dmgbuild
         echo "CUSTOM_DMGBUILD_PATH=${GITHUB_WORKSPACE}/.ci/dmgbuild/dmgbuild" >> $GITHUB_ENV
 
+    - name: Build distribution (macOS x64)
+      if: matrix.os == 'macos-15-intel'
+      run: npx electron-builder --mac dmg --x64 --publish never
+
     - name: Build distribution
+      if: matrix.os != 'macos-15-intel'
       run: npm run dist
 
     - name: Upload build artifacts

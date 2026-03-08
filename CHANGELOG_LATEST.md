@@ -22,6 +22,7 @@
 - Configured the CI workflow with an `electron-builder-binaries` mirror so macOS packaging can fetch DMG tooling reliably
 - Pinned the macOS build runner to `macos-15-intel` so DMG packaging uses the supported x64 toolchain on GitHub Actions
 - Added an explicit macOS CI prefetch for the `dmg-builder` bundle and wired `CUSTOM_DMGBUILD_PATH` to bypass the broken mirror download path
+- Limited the macOS CI packaging path to `x64 DMG` so GitHub Actions no longer blocks on the unstable arm64 DMG detach step
 
 ### Tests
 - Added logging lifecycle coverage for SerialService
