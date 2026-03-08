@@ -3,8 +3,9 @@ import { globalEvents } from '../web/js/services/EventManager.js';
 import { TabComponent } from '../web/js/components/TabComponent.js';
 import { STORAGE_KEYS, THEME_OPTIONS } from '../web/js/utils/constants.js';
 import { applyTheme, saveToLocalStorage, loadFromLocalStorage } from '../web/js/utils/helpers.js';
+import { normalizeSerialConfig } from '../shared/js/serial/normalizeSerialConfig.js';
 import { ElectronConnectionDialog } from './ElectronConnectionDialog.js';
-import { IpcSerialProvider } from './services/IpcSerialProvider.js';
+import { ElectronSerialProvider } from './services/IpcSerialProvider.js';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -62,11 +63,12 @@ class PattermElectronApp {
     }
 
     async createConnection(config, tabName) {
-        const tabState = this.tabManager.createTab(config, tabName || config.path);
-        const service = new IpcSerialProvider();
+        const normalizedConfig = normalizeSerialConfig(config);
+        const tabState = this.tabManager.createTab(normalizedConfig, tabName || normalizedConfig.path);
+        const service = new ElectronSerialProvider();
         
         try {
-            await service.open(config, tabName);
+            await service.open(normalizedConfig, tabName);
             await this.tabManager.connectTab(tabState.id, service);
         } catch (error) {
             console.error('[App] Connection failed:', error);

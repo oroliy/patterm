@@ -89,6 +89,7 @@ A Progressive Web App version is also available, featuring:
 - **Offline support** via service worker
 - **Installable** as desktop app from browser
 - Same feature set as desktop version (multi-tab, all UART configs, logging)
+- Shared serial provider contract across Web and Electron renderer flows
 - **HTTPS required** for Web Serial API (localhost exempt)
 
 **Web Development Commands:**
@@ -198,7 +199,7 @@ patterm/
 │   │   └── serial-service-manager.js  # Multi-connection management
 │   ├── shared/         # Shared code (desktop + web)
 │   │   ├── css/        # Common CSS variables and reset
-│   │   └── js/         # Shared utilities (constants, formatters, theme, utils)
+│   │   └── js/         # Shared utilities and serial provider abstractions
 │   └── web/            # Web version source (PWA)
 │       ├── js/         # Web app entry and components
 │       │   ├── components/  # UI components (ConnectionDialog, Tab, Terminal)
@@ -240,6 +241,8 @@ npm run web:test       # Run Playwright E2E tests
 # Testing
 npm test               # Run Jest unit tests
 npm run test:e2e       # Quick E2E test with virtual serial port
+npm run test:electron  # Run Playwright Electron E2E tests
+npm run web:test       # Run Playwright web E2E tests
 npm run lint           # Run linter
 ```
 

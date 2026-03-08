@@ -1,4 +1,4 @@
-import { SerialService, listAvailablePorts } from './services/SerialService.js';
+import { WebSerialProvider } from './services/SerialService.js';
 import { TabManager } from './services/TabManager.js';
 import { LogManager } from './services/LogManager.js';
 import { globalEvents } from './services/EventManager.js';
@@ -7,6 +7,7 @@ import { TabComponent } from './components/TabComponent.js';
 import { STORAGE_KEYS, DEFAULT_SERIAL_CONFIG, THEME_OPTIONS } from './utils/constants.js';
 import { applyTheme, getEffectiveTheme, saveToLocalStorage, loadFromLocalStorage } from './utils/helpers.js';
 import { debug } from './utils/debug.js';
+import { normalizeSerialConfig } from '../../shared/js/serial/normalizeSerialConfig.js';
 
 class PattermApp {
     constructor() {
@@ -26,7 +27,7 @@ class PattermApp {
     }
 
     checkBrowserSupport() {
-        if (!SerialService.isSupported()) {
+        if (!WebSerialProvider.isSupported()) {
             this.showError(`
                 <h2>Web Serial API Not Supported</h2>
                 <p>Your browser does not support the Web Serial API. Please use one of the following:</p>
@@ -85,14 +86,15 @@ class PattermApp {
             return;
         }
 
-        const tabState = this.tabManager.createTab(config, tabName || `Port ${config.baudRate}`);
-        const service = new SerialService();
+        const normalizedConfig = normalizeSerialConfig(config);
+        const tabState = this.tabManager.createTab(normalizedConfig, tabName || `Port ${normalizedConfig.baudRate}`);
+        const service = new WebSerialProvider();
         service.port = port;
 
-        debug.log('[App] About to open port with config:', config);
+        debug.log('[App] About to open port with config:', normalizedConfig);
 
         try {
-            await service.open(config);
+            await service.open(normalizedConfig);
             debug.log('[App] Port opened successfully');
             await this.tabManager.connectTab(tabState.id, service);
         } catch (error) {

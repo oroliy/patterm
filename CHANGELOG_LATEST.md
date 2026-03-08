@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+- Added shared serial provider abstractions for Web and Electron renderer flows
+- Normalized serial config defaults through a shared helper before tab creation and connection
+- Recorded the current v0.7.0 priority order in `ITERATION_PLAN.md`
+
 ### Fixed
 - Web SerialService now returns a null config before connection to avoid state access errors
 - Fixed typo in virtual serial script error message (removed space before "process")

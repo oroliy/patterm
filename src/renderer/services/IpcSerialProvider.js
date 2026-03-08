@@ -1,15 +1,12 @@
-import { EventManager } from '../../web/js/services/EventManager.js';
+import { BaseSerialProvider } from '../../shared/js/serial/BaseSerialProvider.js';
+import { normalizeSerialConfig } from '../../shared/js/serial/normalizeSerialConfig.js';
 
-export class IpcSerialProvider extends EventManager {
+export class ElectronSerialProvider extends BaseSerialProvider {
     constructor() {
         super();
         this.ipcRenderer = window.require('electron').ipcRenderer;
         this.tabId = null;
-        this.config = null;
-        this.isConnected = false;
 
-        // Note: Global listeners should be managed so we don't leak,
-        // but for now we bind once per instance and filter by tabId.
         this._handleData = (event, tabId, data) => {
             if (this.tabId === tabId) {
                 this.emit('data', data);
@@ -24,7 +21,7 @@ export class IpcSerialProvider extends EventManager {
 
         this._handleConnected = (event, tabId, connected) => {
             if (this.tabId === tabId) {
-                this.isConnected = connected;
+                this.setConnected(connected);
                 if (!connected) {
                     this.emit('close');
                 } else {
@@ -39,16 +36,16 @@ export class IpcSerialProvider extends EventManager {
     }
 
     async open(config, tabName) {
-        this.config = config;
-        // In Electron, we call connection:create which opens the port in the Main process
-        const result = await this.ipcRenderer.invoke('connection:create', config, tabName);
+        const normalizedConfig = normalizeSerialConfig(config);
+        const result = await this.ipcRenderer.invoke('connection:create', normalizedConfig, tabName);
         if (!result.success) {
             throw new Error(result.error || 'Failed to open connection');
         }
-        
+
         this.tabId = result.tabId;
-        this.isConnected = true;
-        this.emit('open', { config });
+        this.setConfig(normalizedConfig);
+        this.setConnected(true);
+        this.emit('open', { config: normalizedConfig });
     }
 
     async write(data) {
@@ -64,18 +61,19 @@ export class IpcSerialProvider extends EventManager {
     async disconnect() {
         if (this.tabId) {
             await this.ipcRenderer.invoke('serial:disconnect', this.tabId);
-            this.isConnected = false;
+            this.setConnected(false);
         }
         this.cleanup();
     }
 
     async reconnect() {
-        if (!this.config || !this.tabId) {
+        const config = this.getConfig();
+        if (!config || !this.tabId) {
             throw new Error('No previous configuration found. Cannot reconnect.');
         }
         const result = await this.ipcRenderer.invoke('serial:reconnect', this.tabId);
         if (result) {
-            this.isConnected = true;
+            this.setConnected(true);
         }
     }
 
@@ -84,15 +82,6 @@ export class IpcSerialProvider extends EventManager {
         this.ipcRenderer.removeListener('serial:error', this._handleError);
         this.ipcRenderer.removeListener('serial:connected', this._handleConnected);
     }
-
-    getConfig() {
-        return { ...this.config };
-    }
-
-    getState() {
-        return {
-            isConnected: this.isConnected,
-            config: this.getConfig()
-        };
-    }
 }
+
+export const IpcSerialProvider = ElectronSerialProvider;

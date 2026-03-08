@@ -19,6 +19,10 @@ function createWindow() {
 
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+    });
+
     mainWindow.on('closed', () => {
         windowManager.closeAll();
         serialServiceManager.closeAll();

@@ -69,6 +69,7 @@
 - **离线支持**通过 Service Worker 实现
 - **可安装**为桌面应用（从浏览器安装）
 - 功能与桌面版相同（多标签、完整 UART 配置、日志记录等）
+- Web 与 Electron 渲染层共用统一的串口提供者契约
 
 运行 Web 版本：
 ```bash
@@ -159,6 +160,9 @@ patterm/
 │   ├── services/       # 业务逻辑
 │   │   ├── serial-service.js  # 单个串口处理
 │   │   └── serial-service-manager.js  # 多连接管理
+│   ├── shared/         # 双端共享代码
+│   │   ├── css/        # 公共样式变量与基础样式
+│   │   └── js/         # 公共工具与串口提供者抽象
 │   └── public/         # 静态资源
 ├── tests/              # Jest 测试套件
 ├── .github/workflows/  # CI/CD 配置
@@ -187,6 +191,14 @@ npm run dist:linux  # 仅 Linux
 ```
 
 ### 测试
+
+```bash
+npm test               # 运行 Jest 单元测试
+npm run test:e2e       # 使用虚拟串口启动桌面端手动 E2E
+npm run test:electron  # 运行 Electron Playwright E2E
+npm run web:test       # 运行 Web 端 Playwright E2E
+npm run lint           # 运行代码检查
+```
 
 #### 快速端到端测试（推荐）
 

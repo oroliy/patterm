@@ -1,5 +1,13 @@
 # Patterm 双端融合与稳定性提升迭代计划 (v0.7.0 - v0.8.0)
 
+## 当前优先顺序 (2026-03-08)
+- [x] 统一串口提供者契约：新增共享 `BaseSerialProvider` 与 `normalizeSerialConfig`
+- [x] Electron 渲染层切换到 `ElectronSerialProvider`，沿用共享配置归一化
+- [x] Web 端串口服务切换到 `WebSerialProvider`，沿用共享配置归一化
+- [ ] 继续收敛 Electron 渲染层残余专用 UI 逻辑
+- [ ] 为共享串口抽象补单元测试
+- [ ] 将双端 E2E 纳入统一 CI 流程
+
 ## 📌 总体愿景
 将 Patterm 从“碰巧拥有 Web 版本的桌面应用”转变为**“以共享核心驱动的现代化多端统一终端应用”**。
 

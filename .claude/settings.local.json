@@ -64,7 +64,12 @@
       "Bash(gh label:*)",
       "Bash(git branch:*)",
       "Bash(gh issue close:*)",
-      "Bash(gh run watch:*)"
+      "Bash(gh run watch:*)",
+      "Bash(~/.claude/skills/browser/scripts/start.js --profile)",
+      "Bash(google-chrome:*)",
+      "Bash(chromium:*)",
+      "Bash(chromium-browser:*)",
+      "Bash(npx playwright screenshot:*)"
     ]
   },
   "outputStyle": "default"
