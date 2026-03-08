@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+env:
+  ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+  ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+
 jobs:
   lint:
     name: Lint Code
@@ -27,8 +31,6 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Run linter (if available)
       run: npm run lint || echo "No lint script configured"
@@ -50,8 +52,6 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Run Jest Unit Tests
       run: npm test
@@ -72,8 +72,6 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
@@ -97,8 +95,6 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
@@ -130,16 +126,12 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Build Electron app
       run: npm run build
 
     - name: Build distribution
       run: npm run dist
-      env:
-        ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4

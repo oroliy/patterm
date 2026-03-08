@@ -19,6 +19,7 @@
 - Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
 - Pinned `cacache -> glob` to `10.5.0` to clear the remaining high-severity glob advisory
+- Configured the CI workflow with an `electron-builder-binaries` mirror so macOS packaging can fetch DMG tooling reliably
 
 ### Tests
 - Added logging lifecycle coverage for SerialService
