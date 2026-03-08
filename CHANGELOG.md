@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cloudflare Pages deploy now skips cleanly when CI secrets are not configured instead of failing the whole workflow
 - Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
+- Pinned `cacache -> glob` to `10.5.0` to clear the remaining high-severity glob advisory
 
 ### Tests
 - Added logging lifecycle coverage for SerialService

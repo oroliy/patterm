@@ -123,7 +123,10 @@
   },
   "overrides": {
     "tar": "7.5.10",
-    "lodash": "^4.17.23"
+    "lodash": "^4.17.23",
+    "cacache": {
+      "glob": "10.5.0"
+    }
   },
   "jest": {
     "testEnvironment": "node",
