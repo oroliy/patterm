@@ -19,3 +19,5 @@ web/playwright-report/
 web/.cache/
 test-results/
 playwright-report/
+test-layout.html
+test-tab-layout.html
