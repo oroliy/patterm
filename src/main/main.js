@@ -10,6 +10,10 @@ let debugWindow;
 let currentTheme = 'system';
 let tabCounter = 0;
 
+function shouldOpenDevTools() {
+    return process.env.PATTERM_OPEN_DEVTOOLS === '1';
+}
+
 function createWindow() {
     debugWindow = new DebugWindow();
     windowManager = new WindowManager(debugWindow);
@@ -19,9 +23,11 @@ function createWindow() {
 
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-    mainWindow.webContents.on('did-finish-load', () => {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-    });
+    if (shouldOpenDevTools()) {
+        mainWindow.webContents.on('did-finish-load', () => {
+            mainWindow.webContents.openDevTools({ mode: 'detach' });
+        });
+    }
 
     mainWindow.on('closed', () => {
         windowManager.closeAll();

@@ -1,6 +1,10 @@
 const { BrowserWindow, BrowserView } = require('electron');
 const path = require('path');
 
+function shouldOpenDevTools() {
+    return process.env.PATTERM_OPEN_DEVTOOLS === '1';
+}
+
 class WindowManager {
     constructor(debugWindow) {
         this.mainWindow = null;
@@ -102,7 +106,9 @@ class WindowManager {
             view.webContents.loadFile(path.join(__dirname, '../renderer/tab.html'));
 
             view.webContents.on('did-finish-load', async () => {
-                view.webContents.openDevTools({ mode: 'detach' });
+                if (shouldOpenDevTools()) {
+                    view.webContents.openDevTools({ mode: 'detach' });
+                }
                 view.webContents.send('tab:init', { tabId: actualTabId });
 
                 await this.updateLayoutMetrics();
