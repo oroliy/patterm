@@ -14,12 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extracted a shared renderer app shell so Electron and Web reuse the same tab and menu controller logic
 - CI now runs required unit, Web E2E, and Electron E2E stages before build and deploy
 - Recorded the current v0.7.0 priority order in `ITERATION_PLAN.md`
+- Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed
 - Web SerialService now returns a null config before connection to avoid state access errors
 - Fixed typo in virtual serial script error message (removed space before "process")
 - Synced README_zh web command list with the English documentation
 - Cloudflare Pages deploy now skips cleanly when CI secrets are not configured instead of failing the whole workflow
+- Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
+- Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
 
 ### Tests
 - Added logging lifecycle coverage for SerialService
