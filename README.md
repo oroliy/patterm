@@ -243,6 +243,8 @@ npm test               # Run Jest unit tests
 npm run test:e2e       # Quick E2E test with virtual serial port
 npm run test:electron  # Run Playwright Electron E2E tests
 npm run web:test       # Run Playwright web E2E tests
+npm run web:test:ci    # Run the CI-safe headless web suite against the real connection dialog flow
+npm run test:ci        # Run the local CI gate: lint + unit + web + Electron
 npm run lint           # Run linter
 ```
 
@@ -253,6 +255,10 @@ CI now enforces four stages before build and deploy:
 - `unit-test`
 - `web-test`
 - `electron-test`
+
+The Web CI suite now asserts the actual UI flow: open the connection dialog, select a mocked Web Serial port through `navigator.serial.requestPort()`, connect, send data, and verify TX/RX content renders in the main terminal area. Ad-hoc debug specs are kept out of the CI path.
+
+Tag-based releases (`v*`) now wait for the Cloudflare Pages deploy job, then publish desktop artifacts to GitHub Releases. Pushes to `master` still deploy the Web PWA when Cloudflare secrets are configured.
 
 #### Quick E2E Test (Recommended)
 

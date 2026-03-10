@@ -10,12 +10,38 @@ export class TerminalComponent {
         this.lastLogLine = null;
         this.lineCount = 0;
         this.maxLines = options.maxLines ?? MAX_TERMINAL_LINES;
-        this.dataBuffer = '';
+        this.dataBuffers = new Map();
     }
 
     appendData(data, type = 'rx') {
-        const normalizedText = this.normalizeNewlines(data);
+        const normalizedText = this.normalizeNewlines(this.normalizeData(data));
         this.processBufferedData(normalizedText, type);
+    }
+
+    normalizeData(data) {
+        if (typeof data === 'string') {
+            return data;
+        }
+
+        if (data instanceof Uint8Array) {
+            return new TextDecoder().decode(data);
+        }
+
+        if (data instanceof ArrayBuffer) {
+            return new TextDecoder().decode(new Uint8Array(data));
+        }
+
+        if (ArrayBuffer.isView(data)) {
+            return new TextDecoder().decode(
+                new Uint8Array(data.buffer, data.byteOffset, data.byteLength)
+            );
+        }
+
+        if (data == null) {
+            return '';
+        }
+
+        return String(data);
     }
 
     normalizeNewlines(text) {
@@ -23,9 +49,10 @@ export class TerminalComponent {
     }
 
     processBufferedData(text, type) {
-        this.dataBuffer += text;
-        const parts = this.dataBuffer.split('\n');
-        this.dataBuffer = parts.pop() || '';
+        const currentBuffer = this.dataBuffers.get(type) || '';
+        const combinedText = currentBuffer + text;
+        const parts = combinedText.split('\n');
+        this.dataBuffers.set(type, parts.pop() || '');
 
         parts.forEach((part) => {
             this.appendLine(part, type, true);
@@ -99,8 +126,8 @@ export class TerminalComponent {
     }
 
     appendTransmitted(data) {
-        const text = typeof data === 'string' ? data : new TextDecoder().decode(data);
-        this.appendData(`> ${text}`, 'tx');
+        const text = this.normalizeData(data);
+        this.appendLine(`> ${text}`, 'tx', true);
     }
 
     appendError(error) {
@@ -116,7 +143,7 @@ export class TerminalComponent {
         this.terminal.innerHTML = '';
         this.lastLogLine = null;
         this.lineCount = 0;
-        this.dataBuffer = '';
+        this.dataBuffers.clear();
     }
 
     getContent() {

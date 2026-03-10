@@ -1,4 +1,4 @@
-# Patterm 双端融合与稳定性提升迭代计划 (v0.7.0 - v0.8.0)
+# Patterm 双端融合、稳定性与现代终端体验迭代计划 (v0.7.0 - v0.9.0)
 
 ## 当前优先顺序 (2026-03-08)
 - [x] 统一串口提供者契约：新增共享 `BaseSerialProvider` 与 `normalizeSerialConfig`
@@ -8,6 +8,9 @@
 - [x] 继续收敛 Electron 渲染层残余专用 UI 逻辑
 - [x] 为共享串口抽象补单元测试
 - [x] 将双端 E2E 纳入统一 CI 流程
+- [x] 收敛 GitHub Actions 发布门禁：仅 Tag 触发 GitHub Release，发布前串联 Web PWA 部署
+- [x] 为 Web 无头 E2E 增加稳定的 CI 启停脚本，避免后台 Vite 进程泄漏
+- [ ] 校验 Cloudflare Pages 生产环境变量与 GitHub Secrets，并完成一次 `v0.8.0` 演练发布
 
 ## 📌 总体愿景
 将 Patterm 从“碰巧拥有 Web 版本的桌面应用”转变为**“以共享核心驱动的现代化多端统一终端应用”**。
@@ -50,3 +53,74 @@
 | **开发周期** | **1 周** (Week 4 后半周: 编写 Workflow 脚本；Week 5 前半周: 联调部署流程及环境变量配置)。 |
 | **测试标准** | - 提交 PR 时，GitHub Actions 必须在 5 分钟内完成 Lint, 单元测试以及 Playwright (Web 无头模式) 测试。 <br> - 打 Tag (如 `v0.8.0`) 时，Cloudflare Pages 成功更新，且 GitHub Releases 成功生成 Win/Mac/Linux 安装包。 |
 | **上线节点** | 产出完全自动化的发布流水线，正式发布双端融合架构的 **Patterm v0.8.0 稳定版**。 |
+
+### 第三阶段当前状态 (2026-03-10)
+- 已完成：`web-test`、`electron-test`、跨平台 `build`、Cloudflare Pages 部署 Job、Tag 触发 GitHub Release
+- 已完成：Release 仅接受 `refs/tags/v*`，避免通过提交信息误发版
+- 已完成：Web CI 测试改为 `npm run web:test:ci`，使用 `wait-on` 和 `trap` 稳定管理 Vite 生命周期
+- 待完成：补齐 Cloudflare Pages 正式环境 Secret，验证一次真实 Tag 发布链路
+
+---
+
+## 📅 第四阶段：现代终端可用性底座 (v0.8.x)
+**目标**：补齐现代终端的高频基础能力，让 Patterm 从“能用的串口工具”升级为“高效率的多会话调试工作台”。**
+
+| 维度 | 详细内容 |
+| :--- | :--- |
+| **功能模块** | **1. 全局搜索与过滤 (Search & Filter)** <br> - 支持当前标签页搜索、全局标签页搜索、正则搜索、大小写敏感切换。 <br> - 为日志/终端数据增加元数据：`tabId`、`direction`(`rx`/`tx`)、`timestamp`、`level`、`transport`。 <br> - 支持仅看 RX、仅看 TX、仅看错误、时间范围过滤，且过滤结果不破坏原始日志。 <br> **2. 命令面板 (Command Palette)** <br> - 支持统一入口执行动作：新建连接、断开、重连、切换 HEX、切换自动滚动、开始/停止日志、切换主题、打开搜索。 <br> - 提供统一 action registry，Web 与 Electron 渲染层共用。 <br> **3. 会话恢复 (Session Restore)** <br> - 保存窗口级 UI 状态：打开的 tabs、激活 tab、连接参数、终端显示模式、过滤器状态。 <br> - Electron 默认启用最近会话恢复；Web 端至少恢复 UI 元数据，不自动重新申请串口权限。 |
+| **参考来源** | Warp 的 Command Palette / Command Search / Block Find；Windows Terminal 的 Command Palette；WezTerm、Ghostty、kitty 的 tabs + panes + actions 模型。 |
+| **实现锚点** | - 在 `src/shared/js/app/AppShell.js` 新增 command registry 与搜索面板入口。 <br> - 扩展 `src/web/js/services/TabManager.js` 的 tab state，纳入结构化事件与会话序列化。 <br> - 扩展 `src/web/js/services/LogManager.js`，支持结构化日志项与过滤导出。 |
+| **开发周期** | **2 周** (Week 1: 数据模型与搜索过滤；Week 2: 命令面板与会话恢复)。 |
+| **测试标准** | - 单元测试覆盖搜索过滤谓词、会话序列化与恢复逻辑。 <br> - Playwright 验证搜索结果高亮、过滤切换、刷新后会话恢复。 <br> - Web 端必须正确处理浏览器串口权限不可恢复的场景提示。 |
+| **上线节点** | 发布 `v0.8.5-beta`，重点收集重度调试用户对搜索、恢复、快捷操作链路的反馈。 |
+
+### 第四阶段拆解建议
+- P0: 统一终端事件数据结构，新增 `terminal entry` 模型，避免继续以裸字符串驱动搜索和过滤
+- P0: 命令面板基础版，仅接现有 action，不先引入复杂工作流
+- P1: 会话恢复仅恢复 UI 与配置，不自动重连串口，先保证安全和可解释性
+- P1: 搜索结果支持定位到原始终端位置，并保留上下文高亮
+
+---
+
+## 📅 第五阶段：面向串口调试的差异化能力 (v0.9.0)
+**目标**：借鉴现代终端的结构化交互与自动化理念，但把能力真正落到串口调试、协议联调、批量诊断的核心场景。**
+
+| 维度 | 详细内容 |
+| :--- | :--- |
+| **功能模块** | **1. 事务块视图 (Transaction / Block View)** <br> - 将“一次发送 + 一段接收窗口”组织为可折叠事务块。 <br> - 支持块级复制、导出、重命名、标星、仅看失败块。 <br> - 兼容纯接收场景，允许系统生成“未关联输入”的接收块。 <br> **2. Trigger 引擎** <br> - 规则模型：`match -> action`。 <br> - 支持匹配正则、十六进制片段、超时未响应。 <br> - 动作支持：高亮、通知、声音、自动回复、开始录制、切换标签颜色、写入标记。 <br> **3. Workflow / Macro** <br> - 预置 AT、Modbus、Bootloader、产测脚本模板。 <br> - 支持参数化变量、延迟、等待响应、失败中断。 <br> - 与 Trigger 引擎共享匹配能力。 <br> **4. 分屏布局 (Split Panes)** <br> - 支持一个窗口同时观察主串口、日志串口、控制串口。 <br> - 支持保存/恢复布局预设。 |
+| **参考来源** | Warp 的 Blocks 与 Workflows；iTerm2 的 Triggers；Windows Terminal / WezTerm / Ghostty / kitty 的 panes 和 action 系统。 |
+| **实现锚点** | - 在 `TabManager` 之上新增 `SessionWorkspace` / `PaneLayout` 层，不直接把分屏逻辑塞进 tab 组件。 <br> - 为终端数据建立 `transactionId`、`source`、`matchState` 字段，支撑块视图与 trigger。 <br> - 将自动化规则存储为 JSON 配置，先不做插件系统。 |
+| **开发周期** | **3 周** (Week 1: trigger + structured log；Week 2: workflow；Week 3: block view 与分屏 MVP)。 |
+| **测试标准** | - 单元测试覆盖规则匹配、事务归并、超时关闭块、工作流执行状态机。 <br> - E2E 覆盖“发送 -> 自动匹配 -> 高亮/自动回复 -> 导出块”的完整链路。 <br> - 分屏模式下多连接并发收发时不得互串状态或污染 counters。 |
+| **上线节点** | 发布 `v0.9.0`，作为“现代串口终端工作台”定位的首个稳定版。 |
+
+### 第五阶段拆解建议
+- P0: Trigger 引擎先只做只读动作和高亮，不先放开自动回复，降低误操作风险
+- P0: Workflow 先做“发送步骤 + 等待匹配 + 超时失败”，不先做脚本执行
+- P1: 事务块按时间窗口归并，默认窗口建议为 300ms 到 1000ms，可配置
+- P1: 分屏先支持 2-pane / 3-pane 固定模板，不先做自由拖拽布局
+
+---
+
+## 🎯 现代特性优先级结论 (2026-03-10)
+
+### 最值得优先做
+1. 全局搜索与过滤
+2. 命令面板
+3. 会话恢复
+4. Trigger 引擎
+5. Workflow / Macro
+
+### 能形成产品差异化
+1. 事务块视图
+2. 基于匹配规则的自动标记与告警
+3. 面向串口场景的工作流模板库
+4. 多串口分屏观察
+
+### 暂不建议优先投入
+1. AI 助手
+2. 图片/富媒体协议
+3. 通用 SSH / remote multiplexer 能力
+4. 复杂插件市场
+
+原因：这些方向虽符合通用终端趋势，但对 Patterm 的串口调试主线收益不如结构化日志、搜索过滤、触发器和工作流直接。

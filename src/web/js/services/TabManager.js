@@ -82,9 +82,10 @@ export class TabManager {
 
         const now = Date.now();
         const timeDiff = (now - tab.lastRxTime) / 1000;
+        const bytes = this.getByteLength(data);
 
-        tab.rxBytesAccumulator += data.length;
-        tab.rxBytesTotal += data.length;
+        tab.rxBytesAccumulator += bytes;
+        tab.rxBytesTotal += bytes;
 
         if (timeDiff >= 1) {
             tab.rxRate = Math.round(tab.rxBytesAccumulator / timeDiff);
@@ -102,8 +103,7 @@ export class TabManager {
 
         const now = Date.now();
         const timeDiff = (now - tab.lastTxTime) / 1000;
-
-        const bytes = data.length;
+        const bytes = this.getByteLength(data);
         tab.txBytesAccumulator += bytes;
         tab.txBytesTotal += bytes;
 
@@ -244,5 +244,29 @@ export class TabManager {
             isLogging: tab.isLogging,
             config: tab.config
         };
+    }
+
+    getByteLength(data) {
+        if (typeof data === 'string') {
+            return new TextEncoder().encode(data).length;
+        }
+
+        if (data instanceof Uint8Array) {
+            return data.byteLength;
+        }
+
+        if (data instanceof ArrayBuffer) {
+            return data.byteLength;
+        }
+
+        if (ArrayBuffer.isView(data)) {
+            return data.byteLength;
+        }
+
+        if (data == null) {
+            return 0;
+        }
+
+        return new TextEncoder().encode(String(data)).length;
     }
 }

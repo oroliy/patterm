@@ -16,6 +16,7 @@
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",
     "test:coverage": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --coverage",
     "test:e2e": "bash scripts/test.sh",
+    "test:ci": "npm run lint && npm test && npm run web:test:ci && npm run test:electron",
     "dist": "electron-builder --publish never",
     "dist:win": "electron-builder --win --publish never",
     "dist:mac": "electron-builder --mac --publish never",
@@ -24,7 +25,8 @@
     "web:build": "cd web && vite build",
     "web:preview": "cd web && vite preview",
     "web:serve": "cd web && vite preview --https",
-    "web:test": "cd web && playwright test"
+    "web:test": "cd web && playwright test",
+    "web:test:ci": "(cd web; npx vite --port 5173 & VITE_PID=$!; trap 'kill $VITE_PID' EXIT; npx wait-on tcp:127.0.0.1:5173 && playwright test tests/simple.spec.js tests/connection-ui.spec.js --config=playwright.config.no-server.js)"
   },
   "keywords": [
     "serial",

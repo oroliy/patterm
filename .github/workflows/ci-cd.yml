@@ -7,9 +7,14 @@ on:
       - 'v*'
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
@@ -77,7 +82,7 @@ jobs:
       run: npx playwright install --with-deps chromium
 
     - name: Run Web E2E Tests
-      run: cd web && npx vite --port 5173 & VITE_PID=$!; sleep 5; cd web && npx playwright test tests/send-receive.spec.js tests/direct-flow-test.spec.js tests/simple.spec.js tests/trace-click.spec.js --config=playwright.config.no-server.js; kill $VITE_PID || true
+      run: npm run web:test:ci
 
   electron-test:
     name: Electron E2E
@@ -202,8 +207,8 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build, unit-test, web-test, electron-test]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, 'release:')) || startsWith(github.ref, 'refs/tags/v')
+    needs: [build, unit-test, web-test, electron-test, deploy-web]
+    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
     - uses: actions/checkout@v4
@@ -228,14 +233,10 @@ jobs:
         find artifacts -type f -name "*.deb" -exec cp {} dist/ \;
         ls -la dist/
 
-    - name: Extract version from tag or commit message
+    - name: Extract version from tag
       id: extract_version
       run: |
-        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-          VERSION=${GITHUB_REF#refs/tags/v}
-        else
-          VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -n 's/.*release:\s*v\?\([0-9.]*\).*/\1/p')
-        fi
+        VERSION=${GITHUB_REF#refs/tags/v}
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Create Release

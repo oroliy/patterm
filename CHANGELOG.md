@@ -13,7 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored the connection dialog to share one UI shell across Web and Electron flows
 - Extracted a shared renderer app shell so Electron and Web reuse the same tab and menu controller logic
 - CI now runs required unit, Web E2E, and Electron E2E stages before build and deploy
+- Tightened the release pipeline so GitHub Releases only publish from `v*` tags after the Web PWA deploy job completes
 - Recorded the current v0.7.0 priority order in `ITERATION_PLAN.md`
+- Expanded `ITERATION_PLAN.md` with a v0.8.x to v0.9.0 roadmap covering search/filter, command palette, session restore, triggers, workflows, transaction blocks, and pane layouts
+- Replaced the Web CI suite with real dialog-driven connection coverage and removed bypass-oriented debug specs from `web/tests`
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed
@@ -21,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed typo in virtual serial script error message (removed space before "process")
 - Synced README_zh web command list with the English documentation
 - Cloudflare Pages deploy now skips cleanly when CI secrets are not configured instead of failing the whole workflow
+- Stabilized the CI Web E2E startup/teardown flow with an explicit `web:test:ci` script and `wait-on`
+- Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
 - Pinned `cacache -> glob` to `10.5.0` to clear the remaining high-severity glob advisory

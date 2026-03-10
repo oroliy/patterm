@@ -197,6 +197,8 @@ npm test               # 运行 Jest 单元测试
 npm run test:e2e       # 使用虚拟串口启动桌面端手动 E2E
 npm run test:electron  # 运行 Electron Playwright E2E
 npm run web:test       # 运行 Web 端 Playwright E2E
+npm run web:test:ci    # 运行适用于 CI 的无头 Web 测试，覆盖真实连接对话框流程
+npm run test:ci        # 运行本地 CI 门禁：lint + 单元测试 + Web + Electron
 npm run lint           # 运行代码检查
 ```
 
@@ -205,6 +207,10 @@ CI 现在会在构建和部署前强制通过四个阶段：
 - `unit-test`
 - `web-test`
 - `electron-test`
+
+Web CI 测试现在会断言真实 UI 流程：打开连接对话框、通过 `navigator.serial.requestPort()` 选择受控 mock 串口、建立连接、发送数据，并验证 TX/RX 内容确实显示在主终端区域。临时排障脚本不再进入 CI 路径。
+
+基于 Tag 的发布（`v*`）现在会先等待 Cloudflare Pages 部署完成，再向 GitHub Releases 发布桌面端构建产物。推送到 `master` 时，只要配置了 Cloudflare Secrets，Web PWA 仍会自动部署。
 
 #### 快速端到端测试（推荐）
 
