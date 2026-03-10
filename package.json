@@ -26,7 +26,7 @@
     "web:preview": "cd web && vite preview",
     "web:serve": "cd web && vite preview --https",
     "web:test": "cd web && playwright test",
-    "web:test:ci": "(cd web; npx vite --port 5173 > /tmp/patterm-vite.log 2>&1 & VITE_PID=$!; npx wait-on tcp:127.0.0.1:5173; playwright test tests/simple.spec.js tests/connection-ui.spec.js --config=playwright.config.no-server.js; STATUS=$?; pkill -P $VITE_PID || true; kill $VITE_PID || true; exit $STATUS)"
+    "web:test:ci": "(cd web; setsid sh -c 'npx vite --port 5173 > /tmp/patterm-vite.log 2>&1' & VITE_PID=$!; npx wait-on tcp:127.0.0.1:5173; playwright test tests/simple.spec.js tests/connection-ui.spec.js --config=playwright.config.no-server.js; STATUS=$?; pkill -TERM -g $VITE_PID || true; exit $STATUS)"
   },
   "keywords": [
     "serial",
