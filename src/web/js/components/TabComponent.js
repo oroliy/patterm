@@ -274,6 +274,16 @@ export class TabComponent {
         return div.innerHTML;
     }
 
+    focusSearch() {
+        const searchInput = this.element?.querySelector('.terminal-search-input');
+        if (!searchInput) {
+            return;
+        }
+
+        searchInput.focus();
+        searchInput.select();
+    }
+
     destroy() {
         if (this.element) {
             this.element.remove();

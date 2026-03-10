@@ -90,6 +90,7 @@ npm run web:test     # 运行 Playwright E2E 测试
 | 快捷键 | 操作 |
 |--------|------|
 | `Ctrl/Cmd + N` | 新建连接 |
+| `Ctrl/Cmd + K` | 打开命令面板 |
 | `Ctrl/Cmd + W` | 关闭窗口 |
 | `Ctrl/Cmd + Shift + D` | 切换调试控制台 |
 

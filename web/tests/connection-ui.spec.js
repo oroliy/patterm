@@ -129,4 +129,27 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(terminal).toContainText('Echo: AT+RST');
         await expect(terminal).toContainText('> AT+RST');
     });
+
+    test('opens the command palette and runs actions', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+K`);
+        const palette = page.locator('#command-palette');
+        await expect(palette).toBeVisible();
+
+        const paletteInput = page.locator('#command-palette-input');
+        await paletteInput.fill('new connection');
+        await page.keyboard.press('Enter');
+
+        await expect(page.locator('.connection-dialog')).toBeVisible();
+        await page.click('#cancel-btn');
+
+        await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+K`);
+        await paletteInput.fill('toggle theme');
+        const html = page.locator('html');
+        const initialTheme = await html.getAttribute('data-theme');
+        await page.keyboard.press('Enter');
+        await expect(html).not.toHaveAttribute('data-theme', initialTheme);
+    });
 });

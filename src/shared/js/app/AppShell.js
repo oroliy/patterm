@@ -10,6 +10,12 @@ export class AppShell {
         this.tabComponents = new Map();
         this.theme = loadFromLocalStorage(STORAGE_KEYS.THEME, 'system');
         this.contextMenu = null;
+        this.commandPalette = null;
+        this.commandPaletteInput = null;
+        this.commandPaletteList = null;
+        this.commandPaletteCommands = [];
+        this.filteredCommands = [];
+        this.selectedCommandIndex = 0;
     }
 
     async init() {
@@ -35,6 +41,7 @@ export class AppShell {
         document.getElementById('new-tab-btn')?.addEventListener('click', () => this.showConnectionDialog());
         document.getElementById('empty-new-connection-btn')?.addEventListener('click', () => this.showConnectionDialog());
         document.getElementById('theme-toggle-btn')?.addEventListener('click', () => this.toggleTheme());
+        document.getElementById('command-palette-btn')?.addEventListener('click', () => this.toggleCommandPalette());
 
         const aboutButton = document.getElementById('about-btn');
         if (aboutButton) {
@@ -51,6 +58,7 @@ export class AppShell {
         globalEvents.on('tab:ratesUpdated', (data) => this.onTabRatesUpdated(data));
 
         document.addEventListener('click', () => this.hideContextMenu());
+        document.addEventListener('keydown', (event) => this.handleGlobalKeydown(event));
         this.registerPlatformEventHandlers();
     }
 
@@ -189,6 +197,12 @@ export class AppShell {
 
     initContextMenu() {
         this.contextMenu = document.getElementById('context-menu');
+        this.commandPalette = document.getElementById('command-palette');
+        this.commandPaletteInput = document.getElementById('command-palette-input');
+        this.commandPaletteList = document.getElementById('command-palette-list');
+
+        this.registerCommandPaletteCommands();
+        this.attachCommandPaletteEventListeners();
     }
 
     showTabContextMenu(tabId, event) {
@@ -230,6 +244,215 @@ export class AppShell {
         if (this.contextMenu) {
             this.contextMenu.style.display = 'none';
         }
+    }
+
+    handleGlobalKeydown(event) {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            this.toggleCommandPalette();
+            return;
+        }
+
+        if (!this.isCommandPaletteOpen()) {
+            return;
+        }
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            this.closeCommandPalette();
+            return;
+        }
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            this.moveCommandSelection(1);
+            return;
+        }
+
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            this.moveCommandSelection(-1);
+            return;
+        }
+
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            this.executeSelectedCommand();
+        }
+    }
+
+    attachCommandPaletteEventListeners() {
+        if (!this.commandPalette || !this.commandPaletteInput || !this.commandPaletteList) {
+            return;
+        }
+
+        this.commandPalette.addEventListener('click', (event) => {
+            if (event.target === this.commandPalette) {
+                this.closeCommandPalette();
+            }
+        });
+
+        this.commandPaletteInput.addEventListener('input', (event) => {
+            this.filterCommands(event.target.value);
+        });
+    }
+
+    registerCommandPaletteCommands() {
+        this.commandPaletteCommands = [
+            {
+                id: 'new-connection',
+                label: 'New Connection',
+                keywords: ['connect', 'serial', 'open', 'port'],
+                run: () => this.showConnectionDialog()
+            },
+            {
+                id: 'toggle-theme',
+                label: 'Toggle Theme',
+                keywords: ['theme', 'dark', 'light', 'appearance'],
+                run: () => this.toggleTheme()
+            },
+            {
+                id: 'search-current-tab',
+                label: 'Search Current Tab',
+                keywords: ['search', 'find', 'filter', 'terminal'],
+                run: () => this.focusActiveTabSearch()
+            },
+            {
+                id: 'clear-active-terminal',
+                label: 'Clear Active Terminal',
+                keywords: ['clear', 'terminal', 'screen'],
+                run: () => {
+                    const activeTab = this.tabManager.getActiveTab();
+                    if (activeTab) {
+                        this.clearTerminal(activeTab.id);
+                    }
+                }
+            },
+            {
+                id: 'close-active-tab',
+                label: 'Close Active Tab',
+                keywords: ['close', 'tab', 'disconnect'],
+                run: () => {
+                    const activeTab = this.tabManager.getActiveTab();
+                    if (activeTab) {
+                        this.closeTab(activeTab.id);
+                    }
+                }
+            }
+        ];
+
+        this.filteredCommands = [...this.commandPaletteCommands];
+    }
+
+    toggleCommandPalette() {
+        if (this.isCommandPaletteOpen()) {
+            this.closeCommandPalette();
+            return;
+        }
+
+        this.openCommandPalette();
+    }
+
+    openCommandPalette() {
+        if (!this.commandPalette || !this.commandPaletteInput) {
+            return;
+        }
+
+        this.filterCommands('');
+        this.commandPalette.style.display = 'flex';
+        this.commandPaletteInput.value = '';
+        this.commandPaletteInput.focus();
+    }
+
+    closeCommandPalette() {
+        if (!this.commandPalette || !this.commandPaletteInput) {
+            return;
+        }
+
+        this.commandPalette.style.display = 'none';
+        this.commandPaletteInput.value = '';
+    }
+
+    isCommandPaletteOpen() {
+        return Boolean(this.commandPalette) && this.commandPalette.style.display === 'flex';
+    }
+
+    filterCommands(query = '') {
+        const normalizedQuery = query.trim().toLowerCase();
+        this.filteredCommands = this.commandPaletteCommands.filter((command) => {
+            if (!normalizedQuery) {
+                return true;
+            }
+
+            return command.label.toLowerCase().includes(normalizedQuery) ||
+                command.keywords.some((keyword) => keyword.includes(normalizedQuery));
+        });
+        this.selectedCommandIndex = 0;
+        this.renderCommandPaletteList();
+    }
+
+    renderCommandPaletteList() {
+        if (!this.commandPaletteList) {
+            return;
+        }
+
+        this.commandPaletteList.innerHTML = '';
+
+        this.filteredCommands.forEach((command, index) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'command-palette-item';
+            item.dataset.commandId = command.id;
+            item.classList.toggle('active', index === this.selectedCommandIndex);
+            item.innerHTML = `
+                <span class="command-palette-item-label">${command.label}</span>
+                <span class="command-palette-item-keywords">${command.keywords.join(' · ')}</span>
+            `;
+            item.addEventListener('click', () => this.executeCommand(command));
+            this.commandPaletteList.appendChild(item);
+        });
+
+        if (this.filteredCommands.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'command-palette-empty';
+            emptyState.textContent = 'No matching commands';
+            this.commandPaletteList.appendChild(emptyState);
+        }
+    }
+
+    moveCommandSelection(direction) {
+        if (this.filteredCommands.length === 0) {
+            return;
+        }
+
+        const lastIndex = this.filteredCommands.length - 1;
+        this.selectedCommandIndex = Math.min(
+            lastIndex,
+            Math.max(0, this.selectedCommandIndex + direction)
+        );
+        this.renderCommandPaletteList();
+    }
+
+    executeSelectedCommand() {
+        const command = this.filteredCommands[this.selectedCommandIndex];
+        if (command) {
+            this.executeCommand(command);
+        }
+    }
+
+    executeCommand(command) {
+        this.closeCommandPalette();
+        command.run();
+    }
+
+    focusActiveTabSearch() {
+        const activeTab = this.tabManager.getActiveTab();
+        if (!activeTab) {
+            return;
+        }
+
+        const component = this.tabComponents.get(activeTab.id);
+        component?.focusSearch();
     }
 
     async copyTabContent(tabId) {

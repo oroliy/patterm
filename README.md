@@ -109,6 +109,7 @@ npm run web:test     # Run Playwright E2E tests
 | Shortcut | Action |
 |----------|--------|
 | `Ctrl/Cmd + N` | New connection |
+| `Ctrl/Cmd + K` | Open command palette |
 | `Ctrl/Cmd + W` | Close window |
 | `Ctrl/Cmd + Shift + D` | Toggle debug console |
 

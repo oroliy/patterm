@@ -13,6 +13,7 @@
 - Expanded `ITERATION_PLAN.md` with a v0.8.x to v0.9.0 roadmap covering search/filter, command palette, session restore, triggers, workflows, transaction blocks, and pane layouts
 - Replaced the Web CI suite with real dialog-driven connection coverage and removed bypass-oriented debug specs from `web/tests`
 - Added a current-tab terminal search and direction filter foundation backed by structured terminal entries
+- Added a shared command palette foundation with `Ctrl/Cmd+K` and reusable high-frequency actions
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed
