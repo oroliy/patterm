@@ -27,6 +27,8 @@
   lifecycle management to prevent the GitHub `Web E2E` job from hanging after tests finish
 - Switched the Playwright CI web server command to `exec npx vite` and added a 10-minute Web E2E
   job timeout so GitHub Actions no longer waits indefinitely on wrapper processes
+- Aligned the Playwright CI web server health-check URL with Vite's HTTPS `localhost` endpoint so
+  the self-signed certificate check no longer times out before tests start
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit
