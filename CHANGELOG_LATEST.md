@@ -25,6 +25,7 @@
 - Stabilized the CI Web E2E startup/teardown flow with an explicit `web:test:ci` script and `wait-on`
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
+- Fixed the CI Web E2E runner to explicitly stop the background Vite process instead of hanging on shell exit
 - Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
 - Pinned `cacache -> glob` to `10.5.0` to clear the remaining high-severity glob advisory
