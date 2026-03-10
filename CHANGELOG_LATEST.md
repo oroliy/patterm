@@ -25,6 +25,8 @@
 - Stabilized the CI Web E2E startup/teardown flow with an explicit `web:test:ci` script and `wait-on`
 - Replaced the custom `web:test:ci` background Vite process management with Playwright `webServer`
   lifecycle management to prevent the GitHub `Web E2E` job from hanging after tests finish
+- Switched the Playwright CI web server command to `exec npx vite` and added a 10-minute Web E2E
+  job timeout so GitHub Actions no longer waits indefinitely on wrapper processes
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit
