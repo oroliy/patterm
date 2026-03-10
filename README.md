@@ -47,6 +47,7 @@
 - Send and receive data with minimal latency
 - Millisecond-precision timestamps on all data lines
 - Support for CRLF, CR, and LF line endings
+- Per-tab terminal search with `All`, `RX`, `TX`, and `Error` filters
 
 ### Context Menus
 - **Tab Right-Click Menu**: Quick access to:

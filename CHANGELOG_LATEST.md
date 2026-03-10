@@ -12,6 +12,7 @@
 - Recorded the current v0.7.0 priority order in `ITERATION_PLAN.md`
 - Expanded `ITERATION_PLAN.md` with a v0.8.x to v0.9.0 roadmap covering search/filter, command palette, session restore, triggers, workflows, transaction blocks, and pane layouts
 - Replaced the Web CI suite with real dialog-driven connection coverage and removed bypass-oriented debug specs from `web/tests`
+- Added a current-tab terminal search and direction filter foundation backed by structured terminal entries
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed
@@ -21,6 +22,7 @@
 - Cloudflare Pages deploy now skips cleanly when CI secrets are not configured instead of failing the whole workflow
 - Stabilized the CI Web E2E startup/teardown flow with an explicit `web:test:ci` script and `wait-on`
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
+- Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
 - Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
 - Pinned `cacache -> glob` to `10.5.0` to clear the remaining high-severity glob advisory

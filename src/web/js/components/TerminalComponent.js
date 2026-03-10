@@ -1,5 +1,10 @@
 import { formatTimestamp, formatBytes, isScrolledToBottom, scrollToBottom } from '../utils/helpers.js';
 import { MAX_TERMINAL_LINES } from '../utils/constants.js';
+import {
+    createTerminalEntry,
+    filterTerminalEntries,
+    normalizeTerminalEntryText
+} from '../../../shared/js/terminal/terminalEntries.js';
 
 export class TerminalComponent {
     constructor(container, options = {}) {
@@ -11,6 +16,11 @@ export class TerminalComponent {
         this.lineCount = 0;
         this.maxLines = options.maxLines ?? MAX_TERMINAL_LINES;
         this.dataBuffers = new Map();
+        this.entries = [];
+        this.filters = {
+            search: '',
+            type: 'all'
+        };
     }
 
     appendData(data, type = 'rx') {
@@ -19,29 +29,7 @@ export class TerminalComponent {
     }
 
     normalizeData(data) {
-        if (typeof data === 'string') {
-            return data;
-        }
-
-        if (data instanceof Uint8Array) {
-            return new TextDecoder().decode(data);
-        }
-
-        if (data instanceof ArrayBuffer) {
-            return new TextDecoder().decode(new Uint8Array(data));
-        }
-
-        if (ArrayBuffer.isView(data)) {
-            return new TextDecoder().decode(
-                new Uint8Array(data.buffer, data.byteOffset, data.byteLength)
-            );
-        }
-
-        if (data == null) {
-            return '';
-        }
-
-        return String(data);
+        return normalizeTerminalEntryText(data);
     }
 
     normalizeNewlines(text) {
@@ -60,21 +48,41 @@ export class TerminalComponent {
     }
 
     appendLine(text, type, hasNewline = true) {
+        const entry = createTerminalEntry({
+            text,
+            type,
+            timestamp: new Date()
+        });
+
+        this.entries.push(entry);
+        if (this.entries.length > this.maxLines) {
+            this.entries.splice(0, this.entries.length - this.maxLines);
+        }
+
+        if (this.hasActiveFilters()) {
+            this.renderEntries();
+            return;
+        }
+
+        this.appendEntry(entry, hasNewline);
+    }
+
+    appendEntry(entry, hasNewline = true) {
         if (this.lineCount >= this.maxLines) {
             this.pruneOldLines();
         }
 
-        const line = this.createLineElement(text, type);
+        const line = this.createLineElement(entry.type);
 
-        if (this.lastLogLine && this.canAppendToLastLine(type)) {
-            const textNode = document.createTextNode(text);
+        if (this.lastLogLine && this.canAppendToLastLine(entry.type)) {
+            const textNode = document.createTextNode(entry.text);
             this.lastLogLine.appendChild(textNode);
-        } else if (text.length > 0 || hasNewline) {
+        } else if (entry.text.length > 0 || hasNewline) {
             if (this.showTimestamps) {
-                const tsSpan = this.createTimestampSpan();
+                const tsSpan = this.createTimestampSpan(entry.timestamp);
                 line.appendChild(tsSpan);
             }
-            const textNode = document.createTextNode(text);
+            const textNode = document.createTextNode(entry.text);
             line.appendChild(textNode);
             this.terminal.appendChild(line);
             this.lastLogLine = line;
@@ -88,7 +96,7 @@ export class TerminalComponent {
         this.maybeScrollToBottom();
     }
 
-    createLineElement(text, type) {
+    createLineElement(type) {
         const line = document.createElement('div');
         line.className = `${type}-data`;
         return line;
@@ -98,10 +106,10 @@ export class TerminalComponent {
         return this.lastLogLine && this.lastLogLine.classList.contains(type + '-data');
     }
 
-    createTimestampSpan() {
+    createTimestampSpan(timestamp = new Date()) {
         const tsSpan = document.createElement('span');
         tsSpan.className = 'timestamp';
-        tsSpan.textContent = formatTimestamp(new Date());
+        tsSpan.textContent = formatTimestamp(timestamp);
         return tsSpan;
     }
 
@@ -144,6 +152,7 @@ export class TerminalComponent {
         this.lastLogLine = null;
         this.lineCount = 0;
         this.dataBuffers.clear();
+        this.entries = [];
     }
 
     getContent() {
@@ -231,5 +240,33 @@ export class TerminalComponent {
 
     resetStyles() {
         this.terminal.removeAttribute('style');
+    }
+
+    setFilters(filters = {}) {
+        this.filters = {
+            ...this.filters,
+            ...filters
+        };
+        this.renderEntries();
+    }
+
+    hasActiveFilters() {
+        return Boolean(this.filters.search.trim()) || this.filters.type !== 'all';
+    }
+
+    renderEntries() {
+        const previousAutoScroll = this.autoScroll;
+        this.autoScroll = false;
+        this.terminal.innerHTML = '';
+        this.lastLogLine = null;
+        this.lineCount = 0;
+
+        const visibleEntries = filterTerminalEntries(this.entries, this.filters);
+        visibleEntries.forEach((entry) => {
+            this.appendEntry(entry, true);
+        });
+
+        this.autoScroll = previousAutoScroll;
+        this.maybeScrollToBottom();
     }
 }

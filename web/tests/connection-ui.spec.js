@@ -95,4 +95,38 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(terminal).toContainText('> AT');
         await expect(terminal).toContainText('Echo: AT');
     });
+
+    test('filters terminal entries within the active tab', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        const activeTab = page.locator('.tab-content').filter({ has: page.locator('.input-field') }).first();
+        await expect(activeTab).toBeVisible();
+
+        await activeTab.locator('.input-field').fill('AT+RST');
+        await activeTab.locator('.send-btn').click();
+
+        const terminal = activeTab.locator('.terminal-display');
+        await expect(terminal).toContainText('> AT+RST');
+        await expect(terminal).toContainText('Echo: AT+RST');
+
+        await activeTab.locator('.terminal-search-input').fill('Echo');
+        await expect(terminal).toContainText('Echo: AT+RST');
+        await expect(terminal).not.toContainText('> AT+RST');
+
+        await activeTab.locator('[data-filter-type="tx"]').click();
+        await expect(terminal).not.toContainText('Echo: AT+RST');
+
+        await activeTab.locator('.terminal-search-input').fill('');
+        await expect(terminal).toContainText('> AT+RST');
+        await expect(terminal).not.toContainText('Echo: AT+RST');
+
+        await activeTab.locator('[data-filter-type="all"]').click();
+        await expect(terminal).toContainText('Echo: AT+RST');
+        await expect(terminal).toContainText('> AT+RST');
+    });
 });

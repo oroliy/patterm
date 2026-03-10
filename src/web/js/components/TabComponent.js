@@ -40,6 +40,17 @@ export class TabComponent {
 
         this.element.innerHTML = `
             <div class="terminal-container">
+                <div class="terminal-toolbar">
+                    <div class="terminal-search">
+                        <input type="search" class="terminal-search-input" placeholder="Search in this tab">
+                    </div>
+                    <div class="terminal-filter-group" role="group" aria-label="Terminal filters">
+                        <button type="button" class="terminal-filter-btn active" data-filter-type="all">All</button>
+                        <button type="button" class="terminal-filter-btn" data-filter-type="rx">RX</button>
+                        <button type="button" class="terminal-filter-btn" data-filter-type="tx">TX</button>
+                        <button type="button" class="terminal-filter-btn" data-filter-type="error">Error</button>
+                    </div>
+                </div>
                 <div class="terminal-display"></div>
 
                 <div class="input-bar">
@@ -151,6 +162,20 @@ export class TabComponent {
         terminalDisplay.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             this.options.onContextMenu?.(this.tabState.id, e);
+        });
+
+        const searchInput = this.element.querySelector('.terminal-search-input');
+        searchInput.addEventListener('input', (event) => {
+            this.terminal.setFilters({ search: event.target.value });
+        });
+
+        const filterButtons = this.element.querySelectorAll('.terminal-filter-btn');
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const filterType = button.dataset.filterType;
+                filterButtons.forEach((item) => item.classList.toggle('active', item === button));
+                this.terminal.setFilters({ type: filterType });
+            });
         });
     }
 
