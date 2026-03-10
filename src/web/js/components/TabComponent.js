@@ -17,6 +17,7 @@ export class TabComponent {
         this.createTabElement();
         this.createTabContent();
         this.attachEventListeners();
+        this.restoreTerminalState();
         debug.log('[TabComponent] Component created');
         return this;
     }
@@ -167,6 +168,7 @@ export class TabComponent {
         const searchInput = this.element.querySelector('.terminal-search-input');
         searchInput.addEventListener('input', (event) => {
             this.terminal.setFilters({ search: event.target.value });
+            this.options.onFiltersChange?.(this.tabState.id, this.getFilterState());
         });
 
         const filterButtons = this.element.querySelectorAll('.terminal-filter-btn');
@@ -175,6 +177,7 @@ export class TabComponent {
                 const filterType = button.dataset.filterType;
                 filterButtons.forEach((item) => item.classList.toggle('active', item === button));
                 this.terminal.setFilters({ type: filterType });
+                this.options.onFiltersChange?.(this.tabState.id, this.getFilterState());
             });
         });
     }
@@ -282,6 +285,26 @@ export class TabComponent {
 
         searchInput.focus();
         searchInput.select();
+    }
+
+    getFilterState() {
+        return this.terminal.getFilters();
+    }
+
+    restoreTerminalState() {
+        const filterState = this.tabState.filterState || { search: '', type: 'all' };
+        const searchInput = this.element.querySelector('.terminal-search-input');
+        const filterButtons = this.element.querySelectorAll('.terminal-filter-btn');
+
+        if (searchInput) {
+            searchInput.value = filterState.search || '';
+        }
+
+        filterButtons.forEach((button) => {
+            button.classList.toggle('active', button.dataset.filterType === (filterState.type || 'all'));
+        });
+
+        this.terminal.setFilters(filterState);
     }
 
     destroy() {

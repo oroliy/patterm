@@ -152,4 +152,27 @@ test.describe('Patterm Web - Connection UI', () => {
         await page.keyboard.press('Enter');
         await expect(html).not.toHaveAttribute('data-theme', initialTheme);
     });
+
+    test('restores disconnected tabs and filter state after reload', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        const activeTab = page.locator('.tab-content').filter({ has: page.locator('.input-field') }).first();
+        await activeTab.locator('.terminal-search-input').fill('Echo');
+        await activeTab.locator('[data-filter-type="tx"]').click();
+
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+
+        await expect(page.locator('#tabs-container .tab')).toHaveCount(1);
+        const restoredTab = page.locator('.tab-content').filter({ has: page.locator('.input-field') }).first();
+        await expect(restoredTab).toBeVisible();
+        await expect(restoredTab.locator('.input-field')).toBeDisabled();
+        await expect(restoredTab.locator('.terminal-search-input')).toHaveValue('Echo');
+        await expect(restoredTab.locator('[data-filter-type="tx"]')).toHaveClass(/active/);
+    });
 });

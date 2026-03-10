@@ -41,5 +41,6 @@ export const TIMESTAMP_FORMAT = 'HH:mm:ss.SSS';
 export const STORAGE_KEYS = {
     THEME: 'patterm-theme',
     CONNECTIONS: 'patterm-connections',
-    SETTINGS: 'patterm-settings'
+    SETTINGS: 'patterm-settings',
+    SESSION: 'patterm-session'
 };

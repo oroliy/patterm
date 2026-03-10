@@ -37,6 +37,10 @@ class PattermApp extends AppShell {
         });
     }
 
+    shouldPersistSession() {
+        return true;
+    }
+
     afterInit() {
         this.initServiceWorker();
     }

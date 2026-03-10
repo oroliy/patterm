@@ -8,9 +8,13 @@ export class TabManager {
         this.tabCounter = 0;
     }
 
-    createTab(config, tabName) {
-        const tabId = `tab-${this.tabCounter++}`;
-        const now = new Date();
+    createTab(config, tabName, options = {}) {
+        const tabId = options.id || `tab-${this.tabCounter++}`;
+        const now = options.createdTime ? new Date(options.createdTime) : new Date();
+        const nextCounter = this.parseTabCounter(tabId);
+        if (nextCounter >= this.tabCounter) {
+            this.tabCounter = nextCounter + 1;
+        }
 
         const tabState = {
             id: tabId,
@@ -33,10 +37,14 @@ export class TabManager {
             lastTxTime: Date.now(),
             rxBytesAccumulator: 0,
             txBytesAccumulator: 0,
-            autoScroll: true,
+            autoScroll: options.autoScroll ?? true,
             isLogging: false,
             logHandle: null,
-            theme: 'system'
+            theme: 'system',
+            filterState: {
+                search: options.filterState?.search || '',
+                type: options.filterState?.type || 'all'
+            }
         };
 
         this.tabs.set(tabId, tabState);
@@ -242,7 +250,22 @@ export class TabManager {
             createdTime: tab.createdTime,
             autoScroll: tab.autoScroll,
             isLogging: tab.isLogging,
-            config: tab.config
+            config: tab.config,
+            filterState: {
+                ...tab.filterState
+            }
+        };
+    }
+
+    updateFilterState(tabId, filterState = {}) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) {
+            return;
+        }
+
+        tab.filterState = {
+            ...tab.filterState,
+            ...filterState
         };
     }
 
@@ -268,5 +291,10 @@ export class TabManager {
         }
 
         return new TextEncoder().encode(String(data)).length;
+    }
+
+    parseTabCounter(tabId) {
+        const match = String(tabId).match(/^tab-(\d+)$/);
+        return match ? parseInt(match[1], 10) : this.tabCounter;
     }
 }

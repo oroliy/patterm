@@ -14,6 +14,7 @@
 - Replaced the Web CI suite with real dialog-driven connection coverage and removed bypass-oriented debug specs from `web/tests`
 - Added a current-tab terminal search and direction filter foundation backed by structured terminal entries
 - Added a shared command palette foundation with `Ctrl/Cmd+K` and reusable high-frequency actions
+- Added a session restore MVP for Web that brings back disconnected tabs, active tab, and terminal filter state after reload
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed

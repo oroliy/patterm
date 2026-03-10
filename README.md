@@ -28,6 +28,7 @@
 - Custom tab names with port display
 - Connection status indicators (● for connected, ○ for disconnected)
 - Tab switching with dedicated BrowserView management
+- Web session restore reopens disconnected tabs and keeps per-tab filter state after reload
 
 ### Complete UART Configuration
 - **Baud rates**: 110 to 921600

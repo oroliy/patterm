@@ -250,6 +250,10 @@ export class TerminalComponent {
         this.renderEntries();
     }
 
+    getFilters() {
+        return { ...this.filters };
+    }
+
     hasActiveFilters() {
         return Boolean(this.filters.search.trim()) || this.filters.type !== 'all';
     }

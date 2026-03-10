@@ -23,6 +23,7 @@ export class AppShell {
         this.initTheme();
         this.registerEventHandlers();
         this.initContextMenu();
+        this.restoreSession();
         this.afterInit();
         this.updateEmptyState();
     }
@@ -56,6 +57,10 @@ export class AppShell {
         globalEvents.on('tab:data', (data) => this.onTabData(data));
         globalEvents.on('tab:error', (data) => this.onTabError(data));
         globalEvents.on('tab:ratesUpdated', (data) => this.onTabRatesUpdated(data));
+        globalEvents.on('tab:closed', () => this.persistSession());
+        globalEvents.on('tab:switched', () => this.persistSession());
+        globalEvents.on('tab:connected', () => this.persistSession());
+        globalEvents.on('tab:disconnected', () => this.persistSession());
 
         document.addEventListener('click', () => this.hideContextMenu());
         document.addEventListener('keydown', (event) => this.handleGlobalKeydown(event));
@@ -71,7 +76,8 @@ export class AppShell {
             onSwitch: (tabId) => this.switchTab(tabId),
             onSend: (tabId, data) => this.sendData(tabId, data),
             onClear: (tabId) => this.clearTerminal(tabId),
-            onContextMenu: (tabId, event) => this.showTabContextMenu(tabId, event)
+            onContextMenu: (tabId, event) => this.showTabContextMenu(tabId, event),
+            onFiltersChange: (tabId, filterState) => this.onTabFiltersChange(tabId, filterState)
         });
 
         component.create();
@@ -82,6 +88,7 @@ export class AppShell {
 
         this.switchTab(tabState.id);
         this.updateEmptyState();
+        this.persistSession();
     }
 
     onTabConnected(data) {
@@ -138,6 +145,11 @@ export class AppShell {
         }
     }
 
+    onTabFiltersChange(tabId, filterState) {
+        this.tabManager.updateFilterState(tabId, filterState);
+        this.persistSession();
+    }
+
     async sendData(tabId, data) {
         const tab = this.tabManager.getTab(tabId);
         if (!tab || !tab.service) {
@@ -177,6 +189,7 @@ export class AppShell {
         saveToLocalStorage(STORAGE_KEYS.THEME, this.theme);
         applyTheme(this.theme);
         this.onThemeChanged(this.theme);
+        this.persistSession();
     }
 
     onThemeChanged() {
@@ -453,6 +466,65 @@ export class AppShell {
 
         const component = this.tabComponents.get(activeTab.id);
         component?.focusSearch();
+    }
+
+    shouldPersistSession() {
+        return false;
+    }
+
+    getSessionStorageKey() {
+        return STORAGE_KEYS.SESSION;
+    }
+
+    persistSession() {
+        if (!this.shouldPersistSession()) {
+            return;
+        }
+
+        saveToLocalStorage(this.getSessionStorageKey(), this.serializeSession());
+    }
+
+    restoreSession() {
+        if (!this.shouldPersistSession()) {
+            return;
+        }
+
+        const session = loadFromLocalStorage(this.getSessionStorageKey(), null);
+        if (!session || !Array.isArray(session.tabs)) {
+            return;
+        }
+
+        session.tabs.forEach((tab) => {
+            this.tabManager.createTab(tab.config, tab.name, {
+                id: tab.id,
+                createdTime: tab.createdTime,
+                autoScroll: tab.autoScroll,
+                filterState: tab.filterState
+            });
+        });
+
+        if (session.activeTabId && this.tabComponents.has(session.activeTabId)) {
+            this.switchTab(session.activeTabId);
+        }
+    }
+
+    serializeSession() {
+        const tabs = this.tabManager.getAllTabs().map((tab) => ({
+            id: tab.id,
+            name: tab.name,
+            config: tab.config,
+            connected: false,
+            autoScroll: tab.autoScroll,
+            createdTime: tab.createdTime instanceof Date ? tab.createdTime.toISOString() : tab.createdTime,
+            filterState: {
+                ...(tab.filterState || {})
+            }
+        }));
+
+        return {
+            activeTabId: this.tabManager.getActiveTab()?.id || null,
+            tabs
+        };
     }
 
     async copyTabContent(tabId) {
