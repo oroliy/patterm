@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added unit coverage for `TabManager` state transitions and `ConnectionDialog` port selection /
   connect flows
 - Added unit coverage for `WebSerialProvider`, `EventManager`, and `LogManager`
+- Added unit coverage for shared core helpers plus deeper `TabComponent` and `AppShell` behaviors
 
 ---
 

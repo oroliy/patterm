@@ -37,6 +37,7 @@ jest.mock('../src/web/js/components/TabComponent.js', () => ({
             appendError: jest.fn(),
             copyAll: jest.fn(() => Promise.resolve()),
         },
+        getFilterState: jest.fn(() => ({ search: '', type: 'all' })),
     })),
 }));
 
@@ -220,5 +221,71 @@ describe('AppShell behavior', () => {
         shell.updateEmptyState();
         expect(elements.get('empty-state').style.display).toBe('none');
         expect(elements.get('tabs-content').style.display).toBe('block');
+    });
+
+    test('handleGlobalKeydown routes command palette shortcuts', () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        shell.toggleCommandPalette = jest.fn();
+        shell.closeCommandPalette = jest.fn();
+        shell.moveCommandSelection = jest.fn();
+        shell.executeSelectedCommand = jest.fn();
+        shell.isCommandPaletteOpen = jest.fn(() => true);
+
+        const shortcutEvent = { ctrlKey: true, key: 'k', preventDefault: jest.fn() };
+        shell.handleGlobalKeydown(shortcutEvent);
+        expect(shell.toggleCommandPalette).toHaveBeenCalled();
+
+        const escapeEvent = { key: 'Escape', preventDefault: jest.fn() };
+        shell.handleGlobalKeydown(escapeEvent);
+        expect(shell.closeCommandPalette).toHaveBeenCalled();
+
+        const downEvent = { key: 'ArrowDown', preventDefault: jest.fn() };
+        shell.handleGlobalKeydown(downEvent);
+        expect(shell.moveCommandSelection).toHaveBeenCalledWith(1);
+
+        const enterEvent = { key: 'Enter', preventDefault: jest.fn() };
+        shell.handleGlobalKeydown(enterEvent);
+        expect(shell.executeSelectedCommand).toHaveBeenCalled();
+    });
+
+    test('onTabCreated mounts component and persists session', () => {
+        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        shell.persistSession = jest.fn();
+        shell.switchTab = jest.fn();
+        shell.updateEmptyState = jest.fn();
+
+        const tabState = { id: 'tab-1', name: 'Main', connected: false };
+        shell.onTabCreated(tabState);
+
+        expect(TabComponent).toHaveBeenCalledWith(
+            tabState,
+            expect.objectContaining({
+                onClose: expect.any(Function),
+                onSwitch: expect.any(Function),
+                onSend: expect.any(Function),
+            })
+        );
+        expect(shell.tabComponents.has('tab-1')).toBe(true);
+        expect(shell.switchTab).toHaveBeenCalledWith('tab-1');
+        expect(shell.persistSession).toHaveBeenCalled();
+    });
+
+    test('focusActiveTabSearch and executeCommand delegate to active component', () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        const component = { focusSearch: jest.fn() };
+
+        shell.tabComponents.set('tab-1', component);
+        shell.focusActiveTabSearch();
+        expect(component.focusSearch).toHaveBeenCalled();
+
+        const run = jest.fn();
+        shell.closeCommandPalette = jest.fn();
+        shell.executeCommand({ run });
+        expect(shell.closeCommandPalette).toHaveBeenCalled();
+        expect(run).toHaveBeenCalled();
     });
 });
