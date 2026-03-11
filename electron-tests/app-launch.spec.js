@@ -49,22 +49,23 @@ test.describe('Patterm Electron Tests', () => {
         expect(tabContentDisplay).toBe('none'); // Should be hidden initially
     });
     
-    test('theme toggle should change attributes', async () => {
+    test('theme menu should switch between explicit modes', async () => {
         const themeBtn = window.locator('#theme-toggle-btn');
+        const themeMenu = window.locator('#theme-menu');
         const rootHtml = window.locator('html');
         
-        // Initial theme should be set (usually system/dark/light)
         const initialTheme = await rootHtml.getAttribute('data-theme');
         expect(initialTheme).toBeTruthy();
         
-        // Click theme toggle
         await themeBtn.click();
-        
-        // Let event propagate
-        await window.waitForTimeout(500);
-        
-        // Verify theme changed
+        await expect(themeMenu).toBeVisible();
+
+        const targetMode = initialTheme === 'dark' ? 'light' : 'dark';
+        await themeMenu.locator(`[data-theme-value="${targetMode}"]`).click();
+        await window.waitForTimeout(200);
+
         const newTheme = await rootHtml.getAttribute('data-theme');
-        expect(newTheme).not.toBe(initialTheme);
+        expect(newTheme).toBe(targetMode);
+        await expect(themeBtn).toContainText(targetMode === 'dark' ? 'Dark' : 'Light');
     });
 });
