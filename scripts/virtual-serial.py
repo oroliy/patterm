@@ -97,8 +97,8 @@ def main():
     print()
 
     if not PTY_AVAILABLE:
-        print("Error: pty module not available. Please install python3-ptyprocess")
-        print("  Ubuntu/Debian: sudo apt install python3-ptyprocess")
+        print("Error: pty module not available in this Python build. Use a standard CPython build on Linux/macOS")
+        print("  The pty module is part of Python's standard library and should not require extra packages")
         sys.exit(1)
 
     print("Creating virtual serial ports...")

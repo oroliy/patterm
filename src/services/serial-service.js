@@ -107,6 +107,12 @@ class SerialService {
                 });
             });
         }
+
+        if (this.port) {
+            this.port = null;
+            this.parser = null;
+        }
+
         return true;
     }
 

@@ -289,9 +289,6 @@ bash scripts/quick-virtual-serial.sh
 #### Python 虚拟串口
 
 ```bash
-# 安装所需包
-sudo apt install python3-ptyprocess
-
 # 运行交互式虚拟串口
 python3 scripts/virtual-serial.py
 

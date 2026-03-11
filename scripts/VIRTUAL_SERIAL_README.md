@@ -35,12 +35,7 @@ echo "Hello from virtual serial" | nc localhost 12345
 # Then type anything, it will be sent to Patterm and echoed back
 ```
 
-## Method 2: Using Python3 (More Features)
-
-### Installation
-```bash
-sudo apt install python3-ptyprocess
-```
+## Method 2: Using Python 3 (More Features)
 
 ### Usage
 ```bash
