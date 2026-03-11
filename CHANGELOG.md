@@ -161,6 +161,10 @@ npm run web:test     # Run Playwright E2E tests
 - Expanded Jest coverage across shared UI shell, web bootstrap, dialog, tab, service, and Electron window helper modules
 - `npm run test:coverage` now passes the repository-wide 50% global threshold locally
 
+### Added
+- Cross-tab global search overlay with `All` / `RX` / `TX` / `Error` scopes
+- Jump from a global search result directly into the target tab and matching terminal entry
+
 ---
 
 ## [0.3.0] - 2025-01-17

@@ -400,4 +400,53 @@ describe('TabComponent', () => {
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(1);
         expect(onFiltersChange).toHaveBeenCalledWith('tab-1', { search: 'AT', type: 'tx' });
     });
+
+    test('focusSearchResult updates local filters and targets a specific entry', () => {
+        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const searchInput = new FakeElement();
+        const allButton = new FakeElement();
+        const rxButton = new FakeElement();
+        const tab = new TabComponent({ id: 'tab-1' });
+
+        allButton.dataset.filterType = 'all';
+        rxButton.dataset.filterType = 'rx';
+
+        tab.element = {
+            querySelector(selector) {
+                if (selector === '.terminal-search-input') {
+                    return searchInput;
+                }
+                if (selector === '.terminal-search-count') {
+                    return new FakeElement();
+                }
+                return null;
+            },
+            querySelectorAll(selector) {
+                if (selector === '.terminal-filter-btn') {
+                    return [allButton, rxButton];
+                }
+                if (selector === '.terminal-nav-btn') {
+                    return [new FakeElement(), new FakeElement()];
+                }
+                return [];
+            },
+        };
+        tab.updateSearchState = jest.fn();
+        tab.focusSearch = jest.fn();
+        tab.terminal = {
+            focusEntry: jest.fn(() => true),
+        };
+
+        tab.focusSearchResult('Echo', 'rx', 'entry-2');
+
+        expect(searchInput.value).toBe('Echo');
+        expect(rxButton.classList.contains('active')).toBe(true);
+        expect(allButton.classList.contains('active')).toBe(false);
+        expect(tab.terminal.focusEntry).toHaveBeenCalledWith('entry-2', {
+            search: 'Echo',
+            type: 'rx',
+        });
+        expect(tab.updateSearchState).toHaveBeenCalled();
+        expect(tab.focusSearch).toHaveBeenCalled();
+    });
 });

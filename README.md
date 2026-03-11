@@ -30,6 +30,7 @@
 - Tab switching with dedicated BrowserView management
 - Web session restore reopens disconnected tabs and keeps per-tab filter state after reload
 - Per-tab search result count, next/previous navigation, and active match highlighting
+- Global search jumps across tabs to the exact matching terminal entry
 
 ### Complete UART Configuration
 - **Baud rates**: 110 to 921600
@@ -51,6 +52,7 @@
 - Support for CRLF, CR, and LF line endings
 - Per-tab terminal search with `All`, `RX`, `TX`, and `Error` filters
 - Search result count with previous/next navigation and highlighted active match
+- Cross-tab global search with `All`, `RX`, `TX`, and `Error` scopes
 
 ### Context Menus
 - **Tab Right-Click Menu**: Quick access to:

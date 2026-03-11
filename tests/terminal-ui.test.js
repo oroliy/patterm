@@ -258,6 +258,22 @@ describe('terminal search UI behavior', () => {
         expect(states.at(-1)).toEqual({ totalMatches: 2, currentMatch: 2 });
     });
 
+    test('TerminalComponent can focus a specific entry by id', () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+        });
+
+        terminal.appendLine('Echo: AT', 'rx', true);
+        terminal.appendLine('Echo: ATI', 'rx', true);
+
+        const targetEntryId = terminal.entries[1].id;
+        expect(terminal.focusEntry(targetEntryId, { search: 'Echo', type: 'all' })).toBe(true);
+        expect(terminal.getSearchState()).toEqual({ totalMatches: 2, currentMatch: 2 });
+        expect(container.querySelector('.terminal-search-current').textContent).toContain('Echo: ATI');
+    });
+
     test('TabComponent updates search count and restores filter state', () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const searchCount = new FakeElement('span');

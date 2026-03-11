@@ -359,6 +359,26 @@ export class TerminalComponent {
         return this.getSearchState();
     }
 
+    focusEntry(entryId, filters = null) {
+        if (filters) {
+            this.filters = {
+                ...this.filters,
+                ...filters
+            };
+        }
+
+        this.visibleEntries = filterTerminalEntries(this.entries, this.filters);
+        const entryIndex = this.visibleEntries.findIndex((entry) => entry.id === entryId);
+        if (entryIndex === -1) {
+            this.renderEntries();
+            return false;
+        }
+
+        this.currentMatchIndex = entryIndex;
+        this.renderEntries();
+        return true;
+    }
+
     scrollCurrentMatchIntoView() {
         const currentLine = this.terminal.querySelector('.terminal-search-current');
         if (!currentLine) {

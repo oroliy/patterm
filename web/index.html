@@ -82,6 +82,21 @@
         </div>
     </div>
 
+    <div id="global-search" class="global-search-overlay" style="display: none;">
+        <div class="global-search-dialog" role="dialog" aria-modal="true" aria-label="Search All Tabs">
+            <div class="global-search-input-wrap">
+                <input id="global-search-input" class="global-search-input" type="search" placeholder="Search across all tabs">
+            </div>
+            <div class="global-search-filter-group" role="group" aria-label="Global search filters">
+                <button type="button" class="global-search-filter-btn active" data-filter-type="all">All</button>
+                <button type="button" class="global-search-filter-btn" data-filter-type="rx">RX</button>
+                <button type="button" class="global-search-filter-btn" data-filter-type="tx">TX</button>
+                <button type="button" class="global-search-filter-btn" data-filter-type="error">Error</button>
+            </div>
+            <div id="global-search-list" class="global-search-list"></div>
+        </div>
+    </div>
+
     <script type="module" src="/src/web/js/main.js"></script>
 </body>
 </html>

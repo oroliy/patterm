@@ -3,6 +3,7 @@ import { TabComponent } from '../../../web/js/components/TabComponent.js';
 import { globalEvents } from '../../../web/js/services/EventManager.js';
 import { STORAGE_KEYS, THEME_OPTIONS } from '../../../web/js/utils/constants.js';
 import { applyTheme, saveToLocalStorage, loadFromLocalStorage } from '../../../web/js/utils/helpers.js';
+import { filterTerminalEntries } from '../terminal/terminalEntries.js';
 
 export class AppShell {
     constructor() {
@@ -16,6 +17,12 @@ export class AppShell {
         this.commandPaletteCommands = [];
         this.filteredCommands = [];
         this.selectedCommandIndex = 0;
+        this.globalSearch = null;
+        this.globalSearchInput = null;
+        this.globalSearchList = null;
+        this.globalSearchResults = [];
+        this.globalSearchType = 'all';
+        this.selectedGlobalSearchIndex = 0;
     }
 
     async init() {
@@ -213,9 +220,13 @@ export class AppShell {
         this.commandPalette = document.getElementById('command-palette');
         this.commandPaletteInput = document.getElementById('command-palette-input');
         this.commandPaletteList = document.getElementById('command-palette-list');
+        this.globalSearch = document.getElementById('global-search');
+        this.globalSearchInput = document.getElementById('global-search-input');
+        this.globalSearchList = document.getElementById('global-search-list');
 
         this.registerCommandPaletteCommands();
         this.attachCommandPaletteEventListeners();
+        this.attachGlobalSearchEventListeners();
     }
 
     showTabContextMenu(tabId, event) {
@@ -264,6 +275,38 @@ export class AppShell {
             event.preventDefault();
             this.toggleCommandPalette();
             return;
+        }
+
+        if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'f') {
+            event.preventDefault();
+            this.openGlobalSearch();
+            return;
+        }
+
+        if (this.isGlobalSearchOpen()) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                this.closeGlobalSearch();
+                return;
+            }
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                this.moveGlobalSearchSelection(1);
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                this.moveGlobalSearchSelection(-1);
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.executeSelectedGlobalSearchResult();
+                return;
+            }
         }
 
         if (!this.isCommandPaletteOpen()) {
@@ -329,6 +372,12 @@ export class AppShell {
                 label: 'Search Current Tab',
                 keywords: ['search', 'find', 'filter', 'terminal'],
                 run: () => this.focusActiveTabSearch()
+            },
+            {
+                id: 'search-all-tabs',
+                label: 'Search All Tabs',
+                keywords: ['search', 'find', 'global', 'tabs'],
+                run: () => this.openGlobalSearch()
             },
             {
                 id: 'clear-active-terminal',
@@ -456,6 +505,143 @@ export class AppShell {
     executeCommand(command) {
         this.closeCommandPalette();
         command.run();
+    }
+
+    attachGlobalSearchEventListeners() {
+        if (!this.globalSearch || !this.globalSearchInput || !this.globalSearchList) {
+            return;
+        }
+
+        this.globalSearch.addEventListener('click', (event) => {
+            if (event.target === this.globalSearch) {
+                this.closeGlobalSearch();
+            }
+        });
+
+        this.globalSearchInput.addEventListener('input', (event) => {
+            this.filterGlobalSearchResults(event.target.value);
+        });
+
+        const filterButtons = this.globalSearch.querySelectorAll('.global-search-filter-btn');
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const filterType = button.dataset.filterType || 'all';
+                filterButtons.forEach((item) => item.classList.toggle('active', item === button));
+                this.globalSearchType = filterType;
+                this.filterGlobalSearchResults(this.globalSearchInput.value);
+            });
+        });
+    }
+
+    openGlobalSearch() {
+        if (!this.globalSearch || !this.globalSearchInput) {
+            return;
+        }
+
+        this.globalSearch.style.display = 'flex';
+        this.filterGlobalSearchResults(this.globalSearchInput.value || '');
+        this.globalSearchInput.focus();
+        this.globalSearchInput.select?.();
+    }
+
+    closeGlobalSearch() {
+        if (!this.globalSearch || !this.globalSearchInput) {
+            return;
+        }
+
+        this.globalSearch.style.display = 'none';
+        this.globalSearchInput.value = '';
+        this.globalSearchResults = [];
+        this.selectedGlobalSearchIndex = 0;
+        this.renderGlobalSearchResults();
+    }
+
+    isGlobalSearchOpen() {
+        return Boolean(this.globalSearch) && this.globalSearch.style.display === 'flex';
+    }
+
+    filterGlobalSearchResults(query = '') {
+        const normalizedQuery = query.trim();
+        this.globalSearchResults = this.getGlobalSearchResults(normalizedQuery, this.globalSearchType);
+        this.selectedGlobalSearchIndex = 0;
+        this.renderGlobalSearchResults();
+    }
+
+    getGlobalSearchResults(query = '', type = 'all') {
+        const tabs = this.tabManager.getAllTabs();
+
+        return tabs.flatMap((tab) => {
+            const terminal = tab.terminal || this.tabComponents.get(tab.id)?.terminal;
+            if (!terminal?.entries) {
+                return [];
+            }
+
+            const entries = filterTerminalEntries(terminal.entries, { search: query, type });
+            return entries.map((entry) => ({
+                tabId: tab.id,
+                tabName: tab.name,
+                entryId: entry.id,
+                text: entry.text,
+                type: entry.type,
+                timestamp: entry.timestamp,
+            }));
+        });
+    }
+
+    renderGlobalSearchResults() {
+        if (!this.globalSearchList) {
+            return;
+        }
+
+        this.globalSearchList.innerHTML = '';
+
+        this.globalSearchResults.forEach((result, index) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'global-search-item';
+            item.classList.toggle('active', index === this.selectedGlobalSearchIndex);
+            item.innerHTML = `
+                <span class="global-search-item-tab">${result.tabName}</span>
+                <span class="global-search-item-type">${String(result.type).toUpperCase()}</span>
+                <span class="global-search-item-text">${result.text || '(empty line)'}</span>
+            `;
+            item.addEventListener('click', () => this.executeGlobalSearchResult(result));
+            this.globalSearchList.appendChild(item);
+        });
+
+        if (this.globalSearchResults.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'global-search-empty';
+            emptyState.textContent = 'No matching terminal entries';
+            this.globalSearchList.appendChild(emptyState);
+        }
+    }
+
+    moveGlobalSearchSelection(direction) {
+        if (this.globalSearchResults.length === 0) {
+            return;
+        }
+
+        const lastIndex = this.globalSearchResults.length - 1;
+        this.selectedGlobalSearchIndex = Math.min(
+            lastIndex,
+            Math.max(0, this.selectedGlobalSearchIndex + direction)
+        );
+        this.renderGlobalSearchResults();
+    }
+
+    executeSelectedGlobalSearchResult() {
+        const result = this.globalSearchResults[this.selectedGlobalSearchIndex];
+        if (result) {
+            this.executeGlobalSearchResult(result);
+        }
+    }
+
+    executeGlobalSearchResult(result) {
+        this.switchTab(result.tabId);
+        const component = this.tabComponents.get(result.tabId);
+        component?.focusSearchResult(this.globalSearchInput?.value || '', this.globalSearchType, result.entryId);
+        this.closeGlobalSearch();
     }
 
     focusActiveTabSearch() {

@@ -89,6 +89,10 @@ class FakeElement {
         return null;
     }
 
+    querySelectorAll() {
+        return [];
+    }
+
     focus() {
         this.focused = true;
     }
@@ -109,6 +113,9 @@ function installFakeDocument() {
         'command-palette',
         'command-palette-input',
         'command-palette-list',
+        'global-search',
+        'global-search-input',
+        'global-search-list',
     ];
 
     ids.forEach((id) => elements.set(id, new FakeElement()));
@@ -424,5 +431,59 @@ describe('AppShell behavior', () => {
         shell.commandPaletteCommands.find((command) => command.id === 'close-active-tab').run();
         expect(shell.tabManager.clearTerminal).not.toHaveBeenCalled();
         expect(shell.tabManager.closeTab).not.toHaveBeenCalled();
+    });
+
+    test('global search finds entries across tabs and jumps to the selected result', () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        const component = {
+            focusSearchResult: jest.fn(),
+        };
+
+        shell.globalSearch = { style: { display: 'none' } };
+        shell.globalSearchInput = {
+            value: '',
+            focus: jest.fn(),
+            select: jest.fn(),
+        };
+        shell.globalSearchList = new FakeElement();
+        shell.switchTab = jest.fn();
+        shell.tabManager.getAllTabs.mockReturnValue([
+            {
+                id: 'tab-1',
+                name: 'Main',
+                terminal: {
+                    entries: [
+                        { id: 'entry-1', text: 'Echo: AT', type: 'rx', timestamp: new Date() },
+                    ],
+                },
+            },
+            {
+                id: 'tab-2',
+                name: 'Diag',
+                terminal: {
+                    entries: [
+                        { id: 'entry-2', text: '> ATI', type: 'tx', timestamp: new Date() },
+                    ],
+                },
+            },
+        ]);
+        shell.tabComponents.set('tab-2', component);
+
+        shell.openGlobalSearch();
+        expect(shell.globalSearch.style.display).toBe('flex');
+
+        shell.globalSearchInput.value = 'ATI';
+        shell.filterGlobalSearchResults('ATI');
+        expect(shell.globalSearchResults).toHaveLength(1);
+        expect(shell.globalSearchResults[0]).toEqual(expect.objectContaining({
+            tabId: 'tab-2',
+            entryId: 'entry-2',
+        }));
+
+        shell.executeSelectedGlobalSearchResult();
+        expect(shell.switchTab).toHaveBeenCalledWith('tab-2');
+        expect(component.focusSearchResult).toHaveBeenCalledWith('ATI', 'all', 'entry-2');
+        expect(shell.globalSearch.style.display).toBe('none');
     });
 });

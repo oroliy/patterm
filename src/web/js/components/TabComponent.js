@@ -327,6 +327,28 @@ export class TabComponent {
         searchInput.select();
     }
 
+    focusSearchResult(search, type = 'all', entryId = null) {
+        const searchInput = this.element?.querySelector('.terminal-search-input');
+        const filterButtons = this.element?.querySelectorAll('.terminal-filter-btn') || [];
+
+        if (searchInput) {
+            searchInput.value = search || '';
+        }
+
+        filterButtons.forEach((button) => {
+            button.classList.toggle('active', button.dataset.filterType === type);
+        });
+
+        if (entryId) {
+            this.terminal.focusEntry(entryId, { search, type });
+        } else {
+            this.terminal.setFilters({ search, type });
+        }
+
+        this.updateSearchState();
+        this.focusSearch();
+    }
+
     getFilterState() {
         return this.terminal.getFilters();
     }

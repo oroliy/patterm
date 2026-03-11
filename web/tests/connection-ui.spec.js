@@ -206,4 +206,42 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(restoredTab.locator('.terminal-search-input')).toHaveValue('Echo');
         await expect(restoredTab.locator('[data-filter-type="tx"]')).toHaveClass(/active/);
     });
+
+    test('searches across tabs and jumps to the matching terminal entry', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        let activeTab = page.locator('.tab-content').nth(0);
+        await expect(activeTab).toBeVisible();
+        await activeTab.locator('.input-field').fill('AT');
+        await activeTab.locator('.send-btn').click();
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        activeTab = page.locator('.tab-content').nth(1);
+        await expect(activeTab).toBeVisible();
+        await activeTab.locator('.input-field').fill('ATI');
+        await activeTab.locator('.send-btn').click();
+
+        await page.keyboard.press(`${process.platform === 'darwin' ? 'Meta' : 'Control'}+Shift+F`);
+        const globalSearch = page.locator('#global-search');
+        await expect(globalSearch).toBeVisible();
+
+        await page.locator('#global-search-input').fill('ATI');
+        await expect(page.locator('.global-search-item')).toHaveCount(2);
+        await expect(page.locator('.global-search-item').first()).toContainText('ATI');
+
+        await page.locator('.global-search-item').first().click();
+        await expect(globalSearch).toBeHidden();
+
+        const switchedTab = page.locator('.tab-content').nth(1);
+        await expect(switchedTab.locator('.terminal-search-input')).toHaveValue('ATI');
+        await expect(switchedTab.locator('.terminal-search-current')).toContainText('ATI');
+    });
 });
