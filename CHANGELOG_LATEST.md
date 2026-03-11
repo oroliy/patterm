@@ -51,6 +51,7 @@
   `AppShell`, `TabComponent`, `TerminalComponent`, and `terminalEntries`
 - Added unit coverage for `TabManager` state transitions and `ConnectionDialog` port selection /
   connect flows
+- Added unit coverage for `WebSerialProvider`, `EventManager`, and `LogManager`
 
 ## Major New Features
 
