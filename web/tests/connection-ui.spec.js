@@ -130,6 +130,37 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(terminal).toContainText('> AT+RST');
     });
 
+    test('navigates and highlights terminal search results', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        const activeTab = page.locator('.tab-content').filter({ has: page.locator('.input-field') }).first();
+        const inputField = activeTab.locator('.input-field');
+        const sendButton = activeTab.locator('.send-btn');
+
+        await inputField.fill('AT');
+        await sendButton.click();
+        await inputField.fill('ATI');
+        await sendButton.click();
+
+        await activeTab.locator('.terminal-search-input').fill('Echo');
+        await expect(activeTab.locator('.terminal-search-count')).toHaveText('1 / 2');
+        await expect(activeTab.locator('.terminal-search-current')).toContainText('Echo: AT');
+        await expect(activeTab.locator('.terminal-search-match.current')).toHaveCount(1);
+
+        await activeTab.locator('[data-search-nav="next"]').click();
+        await expect(activeTab.locator('.terminal-search-count')).toHaveText('2 / 2');
+        await expect(activeTab.locator('.terminal-search-current')).toContainText('Echo: ATI');
+
+        await activeTab.locator('.terminal-search-input').press('Shift+Enter');
+        await expect(activeTab.locator('.terminal-search-count')).toHaveText('1 / 2');
+        await expect(activeTab.locator('.terminal-search-current')).toContainText('Echo: AT');
+    });
+
     test('opens the command palette and runs actions', async ({ page }) => {
         await page.goto('https://localhost:5173/');
         await page.waitForLoadState('networkidle');

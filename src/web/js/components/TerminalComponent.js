@@ -3,6 +3,7 @@ import { MAX_TERMINAL_LINES } from '../utils/constants.js';
 import {
     createTerminalEntry,
     filterTerminalEntries,
+    findTerminalEntryMatchRanges,
     normalizeTerminalEntryText
 } from '../../../shared/js/terminal/terminalEntries.js';
 
@@ -10,6 +11,7 @@ export class TerminalComponent {
     constructor(container, options = {}) {
         this.container = container;
         this.terminal = container;
+        this.onSearchStateChange = options.onSearchStateChange || null;
         this.autoScroll = options.autoScroll ?? true;
         this.showTimestamps = options.showTimestamps ?? true;
         this.lastLogLine = null;
@@ -17,9 +19,15 @@ export class TerminalComponent {
         this.maxLines = options.maxLines ?? MAX_TERMINAL_LINES;
         this.dataBuffers = new Map();
         this.entries = [];
+        this.visibleEntries = [];
         this.filters = {
             search: '',
             type: 'all'
+        };
+        this.currentMatchIndex = 0;
+        this.lastRenderMeta = {
+            totalMatches: 0,
+            currentMatch: 0
         };
     }
 
@@ -64,15 +72,17 @@ export class TerminalComponent {
             return;
         }
 
-        this.appendEntry(entry, hasNewline);
+        this.appendEntry(entry, hasNewline, false);
     }
 
-    appendEntry(entry, hasNewline = true) {
+    appendEntry(entry, hasNewline = true, isCurrentMatch = false) {
         if (this.lineCount >= this.maxLines) {
             this.pruneOldLines();
         }
 
         const line = this.createLineElement(entry.type);
+        line.dataset.entryId = entry.id;
+        line.classList.toggle('terminal-search-current', isCurrentMatch);
 
         if (this.lastLogLine && this.canAppendToLastLine(entry.type)) {
             const textNode = document.createTextNode(entry.text);
@@ -82,8 +92,7 @@ export class TerminalComponent {
                 const tsSpan = this.createTimestampSpan(entry.timestamp);
                 line.appendChild(tsSpan);
             }
-            const textNode = document.createTextNode(entry.text);
-            line.appendChild(textNode);
+            this.appendEntryText(line, entry, isCurrentMatch);
             this.terminal.appendChild(line);
             this.lastLogLine = line;
             this.lineCount++;
@@ -94,6 +103,39 @@ export class TerminalComponent {
         }
 
         this.maybeScrollToBottom();
+    }
+
+    appendEntryText(line, entry, isCurrentMatch) {
+        const matchRanges = this.getEntryMatchRanges(entry);
+
+        if (matchRanges.length === 0) {
+            line.appendChild(document.createTextNode(entry.text));
+            return;
+        }
+
+        let cursor = 0;
+        matchRanges.forEach((range) => {
+            if (range.start > cursor) {
+                line.appendChild(document.createTextNode(entry.text.slice(cursor, range.start)));
+            }
+
+            const match = document.createElement('mark');
+            match.className = 'terminal-search-match';
+            if (isCurrentMatch) {
+                match.classList.add('current');
+            }
+            match.textContent = entry.text.slice(range.start, range.end);
+            line.appendChild(match);
+            cursor = range.end;
+        });
+
+        if (cursor < entry.text.length) {
+            line.appendChild(document.createTextNode(entry.text.slice(cursor)));
+        }
+    }
+
+    getEntryMatchRanges(entry) {
+        return findTerminalEntryMatchRanges(entry.text, this.filters.search);
     }
 
     createLineElement(type) {
@@ -153,6 +195,13 @@ export class TerminalComponent {
         this.lineCount = 0;
         this.dataBuffers.clear();
         this.entries = [];
+        this.visibleEntries = [];
+        this.currentMatchIndex = 0;
+        this.lastRenderMeta = {
+            totalMatches: 0,
+            currentMatch: 0
+        };
+        this.notifySearchStateChange();
     }
 
     getContent() {
@@ -243,10 +292,14 @@ export class TerminalComponent {
     }
 
     setFilters(filters = {}) {
+        const previousSearch = this.filters.search;
         this.filters = {
             ...this.filters,
             ...filters
         };
+        if ((filters.search ?? previousSearch) !== previousSearch) {
+            this.currentMatchIndex = 0;
+        }
         this.renderEntries();
     }
 
@@ -265,12 +318,60 @@ export class TerminalComponent {
         this.lastLogLine = null;
         this.lineCount = 0;
 
-        const visibleEntries = filterTerminalEntries(this.entries, this.filters);
-        visibleEntries.forEach((entry) => {
-            this.appendEntry(entry, true);
+        this.visibleEntries = filterTerminalEntries(this.entries, this.filters);
+        const totalMatches = this.visibleEntries.length;
+
+        if (totalMatches === 0) {
+            this.currentMatchIndex = 0;
+        } else if (this.currentMatchIndex >= totalMatches) {
+            this.currentMatchIndex = totalMatches - 1;
+        }
+
+        this.visibleEntries.forEach((entry, index) => {
+            this.appendEntry(entry, true, totalMatches > 0 && index === this.currentMatchIndex);
         });
+
+        this.lastRenderMeta = {
+            totalMatches,
+            currentMatch: totalMatches > 0 ? this.currentMatchIndex + 1 : 0
+        };
 
         this.autoScroll = previousAutoScroll;
         this.maybeScrollToBottom();
+        this.scrollCurrentMatchIntoView();
+        this.notifySearchStateChange();
+    }
+
+    getSearchState() {
+        return { ...this.lastRenderMeta };
+    }
+
+    navigateSearchResults(direction = 1) {
+        const totalMatches = this.visibleEntries.length;
+        if (totalMatches === 0) {
+            return this.getSearchState();
+        }
+
+        const normalizedDirection = direction < 0 ? -1 : 1;
+        this.currentMatchIndex =
+            (this.currentMatchIndex + normalizedDirection + totalMatches) % totalMatches;
+        this.renderEntries();
+        return this.getSearchState();
+    }
+
+    scrollCurrentMatchIntoView() {
+        const currentLine = this.terminal.querySelector('.terminal-search-current');
+        if (!currentLine) {
+            return;
+        }
+
+        currentLine.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+
+    notifySearchStateChange() {
+        this.onSearchStateChange?.(this.getSearchState());
     }
 }

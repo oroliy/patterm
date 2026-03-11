@@ -30,6 +30,34 @@ export function filterTerminalEntries(entries, filters = {}) {
     });
 }
 
+export function findTerminalEntryMatchRanges(text, search) {
+    const normalizedText = normalizeTerminalEntryText(text);
+    const normalizedSearch = normalizeTerminalEntryText(search).trim().toLowerCase();
+
+    if (!normalizedSearch) {
+        return [];
+    }
+
+    const lowerText = normalizedText.toLowerCase();
+    const ranges = [];
+    let startIndex = 0;
+
+    while (startIndex < lowerText.length) {
+        const matchIndex = lowerText.indexOf(normalizedSearch, startIndex);
+        if (matchIndex === -1) {
+            break;
+        }
+
+        ranges.push({
+            start: matchIndex,
+            end: matchIndex + normalizedSearch.length,
+        });
+        startIndex = matchIndex + normalizedSearch.length;
+    }
+
+    return ranges;
+}
+
 export function normalizeTerminalEntryText(value) {
     if (typeof value === 'string') {
         return value;

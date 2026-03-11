@@ -45,6 +45,11 @@ export class TabComponent {
                     <div class="terminal-search">
                         <input type="search" class="terminal-search-input" placeholder="Search in this tab">
                     </div>
+                    <div class="terminal-search-nav">
+                        <span class="terminal-search-count" aria-live="polite">0 / 0</span>
+                        <button type="button" class="terminal-nav-btn" data-search-nav="prev" aria-label="Previous result">↑</button>
+                        <button type="button" class="terminal-nav-btn" data-search-nav="next" aria-label="Next result">↓</button>
+                    </div>
                     <div class="terminal-filter-group" role="group" aria-label="Terminal filters">
                         <button type="button" class="terminal-filter-btn active" data-filter-type="all">All</button>
                         <button type="button" class="terminal-filter-btn" data-filter-type="rx">RX</button>
@@ -127,9 +132,25 @@ export class TabComponent {
         const terminalContainer = this.element.querySelector('.terminal-display');
         this.terminal = new TerminalComponent(terminalContainer, {
             autoScroll: this.tabState.autoScroll,
-            showTimestamps: true
+            showTimestamps: true,
+            onSearchStateChange: () => this.updateSearchState()
         });
         this.tabState.terminal = this.terminal;
+    }
+
+    updateSearchState() {
+        const searchState = this.terminal.getSearchState();
+        const searchCount = this.element.querySelector('.terminal-search-count');
+        const navButtons = this.element.querySelectorAll('.terminal-nav-btn');
+        const hasMatches = searchState.totalMatches > 0;
+
+        if (searchCount) {
+            searchCount.textContent = `${searchState.currentMatch} / ${searchState.totalMatches}`;
+        }
+
+        navButtons.forEach((button) => {
+            button.disabled = !hasMatches;
+        });
     }
 
     attachEventListeners() {
@@ -156,6 +177,7 @@ export class TabComponent {
         const clearBtn = this.element.querySelector('.clear-btn');
         clearBtn.addEventListener('click', () => {
             this.terminal.clear();
+            this.updateSearchState();
             this.options.onClear?.(this.tabState.id);
         });
 
@@ -168,7 +190,24 @@ export class TabComponent {
         const searchInput = this.element.querySelector('.terminal-search-input');
         searchInput.addEventListener('input', (event) => {
             this.terminal.setFilters({ search: event.target.value });
+            this.updateSearchState();
             this.options.onFiltersChange?.(this.tabState.id, this.getFilterState());
+        });
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.terminal.navigateSearchResults(event.shiftKey ? -1 : 1);
+                this.updateSearchState();
+            }
+        });
+
+        const navButtons = this.element.querySelectorAll('.terminal-nav-btn');
+        navButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const direction = button.dataset.searchNav === 'prev' ? -1 : 1;
+                this.terminal.navigateSearchResults(direction);
+                this.updateSearchState();
+            });
         });
 
         const filterButtons = this.element.querySelectorAll('.terminal-filter-btn');
@@ -177,6 +216,7 @@ export class TabComponent {
                 const filterType = button.dataset.filterType;
                 filterButtons.forEach((item) => item.classList.toggle('active', item === button));
                 this.terminal.setFilters({ type: filterType });
+                this.updateSearchState();
                 this.options.onFiltersChange?.(this.tabState.id, this.getFilterState());
             });
         });
@@ -305,6 +345,7 @@ export class TabComponent {
         });
 
         this.terminal.setFilters(filterState);
+        this.updateSearchState();
     }
 
     destroy() {

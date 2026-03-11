@@ -29,6 +29,7 @@
 - Connection status indicators (● for connected, ○ for disconnected)
 - Tab switching with dedicated BrowserView management
 - Web session restore reopens disconnected tabs and keeps per-tab filter state after reload
+- Per-tab search result count, next/previous navigation, and active match highlighting
 
 ### Complete UART Configuration
 - **Baud rates**: 110 to 921600
@@ -49,6 +50,7 @@
 - Millisecond-precision timestamps on all data lines
 - Support for CRLF, CR, and LF line endings
 - Per-tab terminal search with `All`, `RX`, `TX`, and `Error` filters
+- Search result count with previous/next navigation and highlighted active match
 
 ### Context Menus
 - **Tab Right-Click Menu**: Quick access to:
