@@ -49,6 +49,8 @@
 - Added unit coverage for shared serial abstractions
 - Added instrumented Jest coverage for shared/Web frontend modules and new unit tests for
   `AppShell`, `TabComponent`, `TerminalComponent`, and `terminalEntries`
+- Added unit coverage for `TabManager` state transitions and `ConnectionDialog` port selection /
+  connect flows
 
 ## Major New Features
 
