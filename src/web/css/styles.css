@@ -49,12 +49,11 @@
 }
 
 .btn-theme {
-    gap: 6px;
     min-width: auto;
 }
 
 .theme-label {
-    font-size: 12px;
+    display: none;
 }
 
 .header-right {
@@ -756,10 +755,6 @@
 
     .global-search-item {
         grid-template-columns: 1fr;
-    }
-
-    .theme-label {
-        display: none;
     }
 
     .about-meta {

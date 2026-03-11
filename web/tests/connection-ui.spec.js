@@ -192,7 +192,7 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(page.locator('#theme-menu')).toBeVisible();
         await page.locator('[data-theme-value="dark"]').click();
         await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-        await expect(page.locator('#theme-toggle-btn')).toContainText('Dark');
+        await expect(page.locator('#theme-toggle-btn')).toHaveAttribute('title', 'Theme: Dark');
 
         await page.click('#about-btn');
         const about = page.locator('.about-overlay');

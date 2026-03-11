@@ -66,6 +66,9 @@ test.describe('Patterm Electron Tests', () => {
 
         const newTheme = await rootHtml.getAttribute('data-theme');
         expect(newTheme).toBe(targetMode);
-        await expect(themeBtn).toContainText(targetMode === 'dark' ? 'Dark' : 'Light');
+        await expect(themeBtn).toHaveAttribute(
+            'title',
+            `Theme: ${targetMode === 'dark' ? 'Dark' : 'Light'}`
+        );
     });
 });
