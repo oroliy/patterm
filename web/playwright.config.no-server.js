@@ -22,6 +22,7 @@ export default defineConfig({
         command: 'exec npx vite --port 5173',
         url: 'https://localhost:5173',
         timeout: 120 * 1000,
+        ignoreHTTPSErrors: true,
         reuseExistingServer: !process.env.CI,
         stdout: 'pipe',
         stderr: 'pipe',

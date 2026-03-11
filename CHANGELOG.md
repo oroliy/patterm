@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   job timeout so GitHub Actions no longer waits indefinitely on wrapper processes
 - Aligned the Playwright CI web server health-check URL with Vite's HTTPS `localhost` endpoint so
   the self-signed certificate check no longer times out before tests start
+- Added `ignoreHTTPSErrors: true` to the Playwright CI `webServer` config so GitHub Actions accepts
+  the local self-signed Vite certificate during server readiness checks
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit
