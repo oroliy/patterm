@@ -97,6 +97,84 @@ describe('web services', () => {
         ]);
     });
 
+    test('WebSerialProvider covers unsupported, error, reconnect, and disconnect branches', async () => {
+        const { debug } = require('../src/web/js/utils/debug.js');
+        const {
+            WebSerialProvider,
+            listAvailablePorts,
+        } = require('../src/web/js/services/SerialService.js');
+
+        await expect(new WebSerialProvider().requestPort()).rejects.toThrow('Web Serial API is not supported');
+        await expect(new WebSerialProvider().getPortInfo()).rejects.toThrow('No port selected');
+
+        navigator.serial = {
+            getPorts: jest.fn(async () => {
+                throw new Error('ports failed');
+            }),
+        };
+        expect(await listAvailablePorts()).toEqual([]);
+        expect(debug.error).toHaveBeenCalled();
+
+        const provider = new WebSerialProvider();
+        provider.port = {};
+        provider.emit = jest.fn();
+        await provider.startReading();
+        expect(provider.emit).toHaveBeenCalledWith(
+            'error',
+            expect.objectContaining({
+                message: expect.stringContaining('not readable'),
+            })
+        );
+
+        provider.isConnected = false;
+        await expect(provider.write('AT')).rejects.toThrow('Port is not open');
+        await expect(provider.writeRaw(new Uint8Array([1]))).rejects.toThrow('Port is not open');
+
+        const writer = {
+            write: jest.fn(async () => {
+                throw new Error('raw failed');
+            }),
+            close: jest.fn(async () => {
+                throw new Error('close failed');
+            }),
+        };
+        const reader = {
+            cancel: jest.fn(async () => {
+                throw new Error('cancel failed');
+            }),
+        };
+        provider.port = {
+            writable: {
+                getWriter: jest.fn(() => writer),
+            },
+            close: jest.fn(async () => {
+                throw new Error('port close failed');
+            }),
+        };
+        provider.isConnected = true;
+        provider.writer = writer;
+        provider.reader = reader;
+        provider.readLoopController = { abort: jest.fn() };
+
+        await expect(provider.writeRaw(new Uint8Array([1]))).rejects.toThrow('raw failed');
+        expect(provider.emit).toHaveBeenCalledWith('error', expect.any(Error));
+
+        await provider.disconnect();
+        expect(reader.cancel).toHaveBeenCalled();
+        expect(writer.close).toHaveBeenCalled();
+        expect(provider.port.close).toHaveBeenCalled();
+
+        const reconnecting = new WebSerialProvider();
+        reconnecting.open = jest.fn(async () => {});
+        reconnecting.setConfig({ baudRate: 9600 });
+        await reconnecting.reconnect();
+        expect(reconnecting.open).toHaveBeenCalledWith({
+            baudRate: 9600,
+        });
+
+        await expect(new WebSerialProvider().reconnect()).rejects.toThrow('No previous configuration found');
+    });
+
     test('EventManager supports on/off/once semantics', () => {
         const { EventManager } = require('../src/web/js/services/EventManager.js');
         const manager = new EventManager();
@@ -144,5 +222,22 @@ describe('web services', () => {
         await manager.stopLogging();
         expect(writable.close).toHaveBeenCalled();
         expect(manager.isActive()).toBe(false);
+    });
+
+    test('LogManager and EventManager cover failure branches', async () => {
+        const { EventManager } = require('../src/web/js/services/EventManager.js');
+        const { LogManager } = require('../src/web/js/services/LogManager.js');
+
+        const manager = new EventManager();
+        expect(manager.off('missing', () => {})).toBeUndefined();
+
+        window.showSaveFilePicker = jest.fn(async () => {
+            throw new Error('picker failed');
+        });
+
+        const logManager = new LogManager();
+        expect(await logManager.startLogging('session.log')).toBe(false);
+        expect(await logManager.saveTabContent('content', 'output.txt')).toBe(false);
+        expect(await logManager.flush()).toBeUndefined();
     });
 });

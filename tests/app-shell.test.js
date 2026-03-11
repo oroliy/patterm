@@ -9,6 +9,7 @@ jest.mock('../src/web/js/services/TabManager.js', () => {
         updateFilterState: jest.fn(),
         getTab: jest.fn(() => null),
         getTabConfig: jest.fn(() => null),
+        onDataSent: jest.fn(),
     });
 
     return {
@@ -287,5 +288,141 @@ describe('AppShell behavior', () => {
         shell.executeCommand({ run });
         expect(shell.closeCommandPalette).toHaveBeenCalled();
         expect(run).toHaveBeenCalled();
+    });
+
+    test('command palette open, close, navigation, and empty state rendering work', () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        shell.initContextMenu();
+
+        shell.openCommandPalette();
+        expect(shell.commandPalette.style.display).toBe('flex');
+        expect(shell.commandPaletteInput.focused).toBe(true);
+        expect(shell.filteredCommands.length).toBe(shell.commandPaletteCommands.length);
+
+        shell.moveCommandSelection(1);
+        expect(shell.selectedCommandIndex).toBe(1);
+
+        shell.filterCommands('missing');
+        expect(shell.filteredCommands).toEqual([]);
+        expect(shell.commandPaletteList.children.length).toBeGreaterThan(0);
+
+        shell.closeCommandPalette();
+        expect(shell.commandPalette.style.display).toBe('none');
+        expect(shell.commandPaletteInput.value).toBe('');
+    });
+
+    test('context menu, copy, errors, and session persistence branches are covered', async () => {
+        const helpers = require('../src/web/js/utils/helpers.js');
+        const { STORAGE_KEYS } = require('../src/web/js/utils/constants.js');
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        const event = { pageX: 10, pageY: 20 };
+        const action = jest.fn();
+        const failingComponent = {
+            terminal: {
+                copyAll: jest.fn(() => Promise.reject(new Error('copy failed'))),
+            },
+        };
+
+        shell.initContextMenu();
+        shell.showContextMenu(event, [{ label: 'Copy', action }]);
+        expect(shell.contextMenu.style.display).toBe('block');
+        expect(shell.contextMenu.style.left).toBe('10px');
+        expect(shell.contextMenu.style.top).toBe('20px');
+        expect(shell.contextMenu.querySelector('.context-menu-items').children.length).toBe(1);
+
+        shell.hideContextMenu();
+        expect(shell.contextMenu.style.display).toBe('none');
+
+        shell.tabComponents.set('tab-1', failingComponent);
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        await shell.copyTabContent('tab-1');
+        await shell.copyTabContent('missing');
+        expect(consoleSpy).toHaveBeenCalled();
+
+        shell.showError('Bad things');
+        expect(document.body.children.length).toBeGreaterThan(0);
+
+        shell.shouldPersistSession = () => true;
+        shell.tabManager.getAllTabs.mockReturnValue([]);
+        shell.tabManager.getActiveTab.mockReturnValue(null);
+        shell.persistSession();
+        expect(helpers.saveToLocalStorage).toHaveBeenCalledWith(STORAGE_KEYS.SESSION, {
+            activeTabId: null,
+            tabs: [],
+        });
+
+        helpers.loadFromLocalStorage.mockReturnValue({ tabs: 'bad' });
+        shell.restoreSession();
+        expect(shell.tabManager.createTab).not.toHaveBeenCalled();
+
+        consoleSpy.mockRestore();
+    });
+
+    test('command callbacks and tab event handlers cover inactive branches', async () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        const component = {
+            updateConnectionState: jest.fn(),
+            updatePortName: jest.fn(),
+            updateStatusBar: jest.fn(),
+            updateRates: jest.fn(),
+            setActive: jest.fn(),
+            terminal: {
+                appendData: jest.fn(),
+                appendError: jest.fn(),
+            },
+            destroy: jest.fn(),
+        };
+        const inactiveTerminal = {
+            appendError: jest.fn(),
+        };
+
+        shell.tabComponents.set('tab-1', component);
+        shell.tabManager.getTabConfig.mockReturnValue({
+            baudRate: 115200,
+            dataBits: 8,
+            parity: 'none',
+            stopBits: 1,
+        });
+        shell.onTabConnected({ tabId: 'tab-1' });
+        shell.onTabDisconnected({ tabId: 'tab-1' });
+        shell.onTabSwitched({ tabId: 'tab-1' });
+        shell.onTabData({ tabId: 'tab-1', data: 'RX' });
+        shell.onTabError({ tabId: 'tab-1', error: new Error('boom') });
+        shell.onTabRatesUpdated({ tabId: 'tab-1', rxRate: 1, txRate: 2 });
+        shell.onTabClosed({ tabId: 'tab-1' });
+
+        expect(component.updateConnectionState).toHaveBeenCalledWith(true);
+        expect(component.updatePortName).toHaveBeenCalled();
+        expect(component.terminal.appendData).toHaveBeenCalledWith('RX', 'rx');
+        expect(component.terminal.appendError).toHaveBeenCalledWith('boom');
+        expect(component.updateRates).toHaveBeenCalledWith(1, 2);
+        expect(component.destroy).toHaveBeenCalled();
+
+        shell.tabManager.getTab.mockReturnValue({
+            service: { write: jest.fn(() => Promise.resolve()) },
+            terminal: {
+                appendTransmitted: jest.fn(),
+                appendError: jest.fn(),
+            },
+        });
+        await shell.sendData('tab-1', 'AT');
+        expect(shell.tabManager.onDataSent).toHaveBeenCalledWith('tab-1', 'AT');
+
+        shell.tabManager.getTab.mockReturnValue({
+            service: { write: jest.fn(() => Promise.reject(new Error('send failed'))) },
+            terminal: inactiveTerminal,
+        });
+        await shell.sendData('tab-1', 'AT');
+        expect(inactiveTerminal.appendError).toHaveBeenCalledWith('send failed');
+
+        shell.tabManager.getActiveTab.mockReturnValue(null);
+        shell.registerCommandPaletteCommands();
+        shell.commandPaletteCommands.find((command) => command.id === 'clear-active-terminal').run();
+        shell.commandPaletteCommands.find((command) => command.id === 'close-active-tab').run();
+        expect(shell.tabManager.clearTerminal).not.toHaveBeenCalled();
+        expect(shell.tabManager.closeTab).not.toHaveBeenCalled();
     });
 });

@@ -266,6 +266,8 @@ The Web CI suite now asserts the actual UI flow: open the connection dialog, sel
 Jest now also instruments shared/Web frontend modules through the local transformer at
 `tests/support/frontend-transformer.js`, so coverage reports include UI modules such as
 `AppShell`, `TabComponent`, `TerminalComponent`, and `terminalEntries`.
+The current Jest coverage suite also exercises Web bootstrap flow plus Electron window helpers,
+so `npm run test:coverage` now passes the repository's global 50% coverage gate locally.
 
 Tag-based releases (`v*`) now wait for the Cloudflare Pages deploy job, then publish desktop artifacts to GitHub Releases. Pushes to `master` still deploy the Web PWA when Cloudflare secrets are configured.
 

@@ -74,12 +74,20 @@ describe('shared core modules', () => {
         const { normalizeSerialConfig } = require('../src/shared/js/serial/normalizeSerialConfig.js');
         const formatters = require('../src/shared/js/formatters.js');
         const config = normalizeSerialConfig({ baudRate: 57600, parity: 'odd' });
+        const defaults = normalizeSerialConfig();
 
         expect(config).toEqual({
             baudRate: 57600,
             dataBits: 8,
             stopBits: 1,
             parity: 'odd',
+            flowControl: 'none',
+        });
+        expect(defaults).toEqual({
+            baudRate: 115200,
+            dataBits: 8,
+            stopBits: 1,
+            parity: 'none',
             flowControl: 'none',
         });
         expect(formatters.formatBytes(2048)).toBe('2 KB');
@@ -123,5 +131,95 @@ describe('shared core modules', () => {
         utils.scrollToBottom(target);
         expect(target.scrollTop).toBe(500);
         expect(utils.isScrolledToBottom(target, 500)).toBe(true);
+    });
+
+    test('shared utils cover debounce, throttle, storage fallbacks, and DOM helpers', async () => {
+        jest.useFakeTimers();
+
+        const utils = require('../src/shared/js/utils.js');
+        const debounced = jest.fn();
+        const throttled = jest.fn();
+        const fallbackElement = {
+            innerHTML: '',
+            textContent: '',
+        };
+        const link = {
+            href: '',
+            download: '',
+            click: jest.fn(),
+        };
+        const selection = {
+            removeAllRanges: jest.fn(),
+            addRange: jest.fn(),
+        };
+        const target = {
+            getBoundingClientRect: () => ({ top: 1, left: 2, width: 3, height: 4 }),
+            scrollTop: 25,
+            scrollHeight: 100,
+            clientHeight: 50,
+        };
+
+        document.createElement.mockImplementation((tagName) => {
+            if (tagName === 'div') {
+                return fallbackElement;
+            }
+
+            if (tagName === 'a') {
+                return link;
+            }
+
+            return {
+                textContent: '',
+                innerHTML: '',
+                click: jest.fn(),
+            };
+        });
+        window.getSelection.mockReturnValue(selection);
+
+        const runDebounce = utils.debounce(debounced, 100);
+        runDebounce('first');
+        runDebounce('second');
+        jest.advanceTimersByTime(100);
+        expect(debounced).toHaveBeenCalledTimes(1);
+        expect(debounced).toHaveBeenCalledWith('second');
+
+        const runThrottle = utils.throttle(throttled, 100);
+        runThrottle('one');
+        runThrottle('two');
+        jest.advanceTimersByTime(100);
+        runThrottle('three');
+        expect(throttled.mock.calls).toEqual([['one'], ['three']]);
+
+        expect(utils.escapeHtml('<script>')).toBe('');
+        expect(utils.generateId()).toMatch(/^\d+-/);
+
+        localStorage.setItem.mockImplementation(() => {
+            throw new Error('set failed');
+        });
+        localStorage.removeItem.mockImplementation(() => {
+            throw new Error('remove failed');
+        });
+        localStorage.getItem.mockImplementation(() => {
+            throw new Error('get failed');
+        });
+        expect(utils.saveToLocalStorage('key', { ok: true })).toBe(false);
+        expect(utils.loadFromLocalStorage('key', 'fallback')).toBe('fallback');
+        expect(utils.removeFromLocalStorage('key')).toBe(false);
+
+        navigator.clipboard = null;
+        await expect(utils.copyToClipboard('hello')).rejects.toThrow('Clipboard API not available');
+        await expect(utils.readClipboardText()).resolves.toBeNull();
+
+        utils.downloadBlob('body', 'file.txt');
+        expect(document.body.appendChild).toHaveBeenCalledWith(link);
+        expect(link.click).toHaveBeenCalled();
+        expect(document.body.removeChild).toHaveBeenCalledWith(link);
+
+        utils.selectElementContents(target);
+        expect(selection.removeAllRanges).toHaveBeenCalled();
+        expect(selection.addRange).toHaveBeenCalled();
+        expect(utils.isScrolledToBottom(target)).toBe(false);
+
+        jest.useRealTimers();
     });
 });

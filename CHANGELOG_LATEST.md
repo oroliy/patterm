@@ -90,6 +90,7 @@
 - **Rate Decay**: Rates reset to 0 B/s after 2 seconds of inactivity
 
 ### Developer Experience
+- **Coverage Gate Passing**: Expanded Jest coverage across shared UI, Web bootstrap, and Electron window helper modules so `npm run test:coverage` now passes locally
 - **Conditional Debug Logging**: Debug utility with localStorage/URL toggle
 - **Improved Serial Port Opening**: Better async handling with proper event ordering
 - **Enhanced Error Messages**: More descriptive errors with context

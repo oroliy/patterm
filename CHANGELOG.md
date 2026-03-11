@@ -157,6 +157,10 @@ npm run web:test     # Run Playwright E2E tests
 - Raw serial data support enabled with proper buffer handling
 - Input placeholder visibility restored
 
+### Testing
+- Expanded Jest coverage across shared UI shell, web bootstrap, dialog, tab, service, and Electron window helper modules
+- `npm run test:coverage` now passes the repository-wide 50% global threshold locally
+
 ---
 
 ## [0.3.0] - 2025-01-17

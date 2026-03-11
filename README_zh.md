@@ -221,6 +221,8 @@ Web CI 测试现在会断言真实 UI 流程：打开连接对话框、通过 `n
 
 Jest 现在也会通过本地转换器 `tests/support/frontend-transformer.js` 为共享/Web 前端模块做插桩，
 因此覆盖率报告会纳入 `AppShell`、`TabComponent`、`TerminalComponent`、`terminalEntries` 等 UI 模块。
+当前 Jest 覆盖率套件也已经覆盖 Web 启动流程和 Electron 窗口辅助模块，
+因此 `npm run test:coverage` 现在可以在本地通过仓库要求的全局 50% 覆盖率门槛。
 
 #### 快速端到端测试（推荐）
 

@@ -19,6 +19,15 @@ class FakeElement {
         this.style = {};
         this.disabled = false;
         this.classList = new FakeClassList();
+        this.listeners = new Map();
+    }
+
+    addEventListener(type, listener) {
+        this.listeners.set(type, listener);
+    }
+
+    remove() {
+        this.removed = true;
     }
 }
 
@@ -35,6 +44,13 @@ describe('ConnectionDialog', () => {
             serial: {
                 requestPort: jest.fn(),
             },
+        };
+        global.document = {
+            createElement: jest.fn(() => new FakeElement()),
+            body: {
+                appendChild: jest.fn(),
+            },
+            addEventListener: jest.fn(),
         };
     });
 
@@ -132,5 +148,106 @@ describe('ConnectionDialog', () => {
             'Debug Port',
             port
         );
+    });
+
+    test('dialog helpers cover missing selection, fallback port info, and hide', async () => {
+        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const dialog = new ConnectionDialog({
+            onCancel: jest.fn(),
+        });
+        const errorEl = new FakeElement();
+        const connectBtn = new FakeElement();
+        const input = { value: '   ' };
+
+        dialog.dialog = {
+            querySelector(selector) {
+                if (selector === '#dialog-error') {
+                    return errorEl;
+                }
+                if (selector === '#connect-btn') {
+                    return connectBtn;
+                }
+                if (selector === '#tab-name') {
+                    return input;
+                }
+                return new FakeElement();
+            },
+            addEventListener: jest.fn(),
+        };
+        dialog.overlay = new FakeElement();
+
+        await dialog.handleConnect();
+        expect(errorEl.textContent).toBe('Please select a serial port first');
+        expect(errorEl.style.display).toBe('block');
+        expect(dialog.getTabName('Fallback')).toBe('Fallback');
+        expect(dialog.formatPortInfo({})).toBe('Port selected');
+
+        dialog.setConnectEnabled(true);
+        expect(connectBtn.disabled).toBe(false);
+        dialog.clearError();
+        expect(errorEl.textContent).toBe('');
+        expect(errorEl.style.display).toBe('none');
+
+        dialog.hide();
+        expect(dialog.overlay).toBeNull();
+        expect(dialog.dialog).toBeNull();
+        expect(dialog.selectedPort).toBeNull();
+    });
+
+    test('show wires resolve handlers and event listeners', async () => {
+        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const overlay = new FakeElement();
+        const dialogElement = new FakeElement();
+        const closeBtn = new FakeElement();
+        const cancelBtn = new FakeElement();
+        const connectBtn = new FakeElement();
+        const selectPortBtn = new FakeElement();
+        const keyListeners = [];
+
+        overlay.querySelector = (selector) => {
+            if (selector === '.connection-dialog') return dialogElement;
+            return null;
+        };
+        dialogElement.querySelector = (selector) => {
+            if (selector === '.dialog-close-btn') return closeBtn;
+            if (selector === '#cancel-btn') return cancelBtn;
+            if (selector === '#connect-btn') return connectBtn;
+            if (selector === '#select-port-btn') return selectPortBtn;
+            return new FakeElement();
+        };
+        dialogElement.addEventListener = jest.fn();
+
+        document.createElement = jest.fn(() => overlay);
+        document.body = { appendChild: jest.fn() };
+        document.addEventListener = jest.fn((type, listener) => {
+            keyListeners.push({ type, listener });
+        });
+
+        const dialog = new ConnectionDialog();
+        dialog.selectPort = jest.fn();
+        const resultPromise = dialog.show();
+
+        selectPortBtn.listeners.get('click')();
+        expect(dialog.selectPort).toHaveBeenCalled();
+
+        closeBtn.listeners.get('click')();
+        await expect(resultPromise).resolves.toEqual({ confirmed: false });
+
+        const dialog2 = new ConnectionDialog();
+        dialog2.selectPort = jest.fn();
+        document.createElement = jest.fn(() => overlay);
+        const confirmPromise = dialog2.show();
+        dialog2.onConnect({ baudRate: 115200 }, 'Main', { id: 'port-1' });
+        await expect(confirmPromise).resolves.toEqual({
+            confirmed: true,
+            config: { baudRate: 115200 },
+            tabName: 'Main',
+            port: { id: 'port-1' },
+        });
+
+        expect(dialogElement.addEventListener).toHaveBeenCalled();
+        expect(keyListeners.some(({ type }) => type === 'keydown')).toBe(true);
+        expect(dialog2.getPortSelectionMarkup()).toContain('Select Port');
+        expect(dialog2.getDialogHTML()).toContain('New Serial Connection');
     });
 });
