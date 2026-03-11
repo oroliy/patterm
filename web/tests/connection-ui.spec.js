@@ -184,6 +184,25 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(html).not.toHaveAttribute('data-theme', initialTheme);
     });
 
+    test('switches theme from the header menu and opens the refreshed about dialog', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#theme-toggle-btn');
+        await expect(page.locator('#theme-menu')).toBeVisible();
+        await page.locator('[data-theme-value="dark"]').click();
+        await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+        await expect(page.locator('#theme-toggle-btn')).toContainText('Dark');
+
+        await page.click('#about-btn');
+        const about = page.locator('.about-overlay');
+        await expect(about).toBeVisible();
+        await expect(about).toContainText('Cross-tab global search');
+        await expect(about).toContainText('Web Serial');
+        await about.locator('button:has-text("Close")').click();
+        await expect(about).toBeHidden();
+    });
+
     test('restores disconnected tabs and filter state after reload', async ({ page }) => {
         await page.goto('https://localhost:5173/');
         await page.waitForLoadState('networkidle');

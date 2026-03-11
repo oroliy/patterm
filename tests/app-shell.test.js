@@ -74,6 +74,10 @@ class FakeElement {
         this.listeners.set(type, listener);
     }
 
+    setAttribute(name, value) {
+        this[name] = value;
+    }
+
     appendChild(child) {
         this.children.push(child);
         return child;
@@ -110,6 +114,7 @@ function installFakeDocument() {
         'tabs-content',
         'empty-state',
         'context-menu',
+        'theme-menu',
         'command-palette',
         'command-palette-input',
         'command-palette-list',
@@ -485,5 +490,51 @@ describe('AppShell behavior', () => {
         expect(shell.switchTab).toHaveBeenCalledWith('tab-2');
         expect(component.focusSearchResult).toHaveBeenCalledWith('ATI', 'all', 'entry-2');
         expect(shell.globalSearch.style.display).toBe('none');
+    });
+
+    test('theme menu supports explicit system selection and about dialog renders current summary', () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        const themeIcon = new FakeElement();
+        const themeLabel = new FakeElement();
+        const systemItem = new FakeElement();
+        const darkItem = new FakeElement();
+        const lightItem = new FakeElement();
+
+        systemItem.dataset.themeValue = 'system';
+        darkItem.dataset.themeValue = 'dark';
+        lightItem.dataset.themeValue = 'light';
+
+        shell.themeToggleButton = {
+            querySelector(selector) {
+                if (selector === '.theme-icon') return themeIcon;
+                if (selector === '.theme-label') return themeLabel;
+                return null;
+            },
+            setAttribute: jest.fn(),
+        };
+        shell.themeMenu = new FakeElement();
+        shell.themeMenu.querySelectorAll = () => [systemItem, darkItem, lightItem];
+        shell.persistSession = jest.fn();
+
+        shell.attachThemeMenuEventListeners();
+        shell.showThemeMenu();
+        expect(shell.themeMenu.style.display).toBe('block');
+
+        darkItem.listeners.get('click')();
+        expect(shell.theme).toBe('dark');
+        expect(themeIcon.textContent).toBe('🌙');
+        expect(themeLabel.textContent).toBe('Dark');
+
+        systemItem.listeners.get('click')();
+        expect(shell.theme).toBe('system');
+        expect(themeIcon.textContent).toBe('🖥️');
+        expect(themeLabel.textContent).toBe('System');
+
+        shell.tabManager.getAllTabs.mockReturnValue([{ id: 'tab-1' }, { id: 'tab-2' }]);
+        shell.showAbout();
+        expect(document.body.children.length).toBeGreaterThan(0);
+        expect(document.body.children.at(-1).innerHTML).toContain('Cross-tab global search');
+        expect(document.body.children.at(-1).innerHTML).toContain('Tabs');
     });
 });

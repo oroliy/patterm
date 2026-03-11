@@ -32,8 +32,9 @@
                 <button id="command-palette-btn" class="btn btn-icon" title="Command Palette" aria-label="Command Palette">
                     <span>⌘</span>
                 </button>
-                <button id="theme-toggle-btn" class="btn btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+                <button id="theme-toggle-btn" class="btn btn-icon btn-theme" title="Theme: System" aria-label="Theme: System">
                     <span class="theme-icon">🌓</span>
+                    <span class="theme-label">System</span>
                 </button>
                 <button id="about-btn" class="btn btn-icon" title="About" aria-label="About">
                     <span>ℹ️</span>
@@ -71,6 +72,12 @@
 
     <div id="context-menu" class="context-menu" style="display: none;">
         <div class="context-menu-items"></div>
+    </div>
+
+    <div id="theme-menu" class="theme-menu" style="display: none;">
+        <button type="button" class="theme-menu-item active" data-theme-value="system">Follow System</button>
+        <button type="button" class="theme-menu-item" data-theme-value="dark">Dark</button>
+        <button type="button" class="theme-menu-item" data-theme-value="light">Light</button>
     </div>
 
     <div id="command-palette" class="command-palette-overlay" style="display: none;">

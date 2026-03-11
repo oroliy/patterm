@@ -31,6 +31,7 @@
 - Web session restore reopens disconnected tabs and keeps per-tab filter state after reload
 - Per-tab search result count, next/previous navigation, and active match highlighting
 - Global search jumps across tabs to the exact matching terminal entry
+- Header theme control supports explicit `System`, `Dark`, and `Light` selection
 
 ### Complete UART Configuration
 - **Baud rates**: 110 to 921600
@@ -53,6 +54,10 @@
 - Per-tab terminal search with `All`, `RX`, `TX`, and `Error` filters
 - Search result count with previous/next navigation and highlighted active match
 - Cross-tab global search with `All`, `RX`, `TX`, and `Error` scopes
+
+### Workspace Controls
+- Header theme menu with `System`, `Dark`, and `Light` options
+- Refreshed About dialog with current surface, theme, tab count, and active capabilities
 
 ### Context Menus
 - **Tab Right-Click Menu**: Quick access to:

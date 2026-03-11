@@ -14,6 +14,10 @@ const createBaseShell = () => class AppShell {
     }
 
     clearTerminal() {}
+
+    showAbout() {
+        document.body.appendChild({ kind: 'about' });
+    }
 };
 
 describe('web main app bootstrap', () => {
@@ -229,11 +233,11 @@ describe('web main app bootstrap', () => {
         require('../src/web/js/main.js');
         const app = window.app;
         app.createConnection = jest.fn(() => Promise.resolve());
-        app.theme = 'dark';
+        app.theme = 'system';
 
         app.registerPlatformEventHandlers();
         mediaListener.mock.calls[0][1]();
-        expect(applyTheme).toHaveBeenCalledWith('dark');
+        expect(applyTheme).toHaveBeenCalledWith('system');
 
         await app.showConnectionDialog();
         expect(app.createConnection).toHaveBeenCalledWith(

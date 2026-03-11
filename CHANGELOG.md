@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a session restore MVP for Web that brings back disconnected tabs, active tab, and terminal filter state after reload
 - Added current-tab search result navigation with match counts, next/previous controls, and active
   in-terminal highlight
+- Added an explicit header theme selector with `System`, `Dark`, and `Light` modes
+- Refreshed the About dialog to reflect the current product surface, theme, tab count, and active capabilities
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed

@@ -85,6 +85,8 @@
 
 ### User Interface
 - **Global Search Across Tabs**: Search terminal entries across all open tabs and jump directly to the matching line with `All`, `RX`, `TX`, or `Error` scope
+- **Explicit Theme Modes**: Header theme control now exposes `System`, `Dark`, and `Light` instead of cycling blindly
+- **Refreshed About Dialog**: Simplified About panel now shows current surface, theme, tab count, and active workspace features
 - **Status Bar Visual Design**: Full width, no padding gaps, transparent background
 - **Status Bar Positioning**: Fixed cut-off issue with proper CSS padding
 - **Real-time Rate Updates**: Status bar rates update immediately on data transfer

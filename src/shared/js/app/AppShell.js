@@ -11,6 +11,8 @@ export class AppShell {
         this.tabComponents = new Map();
         this.theme = loadFromLocalStorage(STORAGE_KEYS.THEME, 'system');
         this.contextMenu = null;
+        this.themeMenu = null;
+        this.themeToggleButton = null;
         this.commandPalette = null;
         this.commandPaletteInput = null;
         this.commandPaletteList = null;
@@ -48,7 +50,11 @@ export class AppShell {
     registerEventHandlers() {
         document.getElementById('new-tab-btn')?.addEventListener('click', () => this.showConnectionDialog());
         document.getElementById('empty-new-connection-btn')?.addEventListener('click', () => this.showConnectionDialog());
-        document.getElementById('theme-toggle-btn')?.addEventListener('click', () => this.toggleTheme());
+        this.themeToggleButton = document.getElementById('theme-toggle-btn');
+        this.themeToggleButton?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            this.toggleThemeMenu();
+        });
         document.getElementById('command-palette-btn')?.addEventListener('click', () => this.toggleCommandPalette());
 
         const aboutButton = document.getElementById('about-btn');
@@ -69,7 +75,10 @@ export class AppShell {
         globalEvents.on('tab:connected', () => this.persistSession());
         globalEvents.on('tab:disconnected', () => this.persistSession());
 
-        document.addEventListener('click', () => this.hideContextMenu());
+        document.addEventListener('click', () => {
+            this.hideContextMenu();
+            this.hideThemeMenu();
+        });
         document.addEventListener('keydown', (event) => this.handleGlobalKeydown(event));
         this.registerPlatformEventHandlers();
     }
@@ -192,14 +201,19 @@ export class AppShell {
     toggleTheme() {
         const currentIndex = THEME_OPTIONS.findIndex((option) => option.value === this.theme);
         const nextIndex = (currentIndex + 1) % THEME_OPTIONS.length;
-        this.theme = THEME_OPTIONS[nextIndex].value;
-        saveToLocalStorage(STORAGE_KEYS.THEME, this.theme);
-        applyTheme(this.theme);
-        this.onThemeChanged(this.theme);
-        this.persistSession();
+        this.setTheme(THEME_OPTIONS[nextIndex].value);
     }
 
     onThemeChanged() {
+    }
+
+    setTheme(theme) {
+        this.theme = theme;
+        saveToLocalStorage(STORAGE_KEYS.THEME, this.theme);
+        applyTheme(this.theme);
+        this.updateThemeButton();
+        this.onThemeChanged(this.theme);
+        this.persistSession();
     }
 
     updateEmptyState() {
@@ -217,6 +231,7 @@ export class AppShell {
 
     initContextMenu() {
         this.contextMenu = document.getElementById('context-menu');
+        this.themeMenu = document.getElementById('theme-menu');
         this.commandPalette = document.getElementById('command-palette');
         this.commandPaletteInput = document.getElementById('command-palette-input');
         this.commandPaletteList = document.getElementById('command-palette-list');
@@ -224,9 +239,11 @@ export class AppShell {
         this.globalSearchInput = document.getElementById('global-search-input');
         this.globalSearchList = document.getElementById('global-search-list');
 
+        this.attachThemeMenuEventListeners();
         this.registerCommandPaletteCommands();
         this.attachCommandPaletteEventListeners();
         this.attachGlobalSearchEventListeners();
+        this.updateThemeButton();
     }
 
     showTabContextMenu(tabId, event) {
@@ -270,6 +287,90 @@ export class AppShell {
         }
     }
 
+    attachThemeMenuEventListeners() {
+        if (!this.themeMenu) {
+            return;
+        }
+
+        this.themeMenu.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        const items = this.themeMenu.querySelectorAll('.theme-menu-item');
+        items.forEach((item) => {
+            item.addEventListener('click', () => {
+                const value = item.dataset.themeValue;
+                if (!value) {
+                    return;
+                }
+
+                this.setTheme(value);
+                this.hideThemeMenu();
+            });
+        });
+    }
+
+    toggleThemeMenu() {
+        if (!this.themeMenu) {
+            this.toggleTheme();
+            return;
+        }
+
+        if (this.themeMenu.style.display === 'block') {
+            this.hideThemeMenu();
+            return;
+        }
+
+        this.showThemeMenu();
+    }
+
+    showThemeMenu() {
+        if (!this.themeMenu) {
+            return;
+        }
+
+        this.themeMenu.style.display = 'block';
+        this.updateThemeButton();
+    }
+
+    hideThemeMenu() {
+        if (this.themeMenu) {
+            this.themeMenu.style.display = 'none';
+        }
+    }
+
+    updateThemeButton() {
+        const currentOption = THEME_OPTIONS.find((option) => option.value === this.theme) || THEME_OPTIONS[0];
+        const icon = this.themeToggleButton?.querySelector('.theme-icon');
+        const label = this.themeToggleButton?.querySelector('.theme-label');
+
+        if (icon) {
+            icon.textContent = currentOption.value === 'dark'
+                ? '🌙'
+                : currentOption.value === 'light'
+                    ? '☀️'
+                    : '🖥️';
+        }
+
+        if (label) {
+            label.textContent = currentOption.label;
+        }
+
+        if (this.themeToggleButton) {
+            this.themeToggleButton.title = `Theme: ${currentOption.label}`;
+            this.themeToggleButton.setAttribute('aria-label', `Theme: ${currentOption.label}`);
+        }
+
+        if (!this.themeMenu) {
+            return;
+        }
+
+        const items = this.themeMenu.querySelectorAll('.theme-menu-item');
+        items.forEach((item) => {
+            item.classList.toggle('active', item.dataset.themeValue === this.theme);
+        });
+    }
+
     handleGlobalKeydown(event) {
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
             event.preventDefault();
@@ -280,6 +381,12 @@ export class AppShell {
         if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'f') {
             event.preventDefault();
             this.openGlobalSearch();
+            return;
+        }
+
+        if (event.key === 'Escape' && this.themeMenu?.style.display === 'block') {
+            event.preventDefault();
+            this.hideThemeMenu();
             return;
         }
 
@@ -739,6 +846,52 @@ export class AppShell {
     }
 
     showAbout() {
+        const overlay = document.createElement('div');
+        overlay.className = 'about-overlay';
+        overlay.innerHTML = `
+            <div class="about-dialog">
+                <h2>Patterm</h2>
+                <p class="about-summary">${this.getAboutSummary()}</p>
+                <div class="about-meta">
+                    <div class="about-meta-item">
+                        <span class="about-meta-label">Surface</span>
+                        <span class="about-meta-value">${this.getAboutSurfaceLabel()}</span>
+                    </div>
+                    <div class="about-meta-item">
+                        <span class="about-meta-label">Theme</span>
+                        <span class="about-meta-value">${this.getAboutThemeLabel()}</span>
+                    </div>
+                    <div class="about-meta-item">
+                        <span class="about-meta-label">Tabs</span>
+                        <span class="about-meta-value">${this.tabManager.getAllTabs().length}</span>
+                    </div>
+                </div>
+                <div class="about-highlights">
+                    <span class="about-chip">Multi-tab serial sessions</span>
+                    <span class="about-chip">Per-tab search and filters</span>
+                    <span class="about-chip">Cross-tab global search</span>
+                    <span class="about-chip">Command palette</span>
+                    <span class="about-chip">Session restore</span>
+                </div>
+                <div class="about-actions">
+                    <a href="https://github.com/oroliy/patterm" target="_blank" rel="noreferrer">Project Home</a>
+                    <button class="btn btn-primary" type="button" onclick="this.closest('.about-overlay').remove()">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    getAboutSummary() {
+        return 'A modern serial terminal focused on multi-session debugging across desktop and web.';
+    }
+
+    getAboutSurfaceLabel() {
+        return 'Shared UI';
+    }
+
+    getAboutThemeLabel() {
+        return THEME_OPTIONS.find((option) => option.value === this.theme)?.label || 'System';
     }
 
     async showConnectionDialog() {

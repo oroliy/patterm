@@ -33,7 +33,9 @@ class PattermApp extends AppShell {
 
     registerPlatformEventHandlers() {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            applyTheme(this.theme);
+            if (this.theme === 'system') {
+                applyTheme(this.theme);
+            }
         });
     }
 
@@ -112,33 +114,16 @@ class PattermApp extends AppShell {
         }
     }
 
-    showAbout() {
-        const aboutHtml = `
-            <div class="about-dialog">
-                <h2>Patterm Web</h2>
-                <p>Version 0.1.0</p>
-                <p>Professional Serial Terminal for the Web</p>
-                <hr>
-                <p><strong>Features:</strong></p>
-                <ul>
-                    <li>Multi-tab serial connections</li>
-                    <li>Real-time data transmission</li>
-                    <li>Configurable serial parameters</li>
-                    <li>Terminal output export</li>
-                    <li>Dark/Light theme support</li>
-                </ul>
-                <hr>
-                <p><strong>Powered by:</strong></p>
-                <p>Web Serial API</p>
-                <p><a href="https://github.com/oroliy/patterm" target="_blank">https://github.com/oroliy/patterm</a></p>
-                <button class="btn btn-primary" onclick="this.closest('.about-overlay').remove()">Close</button>
-            </div>
-        `;
+    getAboutSummary() {
+        return 'A lightweight serial workspace for the browser, built around Web Serial, fast tab switching, and searchable terminal history.';
+    }
 
-        const overlay = document.createElement('div');
-        overlay.className = 'about-overlay';
-        overlay.innerHTML = aboutHtml;
-        document.body.appendChild(overlay);
+    getAboutSurfaceLabel() {
+        return 'Web Serial';
+    }
+
+    showAbout() {
+        super.showAbout();
     }
 
     showError(message) {
