@@ -16,7 +16,7 @@ describe('TabManager', () => {
         jest.resetModules();
     });
 
-    test('createTab preserves filter state and advances counter from restored ids', () => {
+    test('createTab preserves filter state and trigger rules, and advances counter from restored ids', () => {
         const { globalEvents } = require('../src/web/js/services/EventManager.js');
         const { TabManager } = require('../src/web/js/services/TabManager.js');
         const manager = new TabManager();
@@ -24,10 +24,14 @@ describe('TabManager', () => {
         const restored = manager.createTab({ baudRate: 115200 }, 'Restored', {
             id: 'tab-3',
             filterState: { search: 'Echo', type: 'tx' },
+            triggerRules: [{ pattern: 'READY', scope: 'rx', highlight: 'success' }],
         });
         const next = manager.createTab({ baudRate: 9600 }, 'Next');
 
         expect(restored.filterState).toEqual({ search: 'Echo', type: 'tx' });
+        expect(restored.triggerRules).toEqual([
+            expect.objectContaining({ pattern: 'READY', scope: 'rx', highlight: 'success' }),
+        ]);
         expect(next.id).toBe('tab-4');
         expect(globalEvents.emit).toHaveBeenCalledWith('tab:created', restored);
     });
@@ -108,6 +112,12 @@ describe('TabManager', () => {
         expect(manager.toggleAutoScroll(tab.id)).toBe(false);
         manager.updateFilterState(tab.id, { search: 'AT', type: 'tx' });
         expect(manager.getTabState(tab.id).filterState).toEqual({ search: 'AT', type: 'tx' });
+        expect(manager.updateTriggerRules(tab.id, [{ pattern: 'ERROR', scope: 'error', highlight: 'danger' }])).toEqual([
+            expect.objectContaining({ pattern: 'ERROR', scope: 'error', highlight: 'danger' }),
+        ]);
+        expect(manager.getTabState(tab.id).triggerRules).toEqual([
+            expect.objectContaining({ pattern: 'ERROR', scope: 'error', highlight: 'danger' }),
+        ]);
 
         tab.terminal = { clear: jest.fn() };
         manager.clearTerminal(tab.id);

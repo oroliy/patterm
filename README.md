@@ -31,6 +31,7 @@
 - Web session restore reopens disconnected tabs and keeps per-tab filter state after reload
 - Per-tab search result count, next/previous navigation, and active match highlighting
 - Global search jumps across tabs to the exact matching terminal entry
+- Per-tab read-only trigger rules can mark matching `RX`, `TX`, or `Error` lines with highlight badges
 - Header theme control supports explicit `System`, `Dark`, and `Light` selection
 
 ### Complete UART Configuration
@@ -54,6 +55,7 @@
 - Per-tab terminal search with `All`, `RX`, `TX`, and `Error` filters
 - Search result count with previous/next navigation and highlighted active match
 - Cross-tab global search with `All`, `RX`, `TX`, and `Error` scopes
+- Read-only trigger highlights with per-tab rules for `Contains` and `Regex` matching
 
 ### Workspace Controls
 - Header theme menu with `System`, `Dark`, and `Light` options

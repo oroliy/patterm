@@ -42,6 +42,8 @@ class FakeElement {
         this.value = '';
         this.disabled = false;
         this.style = {};
+        this.hidden = false;
+        this.children = [];
         this.classList = new FakeClassList();
         this.dataset = {};
         this.listeners = new Map();
@@ -57,6 +59,15 @@ class FakeElement {
 
     addEventListener(type, listener) {
         this.listeners.set(type, listener);
+    }
+
+    appendChild(child) {
+        this.children.push(child);
+        return child;
+    }
+
+    setAttribute(name, value) {
+        this[name] = value;
     }
 
     remove() {
@@ -206,12 +217,19 @@ describe('TabComponent', () => {
         expect(badge.classList.contains('active')).toBe(false);
     });
 
-    test('updateStatusBar, updatePortName, setName, filters, and destroy update the view', () => {
+    test('updateStatusBar, updatePortName, setName, filters, trigger rules, and destroy update the view', () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const tabName = new FakeElement();
         const searchInput = new FakeElement();
         const allButton = new FakeElement();
         const errorButton = new FakeElement();
+        const triggerPattern = new FakeElement();
+        const triggerMatchType = new FakeElement();
+        const triggerScope = new FakeElement();
+        const triggerHighlight = new FakeElement();
+        const triggerList = new FakeElement();
+        const triggerEmpty = new FakeElement();
+        const triggerPanel = new FakeElement();
         const rxBytes = new FakeElement();
         const txBytes = new FakeElement();
         const duration = new FakeElement();
@@ -243,6 +261,13 @@ describe('TabComponent', () => {
             querySelector(selector) {
                 if (selector === '.terminal-search-count') return new FakeElement();
                 if (selector === '.terminal-search-input') return searchInput;
+                if (selector === '.terminal-trigger-pattern-input') return triggerPattern;
+                if (selector === '.terminal-trigger-match-type') return triggerMatchType;
+                if (selector === '.terminal-trigger-scope') return triggerScope;
+                if (selector === '.terminal-trigger-highlight') return triggerHighlight;
+                if (selector === '.terminal-trigger-list') return triggerList;
+                if (selector === '.terminal-trigger-empty') return triggerEmpty;
+                if (selector === '.terminal-trigger-panel') return triggerPanel;
                 return null;
             },
             querySelectorAll(selector) {
@@ -272,6 +297,8 @@ describe('TabComponent', () => {
             getSearchState: () => ({ totalMatches: 0, currentMatch: 0 }),
             getFilters: jest.fn(() => ({ search: 'boom', type: 'error' })),
             setFilters: jest.fn(),
+            getTriggerRules: jest.fn(() => [{ id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' }]),
+            setTriggerRules: jest.fn(() => [{ id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' }]),
         };
 
         tab.updateStatusBar();
@@ -299,13 +326,51 @@ describe('TabComponent', () => {
         expect(errorButton.classList.contains('active')).toBe(true);
         expect(allButton.classList.contains('active')).toBe(false);
         expect(tab.terminal.setFilters).toHaveBeenCalledWith({ search: 'boom', type: 'error' });
+        expect(tab.terminal.setTriggerRules).toHaveBeenCalledWith(tab.tabState.triggerRules || []);
+        expect(triggerList.children).toHaveLength(1);
+        expect(triggerEmpty.style.display).toBe('none');
+
+        triggerPattern.value = 'READY';
+        triggerMatchType.value = 'contains';
+        triggerScope.value = 'rx';
+        triggerHighlight.value = 'success';
+        tab.terminal.setTriggerRules.mockReturnValueOnce([
+            { id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' },
+            { id: 'trigger-2', name: 'READY', scope: 'rx', matchType: 'contains', highlight: 'success' },
+        ]);
+        tab.options.onTriggerRulesChange = jest.fn();
+
+        tab.addTriggerRuleFromInputs();
+        expect(tab.terminal.setTriggerRules).toHaveBeenCalledWith([
+            { id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' },
+            { pattern: 'READY', matchType: 'contains', scope: 'rx', highlight: 'success' },
+        ]);
+        expect(tab.options.onTriggerRulesChange).toHaveBeenCalledWith('tab-1', expect.any(Array));
+        expect(triggerPattern.value).toBe('');
+
+        tab.terminal.getTriggerRules.mockReturnValue([
+            { id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' },
+            { id: 'trigger-2', name: 'READY', scope: 'rx', matchType: 'contains', highlight: 'success' },
+        ]);
+        tab.terminal.setTriggerRules.mockReturnValueOnce([
+            { id: 'trigger-2', name: 'READY', scope: 'rx', matchType: 'contains', highlight: 'success' },
+        ]);
+        tab.removeTriggerRule('trigger-1');
+        expect(tab.terminal.setTriggerRules).toHaveBeenLastCalledWith([
+            { id: 'trigger-2', name: 'READY', scope: 'rx', matchType: 'contains', highlight: 'success' },
+        ]);
+
+        tab.toggleTriggerPanel(true);
+        expect(triggerPanel.hidden).toBe(false);
+        tab.toggleTriggerPanel(false);
+        expect(triggerPanel.hidden).toBe(true);
 
         tab.destroy();
         expect(tab.element.remove).toHaveBeenCalled();
         expect(tab.tabElement.remove).toHaveBeenCalled();
     });
 
-    test('attachEventListeners routes close, switch, send, clear, search, nav, and context menu actions', async () => {
+    test('attachEventListeners routes close, switch, send, clear, search, nav, trigger, and context menu actions', async () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const closeBtn = new FakeElement();
         const sendBtn = new FakeElement();
@@ -317,6 +382,9 @@ describe('TabComponent', () => {
         const nextButton = new FakeElement();
         const allButton = new FakeElement();
         const txButton = new FakeElement();
+        const triggerButton = new FakeElement();
+        const triggerCloseButton = new FakeElement();
+        const triggerAddButton = new FakeElement();
         const onClose = jest.fn();
         const onSwitch = jest.fn();
         const onSend = jest.fn();
@@ -356,6 +424,9 @@ describe('TabComponent', () => {
                 if (selector === '.clear-btn') return clearBtn;
                 if (selector === '.terminal-display') return terminalDisplay;
                 if (selector === '.terminal-search-input') return searchInput;
+                if (selector === '.terminal-trigger-btn') return triggerButton;
+                if (selector === '.terminal-trigger-close-btn') return triggerCloseButton;
+                if (selector === '.terminal-trigger-add-btn') return triggerAddButton;
                 return null;
             },
             querySelectorAll(selector) {
@@ -366,6 +437,8 @@ describe('TabComponent', () => {
         };
         tab.getFilterState = jest.fn(() => ({ search: 'AT', type: 'tx' }));
         tab.updateSearchState = jest.fn();
+        tab.toggleTriggerPanel = jest.fn();
+        tab.addTriggerRuleFromInputs = jest.fn();
         tab.terminal = {
             clear: jest.fn(),
             setFilters: jest.fn(),
@@ -387,6 +460,9 @@ describe('TabComponent', () => {
         prevButton.listeners.get('click')();
         nextButton.listeners.get('click')();
         txButton.listeners.get('click')();
+        triggerButton.listeners.get('click')();
+        triggerCloseButton.listeners.get('click')();
+        triggerAddButton.listeners.get('click')();
 
         expect(onClose).toHaveBeenCalledWith('tab-1');
         expect(onSwitch).toHaveBeenCalledWith('tab-1');
@@ -399,6 +475,9 @@ describe('TabComponent', () => {
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(-1);
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(1);
         expect(onFiltersChange).toHaveBeenCalledWith('tab-1', { search: 'AT', type: 'tx' });
+        expect(tab.toggleTriggerPanel).toHaveBeenCalledWith();
+        expect(tab.toggleTriggerPanel).toHaveBeenCalledWith(false);
+        expect(tab.addTriggerRuleFromInputs).toHaveBeenCalled();
     });
 
     test('focusSearchResult updates local filters and targets a specific entry', () => {

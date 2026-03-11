@@ -93,7 +93,8 @@ export class AppShell {
             onSend: (tabId, data) => this.sendData(tabId, data),
             onClear: (tabId) => this.clearTerminal(tabId),
             onContextMenu: (tabId, event) => this.showTabContextMenu(tabId, event),
-            onFiltersChange: (tabId, filterState) => this.onTabFiltersChange(tabId, filterState)
+            onFiltersChange: (tabId, filterState) => this.onTabFiltersChange(tabId, filterState),
+            onTriggerRulesChange: (tabId, triggerRules) => this.onTabTriggerRulesChange(tabId, triggerRules)
         });
 
         component.create();
@@ -163,6 +164,11 @@ export class AppShell {
 
     onTabFiltersChange(tabId, filterState) {
         this.tabManager.updateFilterState(tabId, filterState);
+        this.persistSession();
+    }
+
+    onTabTriggerRulesChange(tabId, triggerRules) {
+        this.tabManager.updateTriggerRules(tabId, triggerRules);
         this.persistSession();
     }
 
@@ -792,7 +798,8 @@ export class AppShell {
                 id: tab.id,
                 createdTime: tab.createdTime,
                 autoScroll: tab.autoScroll,
-                filterState: tab.filterState
+                filterState: tab.filterState,
+                triggerRules: tab.triggerRules
             });
         });
 
@@ -811,7 +818,10 @@ export class AppShell {
             createdTime: tab.createdTime instanceof Date ? tab.createdTime.toISOString() : tab.createdTime,
             filterState: {
                 ...(tab.filterState || {})
-            }
+            },
+            triggerRules: Array.isArray(tab.triggerRules)
+                ? tab.triggerRules.map((rule) => ({ ...rule }))
+                : []
         }));
 
         return {
@@ -872,6 +882,7 @@ export class AppShell {
                     <span class="about-chip">Cross-tab global search</span>
                     <span class="about-chip">Command palette</span>
                     <span class="about-chip">Session restore</span>
+                    <span class="about-chip">Read-only trigger highlights</span>
                 </div>
                 <div class="about-actions">
                     <a href="https://github.com/oroliy/patterm" target="_blank" rel="noreferrer">Project Home</a>

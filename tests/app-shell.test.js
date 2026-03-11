@@ -184,6 +184,7 @@ describe('AppShell behavior', () => {
                 autoScroll: true,
                 createdTime,
                 filterState: { search: 'Echo', type: 'tx' },
+                triggerRules: [{ id: 'trigger-1', pattern: 'READY', scope: 'rx', highlight: 'success' }],
             },
         ]);
 
@@ -199,6 +200,7 @@ describe('AppShell behavior', () => {
                     autoScroll: true,
                     createdTime: createdTime.toISOString(),
                     filterState: { search: 'Echo', type: 'tx' },
+                    triggerRules: [{ id: 'trigger-1', pattern: 'READY', scope: 'rx', highlight: 'success' }],
                 },
             ],
         });
@@ -215,6 +217,7 @@ describe('AppShell behavior', () => {
                 id: 'tab-1',
                 createdTime: createdTime.toISOString(),
                 filterState: { search: 'Echo', type: 'tx' },
+                triggerRules: [{ id: 'trigger-1', pattern: 'READY', scope: 'rx', highlight: 'success' }],
             })
         );
         expect(shell.tabManager.switchTab).toHaveBeenCalledWith('tab-1');

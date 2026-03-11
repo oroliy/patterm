@@ -6,6 +6,7 @@ import {
     findTerminalEntryMatchRanges,
     normalizeTerminalEntryText
 } from '../../../shared/js/terminal/terminalEntries.js';
+import { findMatchingTriggerRules, normalizeTriggerRules } from '../../../shared/js/terminal/triggerRules.js';
 
 export class TerminalComponent {
     constructor(container, options = {}) {
@@ -20,6 +21,7 @@ export class TerminalComponent {
         this.dataBuffers = new Map();
         this.entries = [];
         this.visibleEntries = [];
+        this.triggerRules = normalizeTriggerRules(options.triggerRules);
         this.filters = {
             search: '',
             type: 'all'
@@ -61,6 +63,7 @@ export class TerminalComponent {
             type,
             timestamp: new Date()
         });
+        entry.triggerMatches = findMatchingTriggerRules(entry, this.triggerRules);
 
         this.entries.push(entry);
         if (this.entries.length > this.maxLines) {
@@ -83,6 +86,7 @@ export class TerminalComponent {
         const line = this.createLineElement(entry.type);
         line.dataset.entryId = entry.id;
         line.classList.toggle('terminal-search-current', isCurrentMatch);
+        this.applyTriggerClasses(line, entry);
 
         if (this.lastLogLine && this.canAppendToLastLine(entry.type)) {
             const textNode = document.createTextNode(entry.text);
@@ -92,6 +96,7 @@ export class TerminalComponent {
                 const tsSpan = this.createTimestampSpan(entry.timestamp);
                 line.appendChild(tsSpan);
             }
+            this.appendTriggerBadges(line, entry);
             this.appendEntryText(line, entry, isCurrentMatch);
             this.terminal.appendChild(line);
             this.lastLogLine = line;
@@ -142,6 +147,30 @@ export class TerminalComponent {
         const line = document.createElement('div');
         line.className = `${type}-data`;
         return line;
+    }
+
+    applyTriggerClasses(line, entry) {
+        if (!Array.isArray(entry.triggerMatches) || entry.triggerMatches.length === 0) {
+            return;
+        }
+
+        line.classList.add('terminal-trigger-hit');
+        entry.triggerMatches.forEach((match) => {
+            line.classList.add(`terminal-trigger-${match.highlight}`);
+        });
+    }
+
+    appendTriggerBadges(line, entry) {
+        if (!Array.isArray(entry.triggerMatches) || entry.triggerMatches.length === 0) {
+            return;
+        }
+
+        entry.triggerMatches.forEach((match) => {
+            const badge = document.createElement('span');
+            badge.className = `terminal-trigger-badge terminal-trigger-badge-${match.highlight}`;
+            badge.textContent = match.name;
+            line.appendChild(badge);
+        });
     }
 
     canAppendToLastLine(type) {
@@ -301,6 +330,19 @@ export class TerminalComponent {
             this.currentMatchIndex = 0;
         }
         this.renderEntries();
+    }
+
+    setTriggerRules(rules = []) {
+        this.triggerRules = normalizeTriggerRules(rules);
+        this.entries.forEach((entry) => {
+            entry.triggerMatches = findMatchingTriggerRules(entry, this.triggerRules);
+        });
+        this.renderEntries();
+        return this.getTriggerRules();
+    }
+
+    getTriggerRules() {
+        return this.triggerRules.map((rule) => ({ ...rule }));
     }
 
     getFilters() {

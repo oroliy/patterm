@@ -56,6 +56,35 @@ export class TabComponent {
                         <button type="button" class="terminal-filter-btn" data-filter-type="tx">TX</button>
                         <button type="button" class="terminal-filter-btn" data-filter-type="error">Error</button>
                     </div>
+                    <button type="button" class="terminal-trigger-btn btn">Triggers</button>
+                </div>
+                <div class="terminal-trigger-panel" hidden>
+                    <div class="terminal-trigger-panel-header">
+                        <strong>Trigger Rules</strong>
+                        <button type="button" class="terminal-trigger-close-btn" aria-label="Close trigger rules">×</button>
+                    </div>
+                    <div class="terminal-trigger-form">
+                        <input type="text" class="terminal-trigger-pattern-input" placeholder="Match text or regex">
+                        <select class="terminal-trigger-match-type" aria-label="Trigger match type">
+                            <option value="contains">Contains</option>
+                            <option value="regex">Regex</option>
+                        </select>
+                        <select class="terminal-trigger-scope" aria-label="Trigger scope">
+                            <option value="all">All</option>
+                            <option value="rx">RX</option>
+                            <option value="tx">TX</option>
+                            <option value="error">Error</option>
+                        </select>
+                        <select class="terminal-trigger-highlight" aria-label="Trigger highlight">
+                            <option value="warning">Warning</option>
+                            <option value="success">Success</option>
+                            <option value="info">Info</option>
+                            <option value="danger">Danger</option>
+                        </select>
+                        <button type="button" class="terminal-trigger-add-btn btn btn-primary">Add</button>
+                    </div>
+                    <div class="terminal-trigger-empty">No trigger rules yet</div>
+                    <div class="terminal-trigger-list"></div>
                 </div>
                 <div class="terminal-display"></div>
 
@@ -133,6 +162,7 @@ export class TabComponent {
         this.terminal = new TerminalComponent(terminalContainer, {
             autoScroll: this.tabState.autoScroll,
             showTimestamps: true,
+            triggerRules: this.tabState.triggerRules,
             onSearchStateChange: () => this.updateSearchState()
         });
         this.tabState.terminal = this.terminal;
@@ -220,6 +250,15 @@ export class TabComponent {
                 this.options.onFiltersChange?.(this.tabState.id, this.getFilterState());
             });
         });
+
+        const triggerButton = this.element.querySelector('.terminal-trigger-btn');
+        triggerButton?.addEventListener('click', () => this.toggleTriggerPanel());
+
+        const triggerCloseButton = this.element.querySelector('.terminal-trigger-close-btn');
+        triggerCloseButton?.addEventListener('click', () => this.toggleTriggerPanel(false));
+
+        const triggerAddButton = this.element.querySelector('.terminal-trigger-add-btn');
+        triggerAddButton?.addEventListener('click', () => this.addTriggerRuleFromInputs());
     }
 
     async handleSend() {
@@ -353,6 +392,98 @@ export class TabComponent {
         return this.terminal.getFilters();
     }
 
+    getTriggerRules() {
+        return this.terminal.getTriggerRules();
+    }
+
+    toggleTriggerPanel(force = null) {
+        const panel = this.element?.querySelector('.terminal-trigger-panel');
+        if (!panel) {
+            return;
+        }
+
+        const shouldShow = force === null ? panel.hidden : force;
+        panel.hidden = !shouldShow;
+    }
+
+    addTriggerRuleFromInputs() {
+        const patternInput = this.element?.querySelector('.terminal-trigger-pattern-input');
+        const matchTypeInput = this.element?.querySelector('.terminal-trigger-match-type');
+        const scopeInput = this.element?.querySelector('.terminal-trigger-scope');
+        const highlightInput = this.element?.querySelector('.terminal-trigger-highlight');
+
+        const pattern = patternInput?.value?.trim() || '';
+        if (!pattern) {
+            patternInput?.focus();
+            return;
+        }
+
+        const triggerRules = this.terminal.setTriggerRules([
+            ...this.getTriggerRules(),
+            {
+                pattern,
+                matchType: matchTypeInput?.value || 'contains',
+                scope: scopeInput?.value || 'all',
+                highlight: highlightInput?.value || 'warning'
+            }
+        ]);
+
+        this.tabState.triggerRules = triggerRules;
+        this.renderTriggerRules();
+        this.options.onTriggerRulesChange?.(this.tabState.id, triggerRules);
+
+        if (patternInput) {
+            patternInput.value = '';
+            patternInput.focus();
+        }
+    }
+
+    removeTriggerRule(ruleId) {
+        const triggerRules = this.terminal
+            .setTriggerRules(this.getTriggerRules().filter((rule) => rule.id !== ruleId));
+        this.tabState.triggerRules = triggerRules;
+        this.renderTriggerRules();
+        this.options.onTriggerRulesChange?.(this.tabState.id, triggerRules);
+    }
+
+    renderTriggerRules() {
+        const list = this.element?.querySelector('.terminal-trigger-list');
+        const emptyState = this.element?.querySelector('.terminal-trigger-empty');
+        if (!list || !emptyState) {
+            return;
+        }
+
+        const triggerRules = this.getTriggerRules();
+        list.innerHTML = '';
+        emptyState.style.display = triggerRules.length === 0 ? 'block' : 'none';
+
+        triggerRules.forEach((rule) => {
+            const item = document.createElement('div');
+            item.className = 'terminal-trigger-item';
+
+            const name = document.createElement('span');
+            name.className = 'terminal-trigger-item-name';
+            name.textContent = rule.name;
+
+            const meta = document.createElement('span');
+            meta.className = 'terminal-trigger-item-meta';
+            meta.textContent = `${String(rule.scope).toUpperCase()} · ${rule.matchType} · ${rule.highlight}`;
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'terminal-trigger-remove-btn';
+            removeButton.dataset.triggerId = rule.id;
+            removeButton.setAttribute('aria-label', 'Remove trigger');
+            removeButton.textContent = 'Remove';
+            removeButton.addEventListener('click', () => this.removeTriggerRule(rule.id));
+
+            item.appendChild(name);
+            item.appendChild(meta);
+            item.appendChild(removeButton);
+            list.appendChild(item);
+        });
+    }
+
     restoreTerminalState() {
         const filterState = this.tabState.filterState || { search: '', type: 'all' };
         const searchInput = this.element.querySelector('.terminal-search-input');
@@ -367,6 +498,8 @@ export class TabComponent {
         });
 
         this.terminal.setFilters(filterState);
+        this.terminal.setTriggerRules(this.tabState.triggerRules || []);
+        this.renderTriggerRules();
         this.updateSearchState();
     }
 

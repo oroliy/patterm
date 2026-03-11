@@ -1,5 +1,6 @@
 import { globalEvents } from './EventManager.js';
 import { debug } from '../utils/debug.js';
+import { normalizeTriggerRules } from '../../../shared/js/terminal/triggerRules.js';
 
 export class TabManager {
     constructor() {
@@ -44,7 +45,8 @@ export class TabManager {
             filterState: {
                 search: options.filterState?.search || '',
                 type: options.filterState?.type || 'all'
-            }
+            },
+            triggerRules: normalizeTriggerRules(options.triggerRules)
         };
 
         this.tabs.set(tabId, tabState);
@@ -253,7 +255,8 @@ export class TabManager {
             config: tab.config,
             filterState: {
                 ...tab.filterState
-            }
+            },
+            triggerRules: tab.triggerRules.map((rule) => ({ ...rule }))
         };
     }
 
@@ -267,6 +270,16 @@ export class TabManager {
             ...tab.filterState,
             ...filterState
         };
+    }
+
+    updateTriggerRules(tabId, triggerRules = []) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) {
+            return [];
+        }
+
+        tab.triggerRules = normalizeTriggerRules(triggerRules);
+        return tab.triggerRules.map((rule) => ({ ...rule }));
     }
 
     getByteLength(data) {

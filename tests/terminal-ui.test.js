@@ -234,6 +234,27 @@ describe('terminal search UI behavior', () => {
         ]);
     });
 
+    test('triggerRules normalizes rules and matches contains and regex patterns', () => {
+        const {
+            normalizeTriggerRules,
+            findMatchingTriggerRules,
+        } = require('../src/shared/js/terminal/triggerRules.js');
+
+        const rules = normalizeTriggerRules([
+            { pattern: 'error', scope: 'error', highlight: 'danger' },
+            { pattern: '^Echo:', matchType: 'regex', scope: 'rx', highlight: 'info' },
+            { pattern: '' },
+        ]);
+
+        expect(rules).toHaveLength(2);
+        expect(findMatchingTriggerRules({ text: 'Echo: AT', type: 'rx' }, rules)).toEqual([
+            expect.objectContaining({ pattern: '^Echo:', highlight: 'info' }),
+        ]);
+        expect(findMatchingTriggerRules({ text: 'Error: boom', type: 'error' }, rules)).toEqual([
+            expect.objectContaining({ pattern: 'error', highlight: 'danger' }),
+        ]);
+    });
+
     test('TerminalComponent tracks search state and navigates between matches', () => {
         const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
@@ -272,6 +293,29 @@ describe('terminal search UI behavior', () => {
         expect(terminal.focusEntry(targetEntryId, { search: 'Echo', type: 'all' })).toBe(true);
         expect(terminal.getSearchState()).toEqual({ totalMatches: 2, currentMatch: 2 });
         expect(container.querySelector('.terminal-search-current').textContent).toContain('Echo: ATI');
+    });
+
+    test('TerminalComponent applies trigger badges and highlight classes', () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+            triggerRules: [
+                { pattern: 'Echo:', scope: 'rx', highlight: 'info' },
+            ],
+        });
+
+        terminal.appendLine('Echo: AT', 'rx', true);
+
+        expect(terminal.entries[0].triggerMatches).toEqual([
+            expect.objectContaining({ pattern: 'Echo:', highlight: 'info' }),
+        ]);
+        expect(container.querySelector('.terminal-trigger-hit')).not.toBeNull();
+        expect(container.querySelector('.terminal-trigger-info')).not.toBeNull();
+        expect(container.querySelector('.terminal-trigger-badge').textContent).toBe('Echo:');
+
+        terminal.setTriggerRules([{ pattern: 'AT', scope: 'tx', highlight: 'warning' }]);
+        expect(terminal.entries[0].triggerMatches).toEqual([]);
     });
 
     test('TabComponent updates search count and restores filter state', () => {
@@ -316,6 +360,8 @@ describe('terminal search UI behavior', () => {
         tab.terminal = {
             getSearchState: () => ({ totalMatches: 2, currentMatch: 1 }),
             setFilters: jest.fn(),
+            setTriggerRules: jest.fn(),
+            getTriggerRules: jest.fn(() => []),
         };
 
         tab.updateSearchState();
