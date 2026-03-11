@@ -47,6 +47,8 @@
 ### Tests
 - Added logging lifecycle coverage for SerialService
 - Added unit coverage for shared serial abstractions
+- Added instrumented Jest coverage for shared/Web frontend modules and new unit tests for
+  `AppShell`, `TabComponent`, `TerminalComponent`, and `terminalEntries`
 
 ## Major New Features
 

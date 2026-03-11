@@ -130,11 +130,14 @@
       "glob": "10.5.0"
     }
   },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/tests/**/*.test.js"
-    ],
+    "jest": {
+      "testEnvironment": "node",
+      "transform": {
+        "^.+\\.js$": "<rootDir>/tests/support/frontend-transformer.js"
+      },
+      "testMatch": [
+        "**/tests/**/*.test.js"
+      ],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/main/main.js",

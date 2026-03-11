@@ -263,6 +263,10 @@ CI now enforces four stages before build and deploy:
 
 The Web CI suite now asserts the actual UI flow: open the connection dialog, select a mocked Web Serial port through `navigator.serial.requestPort()`, connect, send data, and verify TX/RX content renders in the main terminal area. Ad-hoc debug specs are kept out of the CI path.
 
+Jest now also instruments shared/Web frontend modules through the local transformer at
+`tests/support/frontend-transformer.js`, so coverage reports include UI modules such as
+`AppShell`, `TabComponent`, `TerminalComponent`, and `terminalEntries`.
+
 Tag-based releases (`v*`) now wait for the Cloudflare Pages deploy job, then publish desktop artifacts to GitHub Releases. Pushes to `master` still deploy the Web PWA when Cloudflare secrets are configured.
 
 #### Quick E2E Test (Recommended)

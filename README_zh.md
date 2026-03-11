@@ -219,6 +219,9 @@ Web CI 测试现在会断言真实 UI 流程：打开连接对话框、通过 `n
 
 基于 Tag 的发布（`v*`）现在会先等待 Cloudflare Pages 部署完成，再向 GitHub Releases 发布桌面端构建产物。推送到 `master` 时，只要配置了 Cloudflare Secrets，Web PWA 仍会自动部署。
 
+Jest 现在也会通过本地转换器 `tests/support/frontend-transformer.js` 为共享/Web 前端模块做插桩，
+因此覆盖率报告会纳入 `AppShell`、`TabComponent`、`TerminalComponent`、`terminalEntries` 等 UI 模块。
+
 #### 快速端到端测试（推荐）
 
 ```bash
