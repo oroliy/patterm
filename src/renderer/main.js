@@ -1,4 +1,5 @@
 import { AppShell } from '../shared/js/app/AppShell.js';
+import { getEffectiveTheme } from '../shared/js/theme.js';
 import { normalizeSerialConfig } from '../shared/js/serial/normalizeSerialConfig.js';
 import { ElectronConnectionDialog } from './ElectronConnectionDialog.js';
 import { ElectronSerialProvider } from './services/IpcSerialProvider.js';
@@ -12,6 +13,7 @@ export class PattermElectronApp extends AppShell {
         ipcRenderer.on('theme:set', (event, theme) => {
             this.theme = theme;
             this.initTheme();
+            this.updateThemeButton();
         });
     }
 
@@ -78,8 +80,8 @@ export class PattermElectronApp extends AppShell {
         }
     }
 
-    onThemeChanged(theme) {
-        ipcRenderer.invoke('theme:changed', theme, theme);
+    onThemeChanged(theme, effectiveTheme, themeVariant) {
+        ipcRenderer.invoke('theme:changed', theme, effectiveTheme || getEffectiveTheme(theme), themeVariant || this.themeVariant);
     }
 
     async getAboutBuildInfo() {

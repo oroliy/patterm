@@ -34,7 +34,7 @@
 - Per-tab read-only trigger rules can mark matching `RX`, `TX`, or `Error` lines with highlight badges
 - Per-tab workflow runner can execute a simple `send -> wait for match` automation flow
 - Per-tab transaction panel groups `TX -> RX` traffic into request/response or passive blocks with jump-back, copy, export, star, rename, failed/starred filters, failure summaries, and visible-block export
-- Header theme control supports explicit `System`, `Dark`, and `Light` selection
+- Header theme control now separates `System / Dark / Light` appearance from built-in theme presets including `Patterm Blue`, `Claude Canvas`, `Verdant Lab`, and `Signal Grid`
 
 ### Complete UART Configuration
 - **Baud rates**: 110 to 921600
@@ -62,7 +62,7 @@
 - Transaction panel MVP with time-window grouping, jump-to-entry navigation, copy/export actions, starred blocks, rename, `All / Failed / Starred` filters, failure summaries, and visible-block export
 
 ### Workspace Controls
-- Header theme menu with `System`, `Dark`, and `Light` options
+- Header theme panel with explicit appearance modes plus built-in presets such as `Claude Canvas`
 - Refreshed About dialog with current surface, theme, tab count, version, commit ID, and active capabilities
 
 ### Context Menus

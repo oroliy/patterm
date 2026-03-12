@@ -68,7 +68,18 @@ test.describe('Patterm Electron Tests', () => {
         expect(newTheme).toBe(targetMode);
         await expect(themeBtn).toHaveAttribute(
             'title',
-            `Theme: ${targetMode === 'dark' ? 'Dark' : 'Light'}`
+            `Theme: ${targetMode === 'dark' ? 'Dark' : 'Light'} · Patterm Blue`
+        );
+
+        await themeBtn.click();
+        await expect(themeMenu).toBeVisible();
+        await themeMenu.locator('[data-theme-variant="claude"]').click();
+        await window.waitForTimeout(200);
+
+        await expect(rootHtml).toHaveAttribute('data-theme-variant', 'claude');
+        await expect(themeBtn).toHaveAttribute(
+            'title',
+            `Theme: ${targetMode === 'dark' ? 'Dark' : 'Light'} · Claude Canvas`
         );
     });
 });

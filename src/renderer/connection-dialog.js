@@ -3,15 +3,23 @@ const { ipcRenderer } = require('electron');
 // Initialize theme
 ipcRenderer.invoke('theme:get').then(originalTheme => {
     const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+    return Promise.all([
+        originalTheme,
+        ipcRenderer.invoke('theme:getVariant'),
+        systemDarkMode,
+    ]);
+}).then(([originalTheme, themeVariant, systemDarkMode]) => {
     let effectiveTheme = originalTheme;
     if (originalTheme === 'system') {
         effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
     }
     document.documentElement.setAttribute('data-theme', effectiveTheme);
+    document.documentElement.setAttribute('data-theme-variant', themeVariant || 'default');
 });
 
-ipcRenderer.on('theme:update', (event, effectiveTheme) => {
+ipcRenderer.on('theme:update', (event, effectiveTheme, themeVariant) => {
     document.documentElement.setAttribute('data-theme', effectiveTheme);
+    document.documentElement.setAttribute('data-theme-variant', themeVariant || 'default');
 });
 
 const tabNameInput = document.getElementById('tabName');

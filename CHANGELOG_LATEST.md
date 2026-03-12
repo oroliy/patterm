@@ -99,6 +99,7 @@
 - **Explicit Theme Modes**: Header theme control now exposes `System`, `Dark`, and `Light` instead of cycling blindly
 - **Refreshed About Dialog**: Simplified About panel now shows current surface, theme, tab count, and active workspace features
 - **Build Info In About**: About panel now includes the current app version and commit ID on both Web and Electron
+- **Theme Presets**: Added built-in theme presets with a richer theme panel and a warm `Claude Canvas` preset inspired by Anthropic Claude's editorial palette
 - **Status Bar Visual Design**: Full width, no padding gaps, transparent background
 - **Status Bar Positioning**: Fixed cut-off issue with proper CSS padding
 - **Real-time Rate Updates**: Status bar rates update immediately on data transfer

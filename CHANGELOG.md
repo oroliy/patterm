@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added per-transaction rename plus `All / Failed / Starred` filtering in the Blocks panel
 - Added failure summaries and visible-block export in the Blocks panel
 - Added an explicit header theme selector with `System`, `Dark`, and `Light` modes
+- Added built-in theme presets and a richer theme panel, including a warm `Claude Canvas` preset
 - Refreshed the About dialog to reflect the current product surface, theme, tab count, and active capabilities
 - Added version and commit ID metadata to the shared About dialog on both Web and Electron
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain

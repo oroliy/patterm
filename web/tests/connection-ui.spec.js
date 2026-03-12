@@ -192,13 +192,16 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(page.locator('#theme-menu')).toBeVisible();
         await page.locator('[data-theme-value="dark"]').click();
         await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-        await expect(page.locator('#theme-toggle-btn')).toHaveAttribute('title', 'Theme: Dark');
+        await page.locator('[data-theme-variant="claude"]').click();
+        await expect(page.locator('html')).toHaveAttribute('data-theme-variant', 'claude');
+        await expect(page.locator('#theme-toggle-btn')).toHaveAttribute('title', 'Theme: Dark · Claude Canvas');
 
         await page.click('#about-btn');
         const about = page.locator('.about-overlay');
         await expect(about).toBeVisible();
         await expect(about).toContainText('Cross-tab global search');
         await expect(about).toContainText('Web Serial');
+        await expect(about).toContainText('Dark · Claude Canvas');
         await about.locator('button:has-text("Close")').click();
         await expect(about).toBeHidden();
     });

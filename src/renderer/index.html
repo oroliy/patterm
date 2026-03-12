@@ -65,9 +65,55 @@
     </div>
 
     <div id="theme-menu" class="theme-menu" style="display: none;">
-        <button type="button" class="theme-menu-item active" data-theme-value="system">Follow System</button>
-        <button type="button" class="theme-menu-item" data-theme-value="dark">Dark</button>
-        <button type="button" class="theme-menu-item" data-theme-value="light">Light</button>
+        <div class="theme-menu-section">
+            <div class="theme-menu-heading">Appearance</div>
+            <div class="theme-mode-row">
+                <button type="button" class="theme-menu-item active" data-theme-value="system">System</button>
+                <button type="button" class="theme-menu-item" data-theme-value="dark">Dark</button>
+                <button type="button" class="theme-menu-item" data-theme-value="light">Light</button>
+            </div>
+        </div>
+        <div class="theme-menu-section">
+            <div class="theme-menu-heading">Themes</div>
+            <div class="theme-preset-grid">
+                <button type="button" class="theme-preset active" data-theme-variant="default">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#3b82f6;"></span>
+                        <span style="--swatch:#10b981;"></span>
+                        <span style="--swatch:#0f172a;"></span>
+                    </span>
+                    <span class="theme-preset-name">Patterm Blue</span>
+                    <span class="theme-preset-note">Cool glass / electric accent</span>
+                </button>
+                <button type="button" class="theme-preset" data-theme-variant="claude">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#c46a36;"></span>
+                        <span style="--swatch:#e9dcc6;"></span>
+                        <span style="--swatch:#2f241d;"></span>
+                    </span>
+                    <span class="theme-preset-name">Claude Canvas</span>
+                    <span class="theme-preset-note">Warm paper / terracotta / ink</span>
+                </button>
+                <button type="button" class="theme-preset" data-theme-variant="forest">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#1f7a5a;"></span>
+                        <span style="--swatch:#d4b483;"></span>
+                        <span style="--swatch:#11261f;"></span>
+                    </span>
+                    <span class="theme-preset-name">Verdant Lab</span>
+                    <span class="theme-preset-note">Moss glass / copper utility</span>
+                </button>
+                <button type="button" class="theme-preset" data-theme-variant="signal">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#7dff9b;"></span>
+                        <span style="--swatch:#f4b860;"></span>
+                        <span style="--swatch:#09120d;"></span>
+                    </span>
+                    <span class="theme-preset-name">Signal Grid</span>
+                    <span class="theme-preset-note">Phosphor green / amber / steel</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="command-palette" class="command-palette-overlay" style="display: none;">

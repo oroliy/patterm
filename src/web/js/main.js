@@ -39,7 +39,7 @@ class PattermApp extends AppShell {
     registerPlatformEventHandlers() {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             if (this.theme === 'system') {
-                applyTheme(this.theme);
+                applyTheme(this.theme, this.themeVariant || 'default');
             }
         });
     }

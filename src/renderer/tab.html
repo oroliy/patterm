@@ -384,19 +384,24 @@
     <script>
             const { ipcRenderer } = require('electron');
 
-            ipcRenderer.invoke('theme:get').then(originalTheme => {
+            Promise.all([
+                ipcRenderer.invoke('theme:get'),
+                ipcRenderer.invoke('theme:getVariant')
+            ]).then(([originalTheme, themeVariant]) => {
                 const systemDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
                 let effectiveTheme = originalTheme;
                 if (originalTheme === 'system') {
                     effectiveTheme = systemDarkMode.matches ? 'dark' : 'light';
                 }
                 document.documentElement.setAttribute('data-theme', effectiveTheme);
-                console.log(`[Tab] Initial theme set to: ${effectiveTheme}`);
+                document.documentElement.setAttribute('data-theme-variant', themeVariant || 'default');
+                console.log(`[Tab] Initial theme set to: ${effectiveTheme} / ${themeVariant || 'default'}`);
             });
 
-            ipcRenderer.on('theme:update', (event, effectiveTheme) => {
-                console.log(`[Tab] Received theme:update event: ${effectiveTheme}`);
+            ipcRenderer.on('theme:update', (event, effectiveTheme, themeVariant) => {
+                console.log(`[Tab] Received theme:update event: ${effectiveTheme} / ${themeVariant || 'default'}`);
                 document.documentElement.setAttribute('data-theme', effectiveTheme);
+                document.documentElement.setAttribute('data-theme-variant', themeVariant || 'default');
             });
 
             let tabId = null;

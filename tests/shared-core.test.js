@@ -102,10 +102,13 @@ describe('shared core modules', () => {
         const utils = require('../src/shared/js/utils.js');
 
         expect(theme.getEffectiveTheme('system')).toBe('dark');
-        theme.applyTheme('system');
+        theme.applyTheme('system', 'claude');
         expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
+        expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme-variant', 'claude');
         expect(theme.cycleTheme('system')).toBe('dark');
+        expect(theme.cycleThemeVariant('default')).toBe('claude');
         expect(theme.saveTheme('light')).toBe(true);
+        expect(theme.saveThemeVariant('signal')).toBe(true);
         localStorage.getItem.mockReturnValue('"stored"');
         expect(utils.loadFromLocalStorage('k', 'fallback')).toBe('stored');
         expect(theme.loadTheme()).toBe('"stored"');

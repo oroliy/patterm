@@ -60,6 +60,7 @@ jest.mock('../src/web/js/services/EventManager.js', () => ({
 
 jest.mock('../src/web/js/utils/helpers.js', () => ({
     applyTheme: jest.fn(),
+    getEffectiveTheme: jest.fn((theme) => theme === 'system' ? 'dark' : theme),
     saveToLocalStorage: jest.fn(),
     loadFromLocalStorage: jest.fn(() => 'system'),
 }));
@@ -162,7 +163,7 @@ describe('AppShell behavior', () => {
 
         expect(shell.theme).toBe('dark');
         expect(saveToLocalStorage).toHaveBeenCalledWith(STORAGE_KEYS.THEME, 'dark');
-        expect(applyTheme).toHaveBeenCalledWith('dark');
+        expect(applyTheme).toHaveBeenCalledWith('dark', 'default');
         expect(shell.persistSession).toHaveBeenCalled();
     });
 
@@ -176,8 +177,11 @@ describe('AppShell behavior', () => {
         shell.filterCommands('theme');
 
         expect(shell.selectedCommandIndex).toBe(0);
-        expect(shell.filteredCommands.map((command) => command.id)).toEqual(['toggle-theme']);
-        expect(shell.commandPaletteList.children.length).toBe(1);
+        expect(shell.filteredCommands.map((command) => command.id)).toEqual([
+            'toggle-theme',
+            'cycle-theme-preset',
+        ]);
+        expect(shell.commandPaletteList.children.length).toBe(2);
     });
 
     test('serializeSession and restoreSession round-trip tab metadata', () => {
@@ -602,10 +606,14 @@ describe('AppShell behavior', () => {
         const systemItem = new FakeElement();
         const darkItem = new FakeElement();
         const lightItem = new FakeElement();
+        const defaultPreset = new FakeElement();
+        const claudePreset = new FakeElement();
 
         systemItem.dataset.themeValue = 'system';
         darkItem.dataset.themeValue = 'dark';
         lightItem.dataset.themeValue = 'light';
+        defaultPreset.dataset.themeVariant = 'default';
+        claudePreset.dataset.themeVariant = 'claude';
 
         shell.themeToggleButton = {
             querySelector(selector) {
@@ -616,7 +624,12 @@ describe('AppShell behavior', () => {
             setAttribute: jest.fn(),
         };
         shell.themeMenu = new FakeElement();
-        shell.themeMenu.querySelectorAll = () => [systemItem, darkItem, lightItem];
+        shell.themeMenu.querySelectorAll = (selector) => {
+            if (selector === '.theme-preset') {
+                return [defaultPreset, claudePreset];
+            }
+            return [systemItem, darkItem, lightItem];
+        };
         shell.persistSession = jest.fn();
 
         shell.attachThemeMenuEventListeners();
@@ -626,12 +639,17 @@ describe('AppShell behavior', () => {
         darkItem.listeners.get('click')();
         expect(shell.theme).toBe('dark');
         expect(themeIcon.textContent).toBe('🌙');
-        expect(themeLabel.textContent).toBe('Dark');
+        expect(themeLabel.textContent).toBe('Dark · Blue');
 
         systemItem.listeners.get('click')();
         expect(shell.theme).toBe('system');
         expect(themeIcon.textContent).toBe('🖥️');
-        expect(themeLabel.textContent).toBe('System');
+        expect(themeLabel.textContent).toBe('System · Blue');
+
+        claudePreset.listeners.get('click')();
+        expect(shell.themeVariant).toBe('claude');
+        expect(themeIcon.textContent).toBe('✦');
+        expect(themeLabel.textContent).toBe('System · Claude');
 
         shell.tabManager.getAllTabs.mockReturnValue([{ id: 'tab-1' }, { id: 'tab-2' }]);
         shell.getAboutBuildInfo = jest.fn(() => Promise.resolve({
@@ -646,5 +664,6 @@ describe('AppShell behavior', () => {
         expect(document.body.children.at(-1).innerHTML).toContain('0.6.0');
         expect(document.body.children.at(-1).innerHTML).toContain('Commit');
         expect(document.body.children.at(-1).innerHTML).toContain('09b4000');
+        expect(shell.getAboutThemeLabel()).toBe('System · Claude Canvas');
     });
 });

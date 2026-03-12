@@ -10,10 +10,14 @@ export {
 
 export {
     getEffectiveTheme,
+    getThemeVariant,
     applyTheme,
     cycleTheme,
+    cycleThemeVariant,
     saveTheme,
-    loadTheme
+    loadTheme,
+    saveThemeVariant,
+    loadThemeVariant
 } from '../../../shared/js/theme.js';
 
 export {

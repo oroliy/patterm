@@ -1,8 +1,8 @@
 import { TabManager } from '../../../web/js/services/TabManager.js';
 import { TabComponent } from '../../../web/js/components/TabComponent.js';
 import { globalEvents } from '../../../web/js/services/EventManager.js';
-import { STORAGE_KEYS, THEME_OPTIONS } from '../../../web/js/utils/constants.js';
-import { applyTheme, saveToLocalStorage, loadFromLocalStorage } from '../../../web/js/utils/helpers.js';
+import { STORAGE_KEYS, THEME_OPTIONS, THEME_VARIANTS } from '../../../web/js/utils/constants.js';
+import { applyTheme, cycleThemeVariant, getEffectiveTheme, saveToLocalStorage, loadFromLocalStorage } from '../../../web/js/utils/helpers.js';
 import { filterTerminalEntries } from '../terminal/terminalEntries.js';
 import { WorkflowRunner } from '../workflows/workflows.js';
 
@@ -11,6 +11,7 @@ export class AppShell {
         this.tabManager = new TabManager();
         this.tabComponents = new Map();
         this.theme = loadFromLocalStorage(STORAGE_KEYS.THEME, 'system');
+        this.themeVariant = THEME_VARIANTS.find((item) => item.value === loadFromLocalStorage(STORAGE_KEYS.THEME_VARIANT, 'default'))?.value || 'default';
         this.contextMenu = null;
         this.themeMenu = null;
         this.themeToggleButton = null;
@@ -46,7 +47,7 @@ export class AppShell {
     }
 
     initTheme() {
-        applyTheme(this.theme);
+        applyTheme(this.theme, this.themeVariant);
     }
 
     registerEventHandlers() {
@@ -244,9 +245,18 @@ export class AppShell {
     setTheme(theme) {
         this.theme = theme;
         saveToLocalStorage(STORAGE_KEYS.THEME, this.theme);
-        applyTheme(this.theme);
+        applyTheme(this.theme, this.themeVariant);
         this.updateThemeButton();
-        this.onThemeChanged(this.theme);
+        this.onThemeChanged(this.theme, getEffectiveTheme(this.theme), this.themeVariant);
+        this.persistSession();
+    }
+
+    setThemeVariant(themeVariant) {
+        this.themeVariant = THEME_VARIANTS.find((item) => item.value === themeVariant)?.value || 'default';
+        saveToLocalStorage(STORAGE_KEYS.THEME_VARIANT, this.themeVariant);
+        applyTheme(this.theme, this.themeVariant);
+        this.updateThemeButton();
+        this.onThemeChanged(this.theme, getEffectiveTheme(this.theme), this.themeVariant);
         this.persistSession();
     }
 
@@ -339,7 +349,18 @@ export class AppShell {
                 }
 
                 this.setTheme(value);
-                this.hideThemeMenu();
+            });
+        });
+
+        const presetItems = this.themeMenu.querySelectorAll('.theme-preset');
+        presetItems.forEach((item) => {
+            item.addEventListener('click', () => {
+                const value = item.dataset.themeVariant;
+                if (!value) {
+                    return;
+                }
+
+                this.setThemeVariant(value);
             });
         });
     }
@@ -373,26 +394,47 @@ export class AppShell {
         }
     }
 
+    getThemeButtonIcon(theme, themeVariant) {
+        if (themeVariant === 'claude') {
+            return '✦';
+        }
+
+        if (themeVariant === 'forest') {
+            return '⬢';
+        }
+
+        if (themeVariant === 'signal') {
+            return '⌁';
+        }
+
+        if (theme === 'dark') {
+            return '🌙';
+        }
+
+        if (theme === 'light') {
+            return '☀️';
+        }
+
+        return '🖥️';
+    }
+
     updateThemeButton() {
         const currentOption = THEME_OPTIONS.find((option) => option.value === this.theme) || THEME_OPTIONS[0];
+        const currentVariant = THEME_VARIANTS.find((option) => option.value === this.themeVariant) || THEME_VARIANTS[0];
         const icon = this.themeToggleButton?.querySelector('.theme-icon');
         const label = this.themeToggleButton?.querySelector('.theme-label');
 
         if (icon) {
-            icon.textContent = currentOption.value === 'dark'
-                ? '🌙'
-                : currentOption.value === 'light'
-                    ? '☀️'
-                    : '🖥️';
+            icon.textContent = this.getThemeButtonIcon(currentOption.value, currentVariant.value);
         }
 
         if (label) {
-            label.textContent = currentOption.label;
+            label.textContent = `${currentOption.label} · ${currentVariant.shortLabel || currentVariant.label}`;
         }
 
         if (this.themeToggleButton) {
-            this.themeToggleButton.title = `Theme: ${currentOption.label}`;
-            this.themeToggleButton.setAttribute('aria-label', `Theme: ${currentOption.label}`);
+            this.themeToggleButton.title = `Theme: ${currentOption.label} · ${currentVariant.label}`;
+            this.themeToggleButton.setAttribute('aria-label', `Theme: ${currentOption.label} · ${currentVariant.label}`);
         }
 
         if (!this.themeMenu) {
@@ -402,6 +444,11 @@ export class AppShell {
         const items = this.themeMenu.querySelectorAll('.theme-menu-item');
         items.forEach((item) => {
             item.classList.toggle('active', item.dataset.themeValue === this.theme);
+        });
+
+        const presetItems = this.themeMenu.querySelectorAll('.theme-preset');
+        presetItems.forEach((item) => {
+            item.classList.toggle('active', item.dataset.themeVariant === this.themeVariant);
         });
     }
 
@@ -507,6 +554,12 @@ export class AppShell {
                 label: 'Toggle Theme',
                 keywords: ['theme', 'dark', 'light', 'appearance'],
                 run: () => this.toggleTheme()
+            },
+            {
+                id: 'cycle-theme-preset',
+                label: 'Cycle Theme Preset',
+                keywords: ['theme', 'preset', 'claude', 'forest', 'signal', 'palette'],
+                run: () => this.setThemeVariant(cycleThemeVariant(this.themeVariant))
             },
             {
                 id: 'search-current-tab',
@@ -976,7 +1029,9 @@ export class AppShell {
     }
 
     getAboutThemeLabel() {
-        return THEME_OPTIONS.find((option) => option.value === this.theme)?.label || 'System';
+        const mode = THEME_OPTIONS.find((option) => option.value === this.theme)?.label || 'System';
+        const preset = THEME_VARIANTS.find((option) => option.value === this.themeVariant)?.label || 'Patterm Blue';
+        return `${mode} · ${preset}`;
     }
 
     getInitialAboutBuildInfo() {

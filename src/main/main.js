@@ -9,6 +9,7 @@ let windowManager;
 let serialServiceManager;
 let debugWindow;
 let currentTheme = 'system';
+let currentThemeVariant = 'default';
 let tabCounter = 0;
 
 if (process.env.CI === 'true' || process.env.PATTERM_E2E === '1') {
@@ -185,15 +186,20 @@ function setupIpcHandlers() {
         debugWindow.log(message, level);
     });
 
-    ipcMain.handle('theme:changed', async (event, originalTheme, effectiveTheme) => {
+    ipcMain.handle('theme:changed', async (event, originalTheme, effectiveTheme, themeVariant) => {
         currentTheme = originalTheme;
+        currentThemeVariant = themeVariant || currentThemeVariant;
         nativeTheme.themeSource = originalTheme;
-        windowManager.broadcastToTabs('theme:update', effectiveTheme);
+        windowManager.broadcastToTabs('theme:update', effectiveTheme, currentThemeVariant);
         return true;
     });
 
     ipcMain.handle('theme:get', async () => {
         return currentTheme;
+    });
+
+    ipcMain.handle('theme:getVariant', async () => {
+        return currentThemeVariant;
     });
 }
 

@@ -34,6 +34,8 @@
 
 .app-name {
     font-size: 16px;
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
 }
 
 .app-version {
@@ -424,29 +426,116 @@
     top: 62px;
     right: 16px;
     display: none;
-    min-width: 168px;
-    background: var(--bg-secondary);
+    width: min(360px, calc(100vw - 32px));
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 28%),
+        var(--bg-secondary);
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-md);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    border-radius: 18px;
+    box-shadow: var(--surface-shadow);
     overflow: hidden;
     z-index: 1150;
+    padding: 14px;
+    backdrop-filter: blur(18px);
+}
+
+.theme-menu-section + .theme-menu-section {
+    margin-top: 14px;
+}
+
+.theme-menu-heading {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.theme-mode-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
 }
 
 .theme-menu-item {
     width: 100%;
-    background: transparent;
-    border: none;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
     color: var(--text-primary);
     cursor: pointer;
     font-size: 13px;
-    padding: 10px 14px;
-    text-align: left;
+    font-weight: 600;
+    padding: 10px 12px;
+    text-align: center;
+    border-radius: 999px;
+    transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .theme-menu-item:hover,
 .theme-menu-item.active {
-    background: rgba(86, 156, 214, 0.14);
+    background: var(--glass-highlight);
+    border-color: color-mix(in srgb, var(--accent-primary) 36%, var(--glass-border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-primary) 22%, transparent);
+}
+
+.theme-preset-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.theme-preset {
+    width: 100%;
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 55%),
+        rgba(255, 255, 255, 0.02);
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.theme-preset:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--accent-primary) 28%, var(--glass-border));
+}
+
+.theme-preset.active {
+    border-color: color-mix(in srgb, var(--accent-primary) 42%, var(--glass-border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-primary) 18%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 16%, transparent), transparent 58%),
+        rgba(255, 255, 255, 0.02);
+}
+
+.theme-preset-swatches {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.theme-preset-swatches span {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--swatch);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.theme-preset-name {
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.01em;
+}
+
+.theme-preset-note {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 /* About Dialog */

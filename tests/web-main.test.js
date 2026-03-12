@@ -239,7 +239,7 @@ describe('web main app bootstrap', () => {
 
         app.registerPlatformEventHandlers();
         mediaListener.mock.calls[0][1]();
-        expect(applyTheme).toHaveBeenCalledWith('system');
+        expect(applyTheme).toHaveBeenCalledWith('system', 'default');
 
         await app.showConnectionDialog();
         expect(app.createConnection).toHaveBeenCalledWith(
