@@ -49,24 +49,25 @@ ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm install
 ```
 src/
 ├── main/                    # Electron Main Process
-│   ├── main.js             # Entry point, IPC handlers (serial:*, window:*, log:*, app:*)
-│   ├── window-manager.js   # BrowserView-based multi-tab management
+│   ├── main.js             # Entry point, IPC handlers (serial:*, log:*, app:*, dialog:*)
+│   ├── window-manager.js   # Main window lifecycle helper
 │   └── debug-window.js     # Debug console manager
-├── renderer/               # Renderer Process (UI)
-│   ├── index.html/main.js  # Main window shell
-│   ├── tab.html            # Template for tab content (each tab = separate BrowserView)
-│   ├── connection-dialog.* # Connection setup modal
-│   ├── debug-window.html   # Debug console UI
-│   └── theme-manager.js    # Theme switching logic
+├── renderer/               # Desktop renderer shell
+│   ├── index.html/main.js  # Main window shell + shared AppShell bootstrap
+│   ├── connection-dialog.* # Electron connection dialog bridge
+│   ├── services/           # IPC-backed serial provider
+│   └── debug-window.html   # Debug console UI
 ├── services/               # Business Logic (loaded by main process)
 │   ├── serial-service.js           # Handles single serial port operations
 │   └── serial-service-manager.js   # Manages multiple SerialService instances
+├── shared/                 # Shared AppShell, terminal, workflow, theme, and serial abstractions
+├── generated/              # Generated build metadata
 └── web/                    # Web Version Source (PWA)
     ├── js/
-    │   ├── main.js        # Web app entry point
-    │   ├── components/    # UI components (ConnectionDialog, TabComponent, TerminalComponent)
-    │   ├── services/      # Web Serial API services (SerialService, TabManager, LogManager)
-    │   └── utils/         # Utilities (constants, helpers)
+        │   ├── main.js        # Web app entry point
+        │   ├── components/    # UI components (ConnectionDialog, TabComponent, TerminalComponent)
+        │   ├── services/      # Web Serial API services (SerialService, TabManager, LogManager)
+        │   └── utils/         # Utilities (constants, helpers)
     └── css/
         └── styles.css
 web/                        # Web Version Entry
@@ -78,10 +79,10 @@ web/                        # Web Version Entry
 
 ### Key Architectural Patterns
 
-**1. Multi-Tab via BrowserView**
-- Each tab is a separate `BrowserView` instance with independent serial connection
-- `WindowManager` handles tab lifecycle: creation, switching, cleanup
-- Critical: Always call `webContents.destroy()` when removing views to prevent memory leaks
+**1. Shared Renderer Shell**
+- Desktop and Web both run through the shared `AppShell`, `TabComponent`, and `TerminalComponent`
+- Electron-specific behavior is injected at the renderer edge through IPC-backed providers and save handlers
+- `WindowManager` only owns the desktop main window lifecycle now
 
 **2. Service-Oriented Design**
 - `SerialService`: Encapsulates single port operations (open, close, write, event emission)
@@ -97,10 +98,10 @@ web/                        # Web Version Entry
 
 **Key IPC Handlers**:
 - `serial:*`: open, close, write, listPorts, disconnect, reconnect
-- `window:*`: newTab, closeTab, switchTab, showTabContextMenu, showTerminalContextMenu, saveTabOutput, getTabContent
-- `tab:*`: init, rxActivity, txActivity, updateRates, scrollStateChanged
+- `dialog:*`: native file save dialog
 - `debug:*`: log (to debug window)
-- `theme:*`: get, set, toggle
+- `theme:*`: get, getVariant, changed
+- `app:*`: version and build metadata
 
 **4. Debug Console**
 - Separate debug window with real-time logging
@@ -109,8 +110,8 @@ web/                        # Web Version Entry
 - Clear logs with `Ctrl/Cmd + L`
 
 **5. Context Menus**
-- Tab right-click menu: Close Tab, Disconnect/Reconnect, Clear Screen, Save Output, Start/Stop Logging, Copy All Text, Rename Tab, Show Connection Settings
-- Terminal right-click menu: Clear Screen, Save Output, Copy All Text
+- Context menus are rendered in the shared renderer UI instead of being delegated to legacy BrowserView tabs
+- Save/export actions must route through environment-specific handlers so Electron uses native dialogs and Web uses browser downloads
 
 **6. Status Bar (Per Tab)**
 - Connection status with visual indicator (●/○)

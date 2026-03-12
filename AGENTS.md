@@ -110,21 +110,23 @@ npm run dist:linux    # Build for Linux
 src/
 ├── main/           # Electron main process
 │   ├── main.js     # Application entry point
-│   ├── window-manager.js  # Multi-window and tab management
+│   ├── window-manager.js  # Main window lifecycle helper
 │   └── debug-window.js     # Debug console management
-├── renderer/       # UI/frontend code for Electron
+├── renderer/       # Electron renderer shell
 │   ├── index.html  # Main window HTML
-│   ├── main.js     # Main window JavaScript
-│   ├── tab.html    # Tab content HTML
-│   ├── connection-dialog.html  # Connection dialog HTML
-│   ├── connection-dialog.js    # Connection dialog logic
+│   ├── main.js     # Desktop renderer bootstrap
+│   ├── connection-dialog.js    # Electron connection dialog bridge
+│   ├── ElectronConnectionDialog.js  # Desktop dialog wrapper
+│   ├── services/   # IPC-backed serial provider
 │   ├── debug-window.html     # Debug console HTML
-│   ├── about.html  # About dialog HTML
-│   ├── theme-manager.js  # Theme switching logic
-│   └── styles.css  # Global CSS styles
+│   └── styles.css  # Desktop shell styles
 ├── services/       # Business logic for Electron
 │   ├── serial-service.js  # Single serial port handling
 │   └── serial-service-manager.js  # Multi-connection management
+├── shared/         # Shared desktop/web code
+│   ├── css/        # Shared CSS
+│   └── js/         # Shared app shell, terminal, theme, serial helpers
+├── generated/      # Generated build metadata
 └── web/            # Web version source code (PWA)
     ├── js/
     │   ├── main.js  # Web app entry point
@@ -158,11 +160,10 @@ scripts/            # Testing and utility scripts
 - Code should be self-documenting through clear naming
 - Use meaningful variable/function names instead of explaining logic
 
-### BrowserView Management
-- Use BrowserView for tab content in multi-window apps
-- Always set bounds after adding view
-- Remove previous view before switching
-- Clean up views on tab close: `view.webContents.destroy()`
+### Renderer Shell Management
+- Desktop and Web share the same renderer shell through `AppShell`
+- Keep Electron-specific behavior at the renderer edge through IPC-backed providers and save handlers
+- `window-manager.js` should only own main-window lifecycle concerns
 
 ### Serial Port Specifics
 - Always check `port.isOpen` before operations

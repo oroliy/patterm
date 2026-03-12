@@ -27,7 +27,7 @@
 - Automatic tab creation with connection dialog
 - Custom tab names with port display
 - Connection status indicators (● for connected, ○ for disconnected)
-- Tab switching with dedicated BrowserView management
+- Desktop and Web now share the same tab and terminal shell
 - Web session restore reopens disconnected tabs and keeps per-tab filter state after reload
 - Per-tab search result count, next/previous navigation, and active match highlighting
 - Global search jumps across tabs to the exact matching terminal entry
@@ -205,27 +205,28 @@ patterm/
 ├── src/
 │   ├── main/           # Electron main process
 │   │   ├── main.js     # Application entry point
-│   │   └── window-manager.js  # Multi-window and tab management
-│   ├── renderer/       # UI/frontend code
+│   │   └── window-manager.js  # Main window lifecycle helper
+│   ├── renderer/       # Electron renderer shell
 │   │   ├── index.html  # Main window HTML
-│   │   ├── main.js     # Main window JavaScript
-│   │   ├── tab.html    # Tab content HTML
-│   │   ├── connection-dialog.*  # Connection dialog
+│   │   ├── main.js     # Desktop renderer bootstrap
+│   │   ├── connection-dialog.js  # Electron connection dialog bridge
+│   │   ├── ElectronConnectionDialog.js  # Desktop dialog wrapper over shared UI
+│   │   ├── services/   # Electron IPC-backed serial provider
 │   │   ├── debug-window.html  # Debug console UI
-│   │   └── theme-manager.js  # Theme switching logic
+│   │   └── styles.css  # Desktop shell styles
 │   ├── services/       # Business logic
 │   │   ├── serial-service.js  # Single serial port operations
 │   │   └── serial-service-manager.js  # Multi-connection management
 │   ├── shared/         # Shared code (desktop + web)
 │   │   ├── css/        # Common CSS variables and reset
 │   │   └── js/         # Shared utilities, app shell, and serial abstractions
+│   ├── generated/      # Generated build metadata
 │   └── web/            # Web version source (PWA)
 │       ├── js/         # Web app entry and components
 │       │   ├── components/  # UI components (ConnectionDialog, Tab, Terminal)
 │       │   ├── services/  # Web Serial API services
 │       │   └── utils/     # Utility modules
-│       ├── css/        # Web-specific styles
-│       └── public/      # PWA assets (manifest, icons, service worker)
+│       └── css/        # Web-specific styles
 ├── web/                # Web version entry and build config
 │   ├── index.html     # Web app HTML
 │   ├── vite.config.js  # Vite build configuration

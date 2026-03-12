@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Maintenance
+- Removed obsolete Electron renderer assets that no longer participate in the active shared AppShell path
+- Aligned the repository structure docs with the current shared desktop/web renderer architecture
+
 ### Changed
 - Added shared serial provider abstractions for Web and Electron renderer flows
 - Normalized serial config defaults through a shared helper before tab creation and connection

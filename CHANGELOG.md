@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Removed obsolete Electron renderer assets that no longer participate in the active shared AppShell path
+- Aligned repository documentation with the current desktop architecture, generated build metadata, and Web/Electron directory layout
+
 ## [0.7.0] - 2026-03-12
 
 ### Changed

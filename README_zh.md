@@ -25,7 +25,7 @@
 - 连接对话框自动创建标签页
 - 支持自定义标签页名称并显示端口
 - 连接状态指示器（● 已连接，○ 未连接）
-- 标签页切换使用专用 BrowserView 管理
+- Electron 与 Web 现在共用同一套标签页与终端壳层
 - Web 端支持会话恢复：刷新后可恢复断开状态的标签页及每个标签页的过滤器状态
 - 每个标签页支持搜索结果计数、上一条/下一条导航，以及当前匹配高亮
 - 支持跨标签页全局搜索，并跳转到精确匹配的终端条目
@@ -169,22 +169,30 @@ patterm/
 ├── src/
 │   ├── main/           # Electron 主进程
 │   │   ├── main.js     # 应用入口点
-│   │   └── window-manager.js  # 多窗口和标签页管理
-│   ├── renderer/       # UI/前端代码
+│   │   └── window-manager.js  # 主窗口生命周期辅助器
+│   ├── renderer/       # Electron 渲染层壳层
 │   │   ├── index.html  # 主窗口 HTML
-│   │   ├── main.js     # 主窗口 JavaScript
-│   │   ├── tab.html    # 标签页内容 HTML
-│   │   ├── connection-dialog.html  # 连接对话框 HTML
-│   │   ├── connection-dialog.js    # 连接对话框逻辑
-│   │   ├── about.html  # 关于对话框 HTML
-│   │   └── styles.css  # 全局 CSS 样式
+│   │   ├── main.js     # 桌面端渲染入口
+│   │   ├── connection-dialog.js    # Electron 连接对话框桥接
+│   │   ├── ElectronConnectionDialog.js  # 基于共享 UI 的桌面端对话框封装
+│   │   ├── services/   # 基于 IPC 的 Electron 串口提供者
+│   │   ├── debug-window.html  # 调试控制台 UI
+│   │   └── styles.css  # 桌面端壳层样式
 │   ├── services/       # 业务逻辑
 │   │   ├── serial-service.js  # 单个串口处理
 │   │   └── serial-service-manager.js  # 多连接管理
 │   ├── shared/         # 双端共享代码
 │   │   ├── css/        # 公共样式变量与基础样式
 │   │   └── js/         # 公共工具、应用壳层与串口提供者抽象
-│   └── public/         # 静态资源
+│   ├── generated/      # 构建时生成的元数据
+│   └── web/            # Web 端源码（PWA）
+│       ├── js/         # Web 端入口与组件
+│       └── css/        # Web 端样式
+├── web/                # Web 端入口与构建配置
+│   ├── index.html      # Web 页面入口
+│   ├── vite.config.js  # Vite 配置
+│   ├── public/         # PWA 静态资源
+│   └── tests/          # Playwright E2E
 ├── tests/              # Jest 测试套件
 ├── .github/workflows/  # CI/CD 配置
 ├── package.json
