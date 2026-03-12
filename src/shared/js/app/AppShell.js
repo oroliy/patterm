@@ -4,6 +4,7 @@ import { globalEvents } from '../../../web/js/services/EventManager.js';
 import { STORAGE_KEYS, THEME_OPTIONS } from '../../../web/js/utils/constants.js';
 import { applyTheme, saveToLocalStorage, loadFromLocalStorage } from '../../../web/js/utils/helpers.js';
 import { filterTerminalEntries } from '../terminal/terminalEntries.js';
+import { WorkflowRunner } from '../workflows/workflows.js';
 
 export class AppShell {
     constructor() {
@@ -25,6 +26,7 @@ export class AppShell {
         this.globalSearchResults = [];
         this.globalSearchType = 'all';
         this.selectedGlobalSearchIndex = 0;
+        this.workflowRunners = new Map();
     }
 
     async init() {
@@ -94,7 +96,10 @@ export class AppShell {
             onClear: (tabId) => this.clearTerminal(tabId),
             onContextMenu: (tabId, event) => this.showTabContextMenu(tabId, event),
             onFiltersChange: (tabId, filterState) => this.onTabFiltersChange(tabId, filterState),
-            onTriggerRulesChange: (tabId, triggerRules) => this.onTabTriggerRulesChange(tabId, triggerRules)
+            onTriggerRulesChange: (tabId, triggerRules) => this.onTabTriggerRulesChange(tabId, triggerRules),
+            onWorkflowDefinitionsChange: (tabId, workflows) => this.onTabWorkflowDefinitionsChange(tabId, workflows),
+            onWorkflowRun: (tabId, workflowId) => this.startWorkflow(tabId, workflowId),
+            onWorkflowStop: (tabId) => this.stopWorkflow(tabId)
         });
 
         component.create();
@@ -119,6 +124,7 @@ export class AppShell {
     }
 
     onTabDisconnected({ tabId }) {
+        this.stopWorkflow(tabId, 'Port disconnected');
         const component = this.tabComponents.get(tabId);
         if (component) {
             component.updateConnectionState(false);
@@ -126,6 +132,7 @@ export class AppShell {
     }
 
     onTabClosed({ tabId }) {
+        this.stopWorkflow(tabId, 'Tab closed');
         const component = this.tabComponents.get(tabId);
         if (component) {
             component.destroy();
@@ -143,15 +150,17 @@ export class AppShell {
     onTabData({ tabId, data }) {
         const component = this.tabComponents.get(tabId);
         if (component) {
-            component.terminal.appendData(data, 'rx');
+            const entries = component.terminal.appendData(data, 'rx');
             component.updateStatusBar();
+            this.handleWorkflowEntries(tabId, entries);
         }
     }
 
     onTabError({ tabId, error }) {
         const component = this.tabComponents.get(tabId);
         if (component) {
-            component.terminal.appendError(error.message || String(error));
+            const entry = component.terminal.appendError(error.message || String(error));
+            this.handleWorkflowEntries(tabId, entry ? [entry] : []);
         }
     }
 
@@ -172,6 +181,19 @@ export class AppShell {
         this.persistSession();
     }
 
+    onTabWorkflowDefinitionsChange(tabId, workflows) {
+        const normalizedWorkflows = this.tabManager.updateWorkflows(tabId, workflows);
+        const component = this.tabComponents.get(tabId);
+        if (component) {
+            if (component.tabState) {
+                component.tabState.workflows = normalizedWorkflows;
+            }
+            component.renderWorkflows?.();
+            component.renderWorkflowRuntime?.();
+        }
+        this.persistSession();
+    }
+
     async sendData(tabId, data) {
         const tab = this.tabManager.getTab(tabId);
         if (!tab || !tab.service) {
@@ -180,13 +202,14 @@ export class AppShell {
 
         try {
             await tab.service.write(data);
-            tab.terminal.appendTransmitted(data);
+            const entry = tab.terminal.appendTransmitted(data);
             this.tabManager.onDataSent(tabId, data);
 
             const component = this.tabComponents.get(tabId);
             if (component) {
                 component.updateStatusBar();
             }
+            this.handleWorkflowEntries(tabId, entry ? [entry] : []);
         } catch (error) {
             tab.terminal.appendError(error.message);
         }
@@ -491,6 +514,16 @@ export class AppShell {
                 label: 'Search All Tabs',
                 keywords: ['search', 'find', 'global', 'tabs'],
                 run: () => this.openGlobalSearch()
+            },
+            {
+                id: 'toggle-workflows',
+                label: 'Open Workflows',
+                keywords: ['workflow', 'macro', 'automation', 'steps'],
+                run: () => {
+                    const activeTab = this.tabManager.getActiveTab();
+                    const component = activeTab ? this.tabComponents.get(activeTab.id) : null;
+                    component?.toggleWorkflowPanel(true);
+                }
             },
             {
                 id: 'clear-active-terminal',
@@ -799,7 +832,8 @@ export class AppShell {
                 createdTime: tab.createdTime,
                 autoScroll: tab.autoScroll,
                 filterState: tab.filterState,
-                triggerRules: tab.triggerRules
+                triggerRules: tab.triggerRules,
+                workflows: tab.workflows
             });
         });
 
@@ -821,6 +855,12 @@ export class AppShell {
             },
             triggerRules: Array.isArray(tab.triggerRules)
                 ? tab.triggerRules.map((rule) => ({ ...rule }))
+                : [],
+            workflows: Array.isArray(tab.workflows)
+                ? tab.workflows.map((workflow) => ({
+                    ...workflow,
+                    steps: workflow.steps.map((step) => ({ ...step }))
+                }))
                 : []
         }));
 
@@ -883,6 +923,7 @@ export class AppShell {
                     <span class="about-chip">Command palette</span>
                     <span class="about-chip">Session restore</span>
                     <span class="about-chip">Read-only trigger highlights</span>
+                    <span class="about-chip">Workflow runner MVP</span>
                 </div>
                 <div class="about-actions">
                     <a href="https://github.com/oroliy/patterm" target="_blank" rel="noreferrer">Project Home</a>
@@ -907,5 +948,75 @@ export class AppShell {
 
     async showConnectionDialog() {
         throw new Error('showConnectionDialog() must be implemented by subclasses');
+    }
+
+    handleWorkflowEntries(tabId, entries = []) {
+        if (!Array.isArray(entries) || entries.length === 0) {
+            return;
+        }
+
+        const runner = this.workflowRunners.get(tabId);
+        if (!runner) {
+            return;
+        }
+
+        entries.forEach((entry) => {
+            runner.handleEntry(entry);
+        });
+    }
+
+    startWorkflow(tabId, workflowId) {
+        const tab = this.tabManager.getTab(tabId);
+        if (!tab) {
+            return null;
+        }
+
+        const workflow = (tab.workflows || []).find((item) => item.id === workflowId);
+        if (!workflow) {
+            return null;
+        }
+
+        if (!tab.connected || !tab.service) {
+            const runtime = this.tabManager.updateWorkflowRuntime(tabId, {
+                workflowId,
+                status: 'failed',
+                currentStepIndex: -1,
+                completedStepIds: [],
+                error: 'Port is not connected'
+            });
+            this.tabComponents.get(tabId)?.updateWorkflowRuntime(runtime);
+            return runtime;
+        }
+
+        this.stopWorkflow(tabId, 'Replaced by a new workflow run');
+
+        const runner = new WorkflowRunner(workflow, {
+            send: async (payload) => this.sendData(tabId, payload),
+            onStateChange: (runtime) => {
+                const nextRuntime = this.tabManager.updateWorkflowRuntime(tabId, runtime);
+                this.tabComponents.get(tabId)?.updateWorkflowRuntime(nextRuntime);
+                if (runtime.status && runtime.status !== 'running') {
+                    this.workflowRunners.delete(tabId);
+                }
+            }
+        });
+
+        this.workflowRunners.set(tabId, runner);
+        runner.start();
+
+        return runner.getState();
+    }
+
+    stopWorkflow(tabId, reason = 'Stopped') {
+        const runner = this.workflowRunners.get(tabId);
+        if (!runner) {
+            return null;
+        }
+
+        const runtime = runner.stop(reason);
+        this.workflowRunners.delete(tabId);
+        const nextRuntime = this.tabManager.updateWorkflowRuntime(tabId, runtime);
+        this.tabComponents.get(tabId)?.updateWorkflowRuntime(nextRuntime);
+        return nextRuntime;
     }
 }

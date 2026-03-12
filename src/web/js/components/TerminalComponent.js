@@ -35,7 +35,7 @@ export class TerminalComponent {
 
     appendData(data, type = 'rx') {
         const normalizedText = this.normalizeNewlines(this.normalizeData(data));
-        this.processBufferedData(normalizedText, type);
+        return this.processBufferedData(normalizedText, type);
     }
 
     normalizeData(data) {
@@ -51,10 +51,16 @@ export class TerminalComponent {
         const combinedText = currentBuffer + text;
         const parts = combinedText.split('\n');
         this.dataBuffers.set(type, parts.pop() || '');
+        const appendedEntries = [];
 
         parts.forEach((part) => {
-            this.appendLine(part, type, true);
+            const entry = this.appendLine(part, type, true);
+            if (entry) {
+                appendedEntries.push(entry);
+            }
         });
+
+        return appendedEntries;
     }
 
     appendLine(text, type, hasNewline = true) {
@@ -72,10 +78,11 @@ export class TerminalComponent {
 
         if (this.hasActiveFilters()) {
             this.renderEntries();
-            return;
+            return entry;
         }
 
         this.appendEntry(entry, hasNewline, false);
+        return entry;
     }
 
     appendEntry(entry, hasNewline = true, isCurrentMatch = false) {
@@ -201,21 +208,21 @@ export class TerminalComponent {
     }
 
     appendText(text) {
-        this.appendData(text, 'rx');
+        return this.appendData(text, 'rx');
     }
 
     appendTransmitted(data) {
         const text = this.normalizeData(data);
-        this.appendLine(`> ${text}`, 'tx', true);
+        return this.appendLine(`> ${text}`, 'tx', true);
     }
 
     appendError(error) {
         const text = error instanceof Error ? error.message : String(error);
-        this.appendLine(`Error: ${text}`, 'error');
+        return this.appendLine(`Error: ${text}`, 'error');
     }
 
     appendInfo(message) {
-        this.appendLine(`[INFO] ${message}`, 'info');
+        return this.appendLine(`[INFO] ${message}`, 'info');
     }
 
     clear() {

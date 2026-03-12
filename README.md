@@ -32,6 +32,7 @@
 - Per-tab search result count, next/previous navigation, and active match highlighting
 - Global search jumps across tabs to the exact matching terminal entry
 - Per-tab read-only trigger rules can mark matching `RX`, `TX`, or `Error` lines with highlight badges
+- Per-tab workflow runner can execute a simple `send -> wait for match` automation flow
 - Header theme control supports explicit `System`, `Dark`, and `Light` selection
 
 ### Complete UART Configuration
@@ -56,6 +57,7 @@
 - Search result count with previous/next navigation and highlighted active match
 - Cross-tab global search with `All`, `RX`, `TX`, and `Error` scopes
 - Read-only trigger highlights with per-tab rules for `Contains` and `Regex` matching
+- Workflow MVP with per-tab definitions, timeout handling, and run/stop controls
 
 ### Workspace Controls
 - Header theme menu with `System`, `Dark`, and `Light` options

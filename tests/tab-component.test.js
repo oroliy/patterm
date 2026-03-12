@@ -217,7 +217,7 @@ describe('TabComponent', () => {
         expect(badge.classList.contains('active')).toBe(false);
     });
 
-    test('updateStatusBar, updatePortName, setName, filters, trigger rules, and destroy update the view', () => {
+    test('updateStatusBar, updatePortName, setName, filters, triggers, workflows, and destroy update the view', () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const tabName = new FakeElement();
         const searchInput = new FakeElement();
@@ -230,6 +230,17 @@ describe('TabComponent', () => {
         const triggerList = new FakeElement();
         const triggerEmpty = new FakeElement();
         const triggerPanel = new FakeElement();
+        const workflowName = new FakeElement();
+        const workflowSend = new FakeElement();
+        const workflowWait = new FakeElement();
+        const workflowMatchType = new FakeElement();
+        const workflowScope = new FakeElement();
+        const workflowTimeout = new FakeElement();
+        const workflowList = new FakeElement();
+        const workflowEmpty = new FakeElement();
+        const workflowPanel = new FakeElement();
+        const workflowStatus = new FakeElement();
+        const workflowCurrentStep = new FakeElement();
         const rxBytes = new FakeElement();
         const txBytes = new FakeElement();
         const duration = new FakeElement();
@@ -254,6 +265,21 @@ describe('TabComponent', () => {
                 search: 'boom',
                 type: 'error',
             },
+            workflows: [{
+                id: 'workflow-1',
+                name: 'Handshake',
+                steps: [
+                    { id: 'step-1', type: 'send', payload: 'AT' },
+                    { id: 'step-2', type: 'waitForMatch', pattern: 'Echo: AT', matchType: 'contains', scope: 'rx', timeoutMs: 2000 },
+                ],
+            }],
+            workflowRuntime: {
+                workflowId: 'workflow-1',
+                status: 'running',
+                currentStepIndex: 1,
+                completedStepIds: ['step-1'],
+                error: null,
+            },
         });
 
         tab.element = {
@@ -268,6 +294,17 @@ describe('TabComponent', () => {
                 if (selector === '.terminal-trigger-list') return triggerList;
                 if (selector === '.terminal-trigger-empty') return triggerEmpty;
                 if (selector === '.terminal-trigger-panel') return triggerPanel;
+                if (selector === '.terminal-workflow-name-input') return workflowName;
+                if (selector === '.terminal-workflow-send-input') return workflowSend;
+                if (selector === '.terminal-workflow-wait-input') return workflowWait;
+                if (selector === '.terminal-workflow-match-type') return workflowMatchType;
+                if (selector === '.terminal-workflow-scope') return workflowScope;
+                if (selector === '.terminal-workflow-timeout-input') return workflowTimeout;
+                if (selector === '.terminal-workflow-list') return workflowList;
+                if (selector === '.terminal-workflow-empty') return workflowEmpty;
+                if (selector === '.terminal-workflow-panel') return workflowPanel;
+                if (selector === '.terminal-workflow-status') return workflowStatus;
+                if (selector === '.terminal-workflow-current-step') return workflowCurrentStep;
                 return null;
             },
             querySelectorAll(selector) {
@@ -326,6 +363,10 @@ describe('TabComponent', () => {
         expect(errorButton.classList.contains('active')).toBe(true);
         expect(allButton.classList.contains('active')).toBe(false);
         expect(tab.terminal.setFilters).toHaveBeenCalledWith({ search: 'boom', type: 'error' });
+        expect(workflowList.children).toHaveLength(1);
+        expect(workflowEmpty.style.display).toBe('none');
+        expect(workflowStatus.textContent).toBe('Running');
+        expect(workflowCurrentStep.textContent).toBe('Waiting for Echo: AT');
         expect(tab.terminal.setTriggerRules).toHaveBeenCalledWith(tab.tabState.triggerRules || []);
         expect(triggerList.children).toHaveLength(1);
         expect(triggerEmpty.style.display).toBe('none');
@@ -365,12 +406,40 @@ describe('TabComponent', () => {
         tab.toggleTriggerPanel(false);
         expect(triggerPanel.hidden).toBe(true);
 
+        workflowName.value = 'Boot';
+        workflowSend.value = 'ATZ';
+        workflowWait.value = 'READY';
+        workflowMatchType.value = 'contains';
+        workflowScope.value = 'rx';
+        workflowTimeout.value = '1500';
+        tab.options.onWorkflowDefinitionsChange = jest.fn();
+        tab.addWorkflowFromInputs();
+        expect(tab.options.onWorkflowDefinitionsChange).toHaveBeenCalledWith('tab-1', expect.any(Array));
+        expect(workflowSend.value).toBe('');
+        expect(workflowWait.value).toBe('');
+        expect(workflowList.children.length).toBeGreaterThan(1);
+
+        tab.updateWorkflowRuntime({
+            workflowId: 'workflow-1',
+            status: 'failed',
+            currentStepIndex: 1,
+            completedStepIds: ['step-1'],
+            error: 'Timeout waiting for Echo: AT',
+        });
+        expect(workflowStatus.textContent).toBe('Failed');
+        expect(workflowCurrentStep.textContent).toBe('Timeout waiting for Echo: AT');
+
+        tab.toggleWorkflowPanel(true);
+        expect(workflowPanel.hidden).toBe(false);
+        tab.toggleWorkflowPanel(false);
+        expect(workflowPanel.hidden).toBe(true);
+
         tab.destroy();
         expect(tab.element.remove).toHaveBeenCalled();
         expect(tab.tabElement.remove).toHaveBeenCalled();
     });
 
-    test('attachEventListeners routes close, switch, send, clear, search, nav, trigger, and context menu actions', async () => {
+    test('attachEventListeners routes close, switch, send, clear, search, nav, workflow, trigger, and context menu actions', async () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const closeBtn = new FakeElement();
         const sendBtn = new FakeElement();
@@ -382,6 +451,9 @@ describe('TabComponent', () => {
         const nextButton = new FakeElement();
         const allButton = new FakeElement();
         const txButton = new FakeElement();
+        const workflowButton = new FakeElement();
+        const workflowCloseButton = new FakeElement();
+        const workflowAddButton = new FakeElement();
         const triggerButton = new FakeElement();
         const triggerCloseButton = new FakeElement();
         const triggerAddButton = new FakeElement();
@@ -424,6 +496,9 @@ describe('TabComponent', () => {
                 if (selector === '.clear-btn') return clearBtn;
                 if (selector === '.terminal-display') return terminalDisplay;
                 if (selector === '.terminal-search-input') return searchInput;
+                if (selector === '.terminal-workflow-btn') return workflowButton;
+                if (selector === '.terminal-workflow-close-btn') return workflowCloseButton;
+                if (selector === '.terminal-workflow-add-btn') return workflowAddButton;
                 if (selector === '.terminal-trigger-btn') return triggerButton;
                 if (selector === '.terminal-trigger-close-btn') return triggerCloseButton;
                 if (selector === '.terminal-trigger-add-btn') return triggerAddButton;
@@ -437,6 +512,8 @@ describe('TabComponent', () => {
         };
         tab.getFilterState = jest.fn(() => ({ search: 'AT', type: 'tx' }));
         tab.updateSearchState = jest.fn();
+        tab.toggleWorkflowPanel = jest.fn();
+        tab.addWorkflowFromInputs = jest.fn();
         tab.toggleTriggerPanel = jest.fn();
         tab.addTriggerRuleFromInputs = jest.fn();
         tab.terminal = {
@@ -460,6 +537,9 @@ describe('TabComponent', () => {
         prevButton.listeners.get('click')();
         nextButton.listeners.get('click')();
         txButton.listeners.get('click')();
+        workflowButton.listeners.get('click')();
+        workflowCloseButton.listeners.get('click')();
+        workflowAddButton.listeners.get('click')();
         triggerButton.listeners.get('click')();
         triggerCloseButton.listeners.get('click')();
         triggerAddButton.listeners.get('click')();
@@ -475,6 +555,9 @@ describe('TabComponent', () => {
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(-1);
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(1);
         expect(onFiltersChange).toHaveBeenCalledWith('tab-1', { search: 'AT', type: 'tx' });
+        expect(tab.toggleWorkflowPanel).toHaveBeenCalledWith();
+        expect(tab.toggleWorkflowPanel).toHaveBeenCalledWith(false);
+        expect(tab.addWorkflowFromInputs).toHaveBeenCalled();
         expect(tab.toggleTriggerPanel).toHaveBeenCalledWith();
         expect(tab.toggleTriggerPanel).toHaveBeenCalledWith(false);
         expect(tab.addTriggerRuleFromInputs).toHaveBeenCalled();

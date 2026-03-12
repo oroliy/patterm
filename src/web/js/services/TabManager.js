@@ -1,6 +1,7 @@
 import { globalEvents } from './EventManager.js';
 import { debug } from '../utils/debug.js';
 import { normalizeTriggerRules } from '../../../shared/js/terminal/triggerRules.js';
+import { normalizeWorkflowDefinitions } from '../../../shared/js/workflows/workflows.js';
 
 export class TabManager {
     constructor() {
@@ -46,7 +47,15 @@ export class TabManager {
                 search: options.filterState?.search || '',
                 type: options.filterState?.type || 'all'
             },
-            triggerRules: normalizeTriggerRules(options.triggerRules)
+            triggerRules: normalizeTriggerRules(options.triggerRules),
+            workflows: normalizeWorkflowDefinitions(options.workflows),
+            workflowRuntime: {
+                workflowId: null,
+                status: 'idle',
+                currentStepIndex: -1,
+                completedStepIds: [],
+                error: null
+            }
         };
 
         this.tabs.set(tabId, tabState);
@@ -256,7 +265,15 @@ export class TabManager {
             filterState: {
                 ...tab.filterState
             },
-            triggerRules: tab.triggerRules.map((rule) => ({ ...rule }))
+            triggerRules: tab.triggerRules.map((rule) => ({ ...rule })),
+            workflows: tab.workflows.map((workflow) => ({
+                ...workflow,
+                steps: workflow.steps.map((step) => ({ ...step }))
+            })),
+            workflowRuntime: {
+                ...tab.workflowRuntime,
+                completedStepIds: [...(tab.workflowRuntime?.completedStepIds || [])]
+            }
         };
     }
 
@@ -280,6 +297,37 @@ export class TabManager {
 
         tab.triggerRules = normalizeTriggerRules(triggerRules);
         return tab.triggerRules.map((rule) => ({ ...rule }));
+    }
+
+    updateWorkflows(tabId, workflows = []) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) {
+            return [];
+        }
+
+        tab.workflows = normalizeWorkflowDefinitions(workflows);
+        return tab.workflows.map((workflow) => ({
+            ...workflow,
+            steps: workflow.steps.map((step) => ({ ...step }))
+        }));
+    }
+
+    updateWorkflowRuntime(tabId, workflowRuntime = {}) {
+        const tab = this.tabs.get(tabId);
+        if (!tab) {
+            return null;
+        }
+
+        tab.workflowRuntime = {
+            ...tab.workflowRuntime,
+            ...workflowRuntime,
+            completedStepIds: [...(workflowRuntime.completedStepIds || tab.workflowRuntime.completedStepIds || [])]
+        };
+
+        return {
+            ...tab.workflowRuntime,
+            completedStepIds: [...(tab.workflowRuntime.completedStepIds || [])]
+        };
     }
 
     getByteLength(data) {

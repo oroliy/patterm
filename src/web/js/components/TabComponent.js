@@ -56,7 +56,37 @@ export class TabComponent {
                         <button type="button" class="terminal-filter-btn" data-filter-type="tx">TX</button>
                         <button type="button" class="terminal-filter-btn" data-filter-type="error">Error</button>
                     </div>
+                    <button type="button" class="terminal-workflow-btn btn">Workflows</button>
                     <button type="button" class="terminal-trigger-btn btn">Triggers</button>
+                </div>
+                <div class="terminal-workflow-panel" hidden>
+                    <div class="terminal-workflow-panel-header">
+                        <strong>Workflows</strong>
+                        <button type="button" class="terminal-workflow-close-btn" aria-label="Close workflows">×</button>
+                    </div>
+                    <div class="terminal-workflow-runtime">
+                        <span class="terminal-workflow-status" data-workflow-status="idle">Idle</span>
+                        <span class="terminal-workflow-current-step">No workflow running</span>
+                    </div>
+                    <div class="terminal-workflow-form">
+                        <input type="text" class="terminal-workflow-name-input" placeholder="Workflow name">
+                        <input type="text" class="terminal-workflow-send-input" placeholder="Send payload">
+                        <input type="text" class="terminal-workflow-wait-input" placeholder="Wait for match">
+                        <select class="terminal-workflow-match-type" aria-label="Workflow match type">
+                            <option value="contains">Contains</option>
+                            <option value="regex">Regex</option>
+                        </select>
+                        <select class="terminal-workflow-scope" aria-label="Workflow scope">
+                            <option value="rx">RX</option>
+                            <option value="tx">TX</option>
+                            <option value="error">Error</option>
+                            <option value="all">All</option>
+                        </select>
+                        <input type="number" class="terminal-workflow-timeout-input" min="100" step="100" value="2000" placeholder="Timeout ms">
+                        <button type="button" class="terminal-workflow-add-btn btn btn-primary">Add</button>
+                    </div>
+                    <div class="terminal-workflow-empty">No workflows yet</div>
+                    <div class="terminal-workflow-list"></div>
                 </div>
                 <div class="terminal-trigger-panel" hidden>
                     <div class="terminal-trigger-panel-header">
@@ -259,6 +289,15 @@ export class TabComponent {
 
         const triggerAddButton = this.element.querySelector('.terminal-trigger-add-btn');
         triggerAddButton?.addEventListener('click', () => this.addTriggerRuleFromInputs());
+
+        const workflowButton = this.element.querySelector('.terminal-workflow-btn');
+        workflowButton?.addEventListener('click', () => this.toggleWorkflowPanel());
+
+        const workflowCloseButton = this.element.querySelector('.terminal-workflow-close-btn');
+        workflowCloseButton?.addEventListener('click', () => this.toggleWorkflowPanel(false));
+
+        const workflowAddButton = this.element.querySelector('.terminal-workflow-add-btn');
+        workflowAddButton?.addEventListener('click', () => this.addWorkflowFromInputs());
     }
 
     async handleSend() {
@@ -396,6 +435,202 @@ export class TabComponent {
         return this.terminal.getTriggerRules();
     }
 
+    getWorkflows() {
+        return this.tabState.workflows || [];
+    }
+
+    getWorkflowRuntime() {
+        return this.tabState.workflowRuntime || {
+            workflowId: null,
+            status: 'idle',
+            currentStepIndex: -1,
+            completedStepIds: [],
+            error: null
+        };
+    }
+
+    toggleWorkflowPanel(force = null) {
+        const panel = this.element?.querySelector('.terminal-workflow-panel');
+        if (!panel) {
+            return;
+        }
+
+        const shouldShow = force === null ? panel.hidden : force;
+        panel.hidden = !shouldShow;
+    }
+
+    addWorkflowFromInputs() {
+        const nameInput = this.element?.querySelector('.terminal-workflow-name-input');
+        const sendInput = this.element?.querySelector('.terminal-workflow-send-input');
+        const waitInput = this.element?.querySelector('.terminal-workflow-wait-input');
+        const matchTypeInput = this.element?.querySelector('.terminal-workflow-match-type');
+        const scopeInput = this.element?.querySelector('.terminal-workflow-scope');
+        const timeoutInput = this.element?.querySelector('.terminal-workflow-timeout-input');
+
+        const payload = sendInput?.value?.trim() || '';
+        const pattern = waitInput?.value?.trim() || '';
+        if (!payload || !pattern) {
+            (payload ? waitInput : sendInput)?.focus?.();
+            return;
+        }
+
+        const workflows = [
+            ...this.getWorkflows(),
+            {
+                name: nameInput?.value?.trim() || `Workflow ${this.getWorkflows().length + 1}`,
+                steps: [
+                    {
+                        type: 'send',
+                        payload
+                    },
+                    {
+                        type: 'waitForMatch',
+                        pattern,
+                        matchType: matchTypeInput?.value || 'contains',
+                        scope: scopeInput?.value || 'rx',
+                        timeoutMs: Number.parseInt(timeoutInput?.value || '2000', 10) || 2000
+                    }
+                ]
+            }
+        ];
+
+        this.tabState.workflows = workflows;
+        this.options.onWorkflowDefinitionsChange?.(this.tabState.id, workflows);
+        this.renderWorkflows();
+
+        if (nameInput) {
+            nameInput.value = '';
+        }
+        if (sendInput) {
+            sendInput.value = '';
+        }
+        if (waitInput) {
+            waitInput.value = '';
+            waitInput.focus();
+        }
+    }
+
+    removeWorkflow(workflowId) {
+        const workflows = this.getWorkflows().filter((workflow) => workflow.id !== workflowId);
+        this.tabState.workflows = workflows;
+        this.options.onWorkflowDefinitionsChange?.(this.tabState.id, workflows);
+        this.renderWorkflows();
+    }
+
+    renderWorkflows() {
+        const list = this.element?.querySelector('.terminal-workflow-list');
+        const emptyState = this.element?.querySelector('.terminal-workflow-empty');
+        if (!list || !emptyState) {
+            return;
+        }
+
+        const workflows = this.getWorkflows();
+        list.innerHTML = '';
+        emptyState.style.display = workflows.length === 0 ? 'block' : 'none';
+
+        workflows.forEach((workflow) => {
+            const item = document.createElement('div');
+            item.className = 'terminal-workflow-item';
+
+            const name = document.createElement('span');
+            name.className = 'terminal-workflow-item-name';
+            name.textContent = workflow.name;
+
+            const summary = document.createElement('span');
+            summary.className = 'terminal-workflow-item-summary';
+            summary.textContent = workflow.steps.map((step) => {
+                if (step.type === 'send') {
+                    return `Send "${step.payload}"`;
+                }
+                return `Wait ${step.pattern}`;
+            }).join(' -> ');
+
+            const actions = document.createElement('div');
+            actions.className = 'terminal-workflow-item-actions';
+
+            const runButton = document.createElement('button');
+            runButton.type = 'button';
+            runButton.className = 'terminal-workflow-run-btn';
+            runButton.dataset.workflowId = workflow.id;
+            runButton.textContent = 'Run';
+            runButton.addEventListener('click', () => this.options.onWorkflowRun?.(this.tabState.id, workflow.id));
+
+            const stopButton = document.createElement('button');
+            stopButton.type = 'button';
+            stopButton.className = 'terminal-workflow-stop-btn';
+            stopButton.dataset.workflowId = workflow.id;
+            stopButton.textContent = 'Stop';
+            stopButton.addEventListener('click', () => this.options.onWorkflowStop?.(this.tabState.id));
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'terminal-workflow-remove-btn';
+            removeButton.dataset.workflowId = workflow.id;
+            removeButton.textContent = 'Remove';
+            removeButton.addEventListener('click', () => this.removeWorkflow(workflow.id));
+
+            actions.appendChild(runButton);
+            actions.appendChild(stopButton);
+            actions.appendChild(removeButton);
+            item.appendChild(name);
+            item.appendChild(summary);
+            item.appendChild(actions);
+            list.appendChild(item);
+        });
+    }
+
+    renderWorkflowRuntime() {
+        const runtime = this.getWorkflowRuntime();
+        const status = this.element?.querySelector('.terminal-workflow-status');
+        const currentStep = this.element?.querySelector('.terminal-workflow-current-step');
+        if (!status || !currentStep) {
+            return;
+        }
+
+        status.dataset.workflowStatus = runtime.status || 'idle';
+        status.textContent = String(runtime.status || 'idle').replace(/^\w/, (letter) => letter.toUpperCase());
+
+        const workflow = this.getWorkflows().find((item) => item.id === runtime.workflowId);
+        const step = workflow?.steps?.[runtime.currentStepIndex];
+
+        if (runtime.error) {
+            currentStep.textContent = runtime.error;
+            return;
+        }
+
+        if (!workflow) {
+            currentStep.textContent = 'No workflow running';
+            return;
+        }
+
+        if (runtime.status === 'passed') {
+            currentStep.textContent = `${workflow.name} complete`;
+            return;
+        }
+
+        if (runtime.status === 'stopped') {
+            currentStep.textContent = runtime.error || `${workflow.name} stopped`;
+            return;
+        }
+
+        if (!step) {
+            currentStep.textContent = `${workflow.name} complete`;
+            return;
+        }
+
+        currentStep.textContent = step.type === 'send'
+            ? `Sending "${step.payload}"`
+            : `Waiting for ${step.pattern}`;
+    }
+
+    updateWorkflowRuntime(workflowRuntime) {
+        this.tabState.workflowRuntime = {
+            ...this.getWorkflowRuntime(),
+            ...workflowRuntime
+        };
+        this.renderWorkflowRuntime();
+    }
+
     toggleTriggerPanel(force = null) {
         const panel = this.element?.querySelector('.terminal-trigger-panel');
         if (!panel) {
@@ -498,6 +733,8 @@ export class TabComponent {
         });
 
         this.terminal.setFilters(filterState);
+        this.renderWorkflowRuntime();
+        this.renderWorkflows();
         this.terminal.setTriggerRules(this.tabState.triggerRules || []);
         this.renderTriggerRules();
         this.updateSearchState();

@@ -921,6 +921,11 @@
     white-space: nowrap;
 }
 
+.terminal-workflow-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .terminal-filter-btn {
     background: var(--glass-surface);
     border: 1px solid var(--glass-border);
@@ -1003,6 +1008,145 @@
 
 .terminal-trigger-panel[hidden] {
     display: none;
+}
+
+.terminal-workflow-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+}
+
+.terminal-workflow-panel[hidden] {
+    display: none;
+}
+
+.terminal-workflow-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.terminal-workflow-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.terminal-workflow-runtime {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.terminal-workflow-status {
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+}
+
+.terminal-workflow-status[data-workflow-status="running"] {
+    background: rgba(86, 156, 214, 0.18);
+    border-color: rgba(86, 156, 214, 0.45);
+}
+
+.terminal-workflow-status[data-workflow-status="passed"] {
+    background: rgba(46, 204, 113, 0.18);
+    border-color: rgba(46, 204, 113, 0.45);
+}
+
+.terminal-workflow-status[data-workflow-status="failed"],
+.terminal-workflow-status[data-workflow-status="stopped"] {
+    background: rgba(240, 84, 84, 0.16);
+    border-color: rgba(240, 84, 84, 0.45);
+}
+
+.terminal-workflow-current-step {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.terminal-workflow-form {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(140px, 1.2fr) minmax(140px, 1.2fr) minmax(160px, 1.5fr) repeat(2, minmax(100px, 1fr)) minmax(100px, 0.8fr) auto;
+}
+
+.terminal-workflow-form input,
+.terminal-workflow-form select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 10px;
+}
+
+.terminal-workflow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.terminal-workflow-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.terminal-workflow-item {
+    display: grid;
+    grid-template-columns: minmax(0, 180px) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+}
+
+.terminal-workflow-item-name {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.terminal-workflow-item-summary {
+    color: var(--text-secondary);
+    font-size: 12px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.terminal-workflow-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.terminal-workflow-run-btn,
+.terminal-workflow-stop-btn,
+.terminal-workflow-remove-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 10px;
 }
 
 .terminal-trigger-panel-header {
@@ -1175,6 +1319,14 @@
     }
 
     .terminal-trigger-item {
+        grid-template-columns: 1fr;
+    }
+
+    .terminal-workflow-form {
+        grid-template-columns: 1fr;
+    }
+
+    .terminal-workflow-item {
         grid-template-columns: 1fr;
     }
 }

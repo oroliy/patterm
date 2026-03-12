@@ -25,12 +25,22 @@ describe('TabManager', () => {
             id: 'tab-3',
             filterState: { search: 'Echo', type: 'tx' },
             triggerRules: [{ pattern: 'READY', scope: 'rx', highlight: 'success' }],
+            workflows: [{
+                name: 'Handshake',
+                steps: [
+                    { type: 'send', payload: 'AT' },
+                    { type: 'waitForMatch', pattern: 'Echo: AT', scope: 'rx', timeoutMs: 2000 },
+                ],
+            }],
         });
         const next = manager.createTab({ baudRate: 9600 }, 'Next');
 
         expect(restored.filterState).toEqual({ search: 'Echo', type: 'tx' });
         expect(restored.triggerRules).toEqual([
             expect.objectContaining({ pattern: 'READY', scope: 'rx', highlight: 'success' }),
+        ]);
+        expect(restored.workflows).toEqual([
+            expect.objectContaining({ name: 'Handshake' }),
         ]);
         expect(next.id).toBe('tab-4');
         expect(globalEvents.emit).toHaveBeenCalledWith('tab:created', restored);
@@ -118,6 +128,24 @@ describe('TabManager', () => {
         expect(manager.getTabState(tab.id).triggerRules).toEqual([
             expect.objectContaining({ pattern: 'ERROR', scope: 'error', highlight: 'danger' }),
         ]);
+        expect(manager.updateWorkflows(tab.id, [{
+            name: 'Boot',
+            steps: [
+                { type: 'send', payload: 'ATZ' },
+                { type: 'waitForMatch', pattern: 'READY', scope: 'rx', timeoutMs: 1500 },
+            ],
+        }])).toEqual([
+            expect.objectContaining({ name: 'Boot' }),
+        ]);
+        expect(manager.updateWorkflowRuntime(tab.id, {
+            workflowId: 'workflow-1',
+            status: 'running',
+            currentStepIndex: 1,
+            completedStepIds: ['step-1'],
+        })).toEqual(expect.objectContaining({
+            status: 'running',
+            completedStepIds: ['step-1'],
+        }));
 
         tab.terminal = { clear: jest.fn() };
         manager.clearTerminal(tab.id);

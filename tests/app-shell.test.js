@@ -7,6 +7,12 @@ jest.mock('../src/web/js/services/TabManager.js', () => {
         closeTab: jest.fn(),
         clearTerminal: jest.fn(),
         updateFilterState: jest.fn(),
+        updateTriggerRules: jest.fn((tabId, rules) => rules),
+        updateWorkflows: jest.fn((tabId, workflows) => workflows.map((workflow, index) => ({
+            id: workflow.id || `workflow-${index}`,
+            ...workflow,
+        }))),
+        updateWorkflowRuntime: jest.fn((tabId, runtime) => runtime),
         getTab: jest.fn(() => null),
         getTabConfig: jest.fn(() => null),
         onDataSent: jest.fn(),
@@ -39,6 +45,10 @@ jest.mock('../src/web/js/components/TabComponent.js', () => ({
             copyAll: jest.fn(() => Promise.resolve()),
         },
         getFilterState: jest.fn(() => ({ search: '', type: 'all' })),
+        renderWorkflows: jest.fn(),
+        renderWorkflowRuntime: jest.fn(),
+        updateWorkflowRuntime: jest.fn(),
+        toggleWorkflowPanel: jest.fn(),
     })),
 }));
 
@@ -185,6 +195,14 @@ describe('AppShell behavior', () => {
                 createdTime,
                 filterState: { search: 'Echo', type: 'tx' },
                 triggerRules: [{ id: 'trigger-1', pattern: 'READY', scope: 'rx', highlight: 'success' }],
+                workflows: [{
+                    id: 'workflow-1',
+                    name: 'Handshake',
+                    steps: [
+                        { id: 'step-1', type: 'send', payload: 'AT' },
+                        { id: 'step-2', type: 'waitForMatch', pattern: 'Echo: AT', matchType: 'contains', scope: 'rx', timeoutMs: 2000 },
+                    ],
+                }],
             },
         ]);
 
@@ -201,6 +219,14 @@ describe('AppShell behavior', () => {
                     createdTime: createdTime.toISOString(),
                     filterState: { search: 'Echo', type: 'tx' },
                     triggerRules: [{ id: 'trigger-1', pattern: 'READY', scope: 'rx', highlight: 'success' }],
+                    workflows: [{
+                        id: 'workflow-1',
+                        name: 'Handshake',
+                        steps: [
+                            { id: 'step-1', type: 'send', payload: 'AT' },
+                            { id: 'step-2', type: 'waitForMatch', pattern: 'Echo: AT', matchType: 'contains', scope: 'rx', timeoutMs: 2000 },
+                        ],
+                    }],
                 },
             ],
         });
@@ -218,6 +244,14 @@ describe('AppShell behavior', () => {
                 createdTime: createdTime.toISOString(),
                 filterState: { search: 'Echo', type: 'tx' },
                 triggerRules: [{ id: 'trigger-1', pattern: 'READY', scope: 'rx', highlight: 'success' }],
+                workflows: [{
+                    id: 'workflow-1',
+                    name: 'Handshake',
+                    steps: [
+                        { id: 'step-1', type: 'send', payload: 'AT' },
+                        { id: 'step-2', type: 'waitForMatch', pattern: 'Echo: AT', matchType: 'contains', scope: 'rx', timeoutMs: 2000 },
+                    ],
+                }],
             })
         );
         expect(shell.tabManager.switchTab).toHaveBeenCalledWith('tab-1');
@@ -439,6 +473,68 @@ describe('AppShell behavior', () => {
         shell.commandPaletteCommands.find((command) => command.id === 'close-active-tab').run();
         expect(shell.tabManager.clearTerminal).not.toHaveBeenCalled();
         expect(shell.tabManager.closeTab).not.toHaveBeenCalled();
+    });
+
+    test('workflow definitions, runner lifecycle, and command palette workflow action are wired through', async () => {
+        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const shell = new AppShell();
+        const component = {
+            updateWorkflowRuntime: jest.fn(),
+            renderWorkflows: jest.fn(),
+            renderWorkflowRuntime: jest.fn(),
+            toggleWorkflowPanel: jest.fn(),
+            terminal: {
+                appendData: jest.fn(() => [{ id: 'entry-1', text: 'Echo: AT', type: 'rx' }]),
+                appendTransmitted: jest.fn(() => ({ id: 'entry-2', text: '> AT', type: 'tx' })),
+                appendError: jest.fn(() => ({ id: 'entry-3', text: 'Error: boom', type: 'error' })),
+            },
+            updateStatusBar: jest.fn(),
+        };
+        const tab = {
+            id: 'tab-1',
+            connected: true,
+            service: { write: jest.fn(() => Promise.resolve()) },
+            terminal: component.terminal,
+            workflows: [{
+                id: 'workflow-1',
+                name: 'Handshake',
+                steps: [
+                    { id: 'step-1', type: 'send', payload: 'AT' },
+                    { id: 'step-2', type: 'waitForMatch', pattern: 'Echo: AT', matchType: 'contains', scope: 'rx', timeoutMs: 2000 },
+                ],
+            }],
+        };
+
+        shell.tabComponents.set('tab-1', component);
+        shell.tabManager.getTab.mockReturnValue(tab);
+        shell.tabManager.getActiveTab.mockReturnValue({ id: 'tab-1' });
+        shell.tabManager.updateWorkflows.mockImplementation((tabId, workflows) => workflows.map((workflow) => ({
+            id: workflow.id || 'workflow-2',
+            ...workflow,
+        })));
+
+        shell.onTabWorkflowDefinitionsChange('tab-1', [{ name: 'Boot', steps: [{ type: 'send', payload: 'AT' }] }]);
+        expect(shell.tabManager.updateWorkflows).toHaveBeenCalledWith('tab-1', expect.any(Array));
+        expect(component.renderWorkflows).toHaveBeenCalled();
+
+        shell.registerCommandPaletteCommands();
+        shell.commandPaletteCommands.find((command) => command.id === 'toggle-workflows').run();
+        expect(component.toggleWorkflowPanel).toHaveBeenCalledWith(true);
+
+        shell.startWorkflow('tab-1', 'workflow-1');
+        await Promise.resolve();
+        shell.onTabData({ tabId: 'tab-1', data: 'Echo: AT\n' });
+        expect(component.updateWorkflowRuntime).toHaveBeenCalled();
+
+        shell.stopWorkflow('tab-1');
+        expect(shell.workflowRunners.has('tab-1')).toBe(false);
+
+        tab.connected = false;
+        shell.startWorkflow('tab-1', 'workflow-1');
+        expect(shell.tabManager.updateWorkflowRuntime).toHaveBeenCalledWith('tab-1', expect.objectContaining({
+            status: 'failed',
+            error: 'Port is not connected',
+        }));
     });
 
     test('global search finds entries across tabs and jumps to the selected result', () => {

@@ -289,4 +289,31 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(activeTab.locator('.terminal-display .terminal-trigger-hit')).toContainText('Echo: AT');
         await expect(activeTab.locator('.terminal-display .terminal-trigger-badge')).toHaveText('Echo:');
     });
+
+    test('runs a simple workflow and waits for a matching response', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        const activeTab = page.locator('.tab-content').filter({ has: page.locator('.input-field') }).first();
+        await activeTab.locator('.terminal-workflow-btn').click();
+        await expect(activeTab.locator('.terminal-workflow-panel')).toBeVisible();
+
+        await activeTab.locator('.terminal-workflow-name-input').fill('Handshake');
+        await activeTab.locator('.terminal-workflow-send-input').fill('AT');
+        await activeTab.locator('.terminal-workflow-wait-input').fill('Echo: AT');
+        await activeTab.locator('.terminal-workflow-timeout-input').fill('2000');
+        await activeTab.locator('.terminal-workflow-add-btn').click();
+
+        await expect(activeTab.locator('.terminal-workflow-item')).toHaveCount(1);
+        await activeTab.locator('.terminal-workflow-run-btn').click();
+
+        await expect(activeTab.locator('.terminal-workflow-status')).toHaveText('Passed');
+        await expect(activeTab.locator('.terminal-workflow-current-step')).toContainText('complete');
+        await expect(activeTab.locator('.terminal-display')).toContainText('> AT');
+        await expect(activeTab.locator('.terminal-display')).toContainText('Echo: AT');
+    });
 });
