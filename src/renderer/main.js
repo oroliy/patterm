@@ -5,13 +5,127 @@ import { ElectronSerialProvider } from './services/IpcSerialProvider.js';
 
 const { ipcRenderer } = window.require('electron');
 
-class PattermElectronApp extends AppShell {
+export class ElectronTabShell {
+    constructor(tabState, options = {}) {
+        this.tabState = tabState;
+        this.options = options;
+        this.tabElement = null;
+        this.element = null;
+    }
+
+    create() {
+        const tabElement = document.createElement('div');
+        tabElement.className = 'tab';
+        tabElement.dataset.tabId = this.tabState.id;
+        tabElement.innerHTML = `
+            <span class="tab-status ${this.tabState.connected ? 'connected' : ''}"></span>
+            <span class="tab-name">${this.escapeHtml(this.tabState.name)}</span>
+            <button class="tab-close-btn" aria-label="Close tab">×</button>
+        `;
+
+        tabElement.querySelector('.tab-close-btn')?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            this.options.onClose?.(this.tabState.id);
+        });
+        tabElement.addEventListener('click', () => {
+            this.options.onSwitch?.(this.tabState.id);
+        });
+
+        this.tabElement = tabElement;
+        return this;
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    setActive(active) {
+        this.tabElement?.classList.toggle('active', active);
+    }
+
+    setName(name) {
+        this.tabState.name = name;
+        const label = this.tabElement?.querySelector('.tab-name');
+        if (label) {
+            label.textContent = name;
+        }
+    }
+
+    updateConnectionState(connected) {
+        this.tabState.connected = connected;
+        this.tabElement?.querySelector('.tab-status')?.classList.toggle('connected', connected);
+    }
+
+    updatePortName() {
+    }
+
+    updateStatusBar() {
+    }
+
+    updateRates() {
+    }
+
+    focusSearch() {
+    }
+
+    renderWorkflows() {
+    }
+
+    renderWorkflowRuntime() {
+    }
+
+    updateWorkflowRuntime() {
+    }
+
+    destroy() {
+        this.tabElement?.remove();
+        this.element?.remove?.();
+    }
+}
+
+export class PattermElectronApp extends AppShell {
+    onTabCreated(tabState) {
+        const component = new ElectronTabShell(tabState, {
+            onClose: (tabId) => this.closeTab(tabId),
+            onSwitch: (tabId) => this.switchTab(tabId),
+        }).create();
+
+        this.tabComponents.set(tabState.id, component);
+        document.getElementById('tabs-container').appendChild(component.tabElement);
+
+        this.switchTab(tabState.id);
+        this.updateEmptyState();
+        this.persistSession();
+    }
+
+    onTabData() {
+    }
+
+    onTabError() {
+    }
+
+    onTabRatesUpdated() {
+    }
+
     registerPlatformEventHandlers() {
         ipcRenderer.on('menu:new-connection', () => this.showConnectionDialog());
         ipcRenderer.on('theme:set', (event, theme) => {
             this.theme = theme;
             this.initTheme();
         });
+    }
+
+    registerCommandPaletteCommands() {
+        super.registerCommandPaletteCommands();
+        this.commandPaletteCommands = this.commandPaletteCommands.filter((command) => ![
+            'search-current-tab',
+            'search-all-tabs',
+            'toggle-transactions',
+            'toggle-workflows',
+            'clear-active-terminal',
+        ].includes(command.id));
     }
 
     async showConnectionDialog() {
@@ -40,8 +154,6 @@ class PattermElectronApp extends AppShell {
 
     getTabContextMenuItems(tabId) {
         return [
-            { label: 'Clear Screen', action: () => this.clearTerminal(tabId) },
-            { label: 'Copy All Text', action: () => this.copyTabContent(tabId) },
             { label: 'Disconnect/Reconnect', action: () => this.toggleConnection(tabId) }
         ];
     }

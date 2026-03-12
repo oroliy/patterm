@@ -15,6 +15,7 @@ export class TerminalComponent {
         this.terminal = container;
         this.onSearchStateChange = options.onSearchStateChange || null;
         this.onTransactionsChange = options.onTransactionsChange || null;
+        this.saveContent = typeof options.saveContent === 'function' ? options.saveContent : null;
         this.autoScroll = options.autoScroll ?? true;
         this.showTimestamps = options.showTimestamps ?? true;
         this.transactionWindowMs = options.transactionWindowMs ?? 1000;
@@ -320,16 +321,7 @@ export class TerminalComponent {
         const content = this.getContent();
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const fileName = defaultFileName || `terminal-${timestamp}.txt`;
-
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        return this.persistContent(content, fileName);
     }
 
     applyStyles(styles) {
@@ -482,17 +474,7 @@ export class TerminalComponent {
             .slice(0, 40)
             .toLowerCase() || 'transaction';
         const fileName = defaultFileName || `${slug}-${timestamp}.txt`;
-
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        return true;
+        return this.persistContent(content, fileName);
     }
 
     async exportTransactions(transactionIds = [], defaultFileName = null) {
@@ -503,6 +485,14 @@ export class TerminalComponent {
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
         const fileName = defaultFileName || `transactions-${timestamp}.txt`;
+        return this.persistContent(content, fileName);
+    }
+
+    async persistContent(content, fileName) {
+        if (this.saveContent) {
+            return this.saveContent(content, fileName);
+        }
+
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

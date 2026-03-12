@@ -452,6 +452,22 @@ describe('terminal search UI behavior', () => {
         expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
 
+    test('TerminalComponent delegates saving to the injected save handler when provided', async () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const saveContent = jest.fn(() => Promise.resolve(true));
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+            saveContent,
+        });
+
+        terminal.appendTransmitted('AT');
+
+        await expect(terminal.saveToFile('terminal.txt')).resolves.toBe(true);
+        expect(saveContent).toHaveBeenCalledWith(expect.stringContaining('> AT'), 'terminal.txt');
+        expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+    });
+
     test('TabComponent updates search count and restores filter state', () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const searchCount = new FakeElement('span');
