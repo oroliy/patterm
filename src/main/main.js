@@ -1,9 +1,9 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, nativeTheme } = require('electron');
-const { execFileSync } = require('child_process');
 const path = require('path');
 const WindowManager = require('./window-manager');
 const SerialServiceManager = require('../services/serial-service-manager');
 const DebugWindow = require('./debug-window');
+const buildMeta = require('../generated/build-meta.json');
 
 let windowManager;
 let serialServiceManager;
@@ -20,22 +20,6 @@ if (process.env.CI === 'true' || process.env.PATTERM_E2E === '1') {
 
 function shouldOpenDevTools() {
     return process.env.PATTERM_OPEN_DEVTOOLS === '1';
-}
-
-function getCommitId() {
-    if (process.env.PATTERM_COMMIT_ID) {
-        return process.env.PATTERM_COMMIT_ID;
-    }
-
-    try {
-        return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
-            cwd: path.join(__dirname, '../..'),
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-        }).trim();
-    } catch (error) {
-        return 'unknown';
-    }
 }
 
 function createWindow() {
@@ -167,8 +151,8 @@ function setupIpcHandlers() {
 
     ipcMain.handle('app:getBuildInfo', async () => {
         return {
-            version: app.getVersion(),
-            commitId: getCommitId(),
+            version: buildMeta.version || app.getVersion(),
+            commitId: buildMeta.commitId || 'unknown',
         };
     });
 

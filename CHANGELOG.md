@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
 - Fixed Electron terminal exports to use an injected native save handler instead of forcing browser-style downloads
 - Fixed shared About build metadata loading by routing Web through Vite build constants and Electron through IPC
+- Fixed Electron About build metadata so packaged apps read version and commit ID from generated build metadata instead of runtime `git`
+- Removed the unused Electron BrowserView tab path from `window-manager` so desktop code matches the active shared renderer architecture
 - Replaced the Cloudflare Pages deploy GitHub Action wrapper with a direct `wrangler` CLI call so
   the `Deploy Web PWA` job no longer fails during third-party action download
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit
