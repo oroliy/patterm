@@ -208,6 +208,7 @@ function installFakeDom() {
         scrollY: 0,
         scrollX: 0,
         matchMedia: () => ({ matches: false }),
+        prompt: jest.fn(),
     };
 
     global.navigator = {
@@ -413,6 +414,22 @@ describe('terminal search UI behavior', () => {
         expect(global.URL.createObjectURL).toHaveBeenCalled();
         expect(global.URL.revokeObjectURL).toHaveBeenCalled();
         expect(global.document.body.children).toHaveLength(0);
+    });
+
+    test('TerminalComponent can rename a transaction summary', () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+        });
+
+        terminal.appendTransmitted('AT');
+        terminal.appendData('Echo: AT\n', 'rx');
+
+        const [transaction] = terminal.getTransactions();
+        const updated = terminal.renameTransaction(transaction.id, 'Handshake');
+        expect(updated.summary).toBe('Handshake');
+        expect(terminal.getTransactions()[0].summary).toBe('Handshake');
     });
 
     test('TabComponent updates search count and restores filter state', () => {

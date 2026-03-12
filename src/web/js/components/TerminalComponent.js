@@ -406,6 +406,22 @@ export class TerminalComponent {
         };
     }
 
+    renameTransaction(transactionId, summary) {
+        const transaction = this.getTransactionById(transactionId);
+        const nextSummary = String(summary || '').trim();
+        if (!transaction || !nextSummary) {
+            return null;
+        }
+
+        transaction.summary = nextSummary;
+        this.notifyTransactionsChange();
+        return {
+            ...transaction,
+            counts: { ...transaction.counts },
+            entryIds: [...transaction.entryIds],
+        };
+    }
+
     formatTransactionContent(transactionId) {
         const transaction = this.getTransactionById(transactionId);
         if (!transaction) {

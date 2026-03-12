@@ -1048,6 +1048,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-sm);
+    flex-wrap: wrap;
 }
 
 .terminal-transaction-close-btn {
@@ -1057,6 +1058,28 @@
     cursor: pointer;
     font-size: 16px;
     line-height: 1;
+}
+
+.terminal-transaction-filter-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.terminal-transaction-filter-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+.terminal-transaction-filter-btn.active {
+    background: rgba(46, 204, 113, 0.16);
+    border-color: rgba(46, 204, 113, 0.42);
+    color: var(--text-primary);
 }
 
 .terminal-transaction-list {
@@ -1104,6 +1127,7 @@
 }
 
 .terminal-transaction-star-btn,
+.terminal-transaction-rename-btn,
 .terminal-transaction-copy-btn,
 .terminal-transaction-export-btn,
 .terminal-transaction-jump-btn {

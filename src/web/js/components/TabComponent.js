@@ -10,6 +10,7 @@ export class TabComponent {
         this.tabElement = null;
         this.terminal = null;
         this.statusBarElements = {};
+        this.transactionFilter = 'all';
     }
 
     create() {
@@ -63,6 +64,11 @@ export class TabComponent {
                 <div class="terminal-transaction-panel" hidden>
                     <div class="terminal-transaction-panel-header">
                         <strong>Transactions</strong>
+                        <div class="terminal-transaction-filter-group" role="group" aria-label="Transaction filters">
+                            <button type="button" class="terminal-transaction-filter-btn active" data-transaction-filter="all">All</button>
+                            <button type="button" class="terminal-transaction-filter-btn" data-transaction-filter="failed">Failed</button>
+                            <button type="button" class="terminal-transaction-filter-btn" data-transaction-filter="starred">Starred</button>
+                        </div>
                         <button type="button" class="terminal-transaction-close-btn" aria-label="Close transactions">×</button>
                     </div>
                     <div class="terminal-transaction-empty">No transactions yet</div>
@@ -294,6 +300,13 @@ export class TabComponent {
         const transactionButton = this.element.querySelector('.terminal-transaction-btn');
         transactionButton?.addEventListener('click', () => this.toggleTransactionPanel());
 
+        const transactionFilterButtons = this.element.querySelectorAll('.terminal-transaction-filter-btn');
+        transactionFilterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                this.setTransactionFilter(button.dataset.transactionFilter || 'all');
+            });
+        });
+
         const transactionCloseButton = this.element.querySelector('.terminal-transaction-close-btn');
         transactionCloseButton?.addEventListener('click', () => this.toggleTransactionPanel(false));
 
@@ -466,6 +479,15 @@ export class TabComponent {
         this.renderTransactions();
     }
 
+    setTransactionFilter(filter = 'all') {
+        this.transactionFilter = filter;
+        const filterButtons = this.element?.querySelectorAll('.terminal-transaction-filter-btn') || [];
+        filterButtons.forEach((button) => {
+            button.classList.toggle('active', button.dataset.transactionFilter === filter);
+        });
+        this.renderTransactions();
+    }
+
     async copyTransaction(transactionId) {
         try {
             await this.terminal.copyTransaction(transactionId);
@@ -495,6 +517,37 @@ export class TabComponent {
         this.updateTransactions(this.terminal.getTransactions());
     }
 
+    renameTransaction(transactionId) {
+        const transaction = this.getTransactions().find((item) => item.id === transactionId);
+        if (!transaction) {
+            return;
+        }
+
+        const nextSummary = window.prompt?.('Rename transaction', transaction.summary || '');
+        if (!nextSummary || !nextSummary.trim()) {
+            return;
+        }
+
+        const updated = this.terminal.renameTransaction(transactionId, nextSummary);
+        if (!updated) {
+            return;
+        }
+
+        this.updateTransactions(this.terminal.getTransactions());
+    }
+
+    matchesTransactionFilter(transaction) {
+        if (this.transactionFilter === 'failed') {
+            return (transaction.counts.error || 0) > 0;
+        }
+
+        if (this.transactionFilter === 'starred') {
+            return Boolean(transaction.starred);
+        }
+
+        return true;
+    }
+
     renderTransactions() {
         const list = this.element?.querySelector('.terminal-transaction-list');
         const emptyState = this.element?.querySelector('.terminal-transaction-empty');
@@ -502,7 +555,7 @@ export class TabComponent {
             return;
         }
 
-        const transactions = this.getTransactions();
+        const transactions = this.getTransactions().filter((transaction) => this.matchesTransactionFilter(transaction));
         this.clearListContent(list);
         emptyState.style.display = transactions.length === 0 ? 'block' : 'none';
 
@@ -536,6 +589,12 @@ export class TabComponent {
                 starButton.textContent = transaction.starred ? 'Unstar' : 'Star';
                 starButton.addEventListener('click', () => this.toggleTransactionStar(transaction.id));
 
+                const renameButton = document.createElement('button');
+                renameButton.type = 'button';
+                renameButton.className = 'terminal-transaction-rename-btn';
+                renameButton.textContent = 'Rename';
+                renameButton.addEventListener('click', () => this.renameTransaction(transaction.id));
+
                 const copyButton = document.createElement('button');
                 copyButton.type = 'button';
                 copyButton.className = 'terminal-transaction-copy-btn';
@@ -557,6 +616,7 @@ export class TabComponent {
                 });
 
                 actions.appendChild(starButton);
+                actions.appendChild(renameButton);
                 actions.appendChild(copyButton);
                 actions.appendChild(exportButton);
                 actions.appendChild(jumpButton);
