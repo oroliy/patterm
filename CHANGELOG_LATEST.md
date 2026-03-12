@@ -91,6 +91,7 @@
 - **Global Search Across Tabs**: Search terminal entries across all open tabs and jump directly to the matching line with `All`, `RX`, `TX`, or `Error` scope
 - **Read-Only Trigger Highlights**: Add per-tab rules to mark matching `RX`, `TX`, and `Error` lines without changing serial traffic
 - **Workflow Runner MVP**: Build a simple per-tab automation flow with run, stop, response matching, and timeout failure states
+- **Transaction Panel MVP**: Group terminal traffic into request/response or passive blocks and jump back to the source terminal entry
 - **Explicit Theme Modes**: Header theme control now exposes `System`, `Dark`, and `Light` instead of cycling blindly
 - **Refreshed About Dialog**: Simplified About panel now shows current surface, theme, tab count, and active workspace features
 - **Status Bar Visual Design**: Full width, no padding gaps, transparent background
@@ -102,6 +103,7 @@
 - **Coverage Gate Passing**: Expanded Jest coverage across shared UI, Web bootstrap, and Electron window helper modules so `npm run test:coverage` now passes locally
 - **Trigger Coverage**: Added Jest and Playwright coverage for rule matching, trigger persistence, and in-terminal highlighting
 - **Workflow Coverage**: Added Jest and Playwright coverage for workflow normalization, runner execution, and UI state changes
+- **Transaction Coverage**: Added Jest and Playwright coverage for grouping, block panel rendering, and jump navigation
 - **Conditional Debug Logging**: Debug utility with localStorage/URL toggle
 - **Improved Serial Port Opening**: Better async handling with proper event ordering
 - **Enhanced Error Messages**: More descriptive errors with context

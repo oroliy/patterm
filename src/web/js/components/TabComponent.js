@@ -56,8 +56,17 @@ export class TabComponent {
                         <button type="button" class="terminal-filter-btn" data-filter-type="tx">TX</button>
                         <button type="button" class="terminal-filter-btn" data-filter-type="error">Error</button>
                     </div>
+                    <button type="button" class="terminal-transaction-btn btn">Blocks</button>
                     <button type="button" class="terminal-workflow-btn btn">Workflows</button>
                     <button type="button" class="terminal-trigger-btn btn">Triggers</button>
+                </div>
+                <div class="terminal-transaction-panel" hidden>
+                    <div class="terminal-transaction-panel-header">
+                        <strong>Transactions</strong>
+                        <button type="button" class="terminal-transaction-close-btn" aria-label="Close transactions">×</button>
+                    </div>
+                    <div class="terminal-transaction-empty">No transactions yet</div>
+                    <div class="terminal-transaction-list"></div>
                 </div>
                 <div class="terminal-workflow-panel" hidden>
                     <div class="terminal-workflow-panel-header">
@@ -193,7 +202,8 @@ export class TabComponent {
             autoScroll: this.tabState.autoScroll,
             showTimestamps: true,
             triggerRules: this.tabState.triggerRules,
-            onSearchStateChange: () => this.updateSearchState()
+            onSearchStateChange: () => this.updateSearchState(),
+            onTransactionsChange: (transactions) => this.updateTransactions(transactions)
         });
         this.tabState.terminal = this.terminal;
     }
@@ -280,6 +290,12 @@ export class TabComponent {
                 this.options.onFiltersChange?.(this.tabState.id, this.getFilterState());
             });
         });
+
+        const transactionButton = this.element.querySelector('.terminal-transaction-btn');
+        transactionButton?.addEventListener('click', () => this.toggleTransactionPanel());
+
+        const transactionCloseButton = this.element.querySelector('.terminal-transaction-close-btn');
+        transactionCloseButton?.addEventListener('click', () => this.toggleTransactionPanel(false));
 
         const triggerButton = this.element.querySelector('.terminal-trigger-btn');
         triggerButton?.addEventListener('click', () => this.toggleTriggerPanel());
@@ -431,6 +447,71 @@ export class TabComponent {
         return this.terminal.getFilters();
     }
 
+    getTransactions() {
+        return this.tabState.transactions || [];
+    }
+
+    toggleTransactionPanel(force = null) {
+        const panel = this.element?.querySelector('.terminal-transaction-panel');
+        if (!panel) {
+            return;
+        }
+
+        const shouldShow = force === null ? panel.hidden : force;
+        panel.hidden = !shouldShow;
+    }
+
+    updateTransactions(transactions = []) {
+        this.tabState.transactions = transactions;
+        this.renderTransactions();
+    }
+
+    renderTransactions() {
+        const list = this.element?.querySelector('.terminal-transaction-list');
+        const emptyState = this.element?.querySelector('.terminal-transaction-empty');
+        if (!list || !emptyState) {
+            return;
+        }
+
+        const transactions = this.getTransactions();
+        this.clearListContent(list);
+        emptyState.style.display = transactions.length === 0 ? 'block' : 'none';
+
+        transactions
+            .slice()
+            .reverse()
+            .forEach((transaction) => {
+                const item = document.createElement('div');
+                item.className = 'terminal-transaction-item';
+
+                const summary = document.createElement('span');
+                summary.className = 'terminal-transaction-item-summary';
+                summary.textContent = transaction.summary || '(empty transaction)';
+
+                const meta = document.createElement('span');
+                meta.className = 'terminal-transaction-item-meta';
+                meta.textContent = [
+                    transaction.type === 'request-response' ? 'REQ/RESP' : 'PASSIVE',
+                    `TX ${transaction.counts.tx || 0}`,
+                    `RX ${transaction.counts.rx || 0}`,
+                    transaction.counts.error ? `ERR ${transaction.counts.error}` : null,
+                ].filter(Boolean).join(' · ');
+
+                const jumpButton = document.createElement('button');
+                jumpButton.type = 'button';
+                jumpButton.className = 'terminal-transaction-jump-btn';
+                jumpButton.textContent = 'Jump';
+                jumpButton.addEventListener('click', () => {
+                    this.terminal.focusEntry(transaction.firstEntryId);
+                });
+
+                item.appendChild(summary);
+                item.appendChild(meta);
+                item.appendChild(jumpButton);
+                list.appendChild(item);
+            });
+    }
+
     getTriggerRules() {
         return this.terminal.getTriggerRules();
     }
@@ -525,7 +606,7 @@ export class TabComponent {
         }
 
         const workflows = this.getWorkflows();
-        list.innerHTML = '';
+        this.clearListContent(list);
         emptyState.style.display = workflows.length === 0 ? 'block' : 'none';
 
         workflows.forEach((workflow) => {
@@ -689,7 +770,7 @@ export class TabComponent {
         }
 
         const triggerRules = this.getTriggerRules();
-        list.innerHTML = '';
+        this.clearListContent(list);
         emptyState.style.display = triggerRules.length === 0 ? 'block' : 'none';
 
         triggerRules.forEach((rule) => {
@@ -733,11 +814,19 @@ export class TabComponent {
         });
 
         this.terminal.setFilters(filterState);
+        this.updateTransactions(this.terminal.getTransactions());
         this.renderWorkflowRuntime();
         this.renderWorkflows();
         this.terminal.setTriggerRules(this.tabState.triggerRules || []);
         this.renderTriggerRules();
         this.updateSearchState();
+    }
+
+    clearListContent(list) {
+        list.innerHTML = '';
+        if (Array.isArray(list.children)) {
+            list.children = [];
+        }
     }
 
     destroy() {

@@ -926,6 +926,11 @@
     white-space: nowrap;
 }
 
+.terminal-transaction-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .terminal-filter-btn {
     background: var(--glass-surface);
     border: 1px solid var(--glass-border);
@@ -1022,6 +1027,82 @@
 
 .terminal-workflow-panel[hidden] {
     display: none;
+}
+
+.terminal-transaction-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+}
+
+.terminal-transaction-panel[hidden] {
+    display: none;
+}
+
+.terminal-transaction-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.terminal-transaction-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.terminal-transaction-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.terminal-transaction-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.terminal-transaction-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+}
+
+.terminal-transaction-item-summary {
+    color: var(--text-primary);
+    font-size: 13px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.terminal-transaction-item-meta {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.terminal-transaction-jump-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 10px;
 }
 
 .terminal-workflow-panel-header {
@@ -1327,6 +1408,10 @@
     }
 
     .terminal-workflow-item {
+        grid-template-columns: 1fr;
+    }
+
+    .terminal-transaction-item {
         grid-template-columns: 1fr;
     }
 }

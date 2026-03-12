@@ -255,6 +255,45 @@ describe('terminal search UI behavior', () => {
         ]);
     });
 
+    test('transactions group request-response entries within the transaction window', () => {
+        const { assignEntryToTransactions } = require('../src/shared/js/terminal/transactions.js');
+        const baseTime = new Date('2026-03-12T02:00:00.000Z');
+
+        const first = assignEntryToTransactions({
+            id: 'entry-1',
+            text: '> AT',
+            type: 'tx',
+            timestamp: baseTime,
+        }, []);
+        const second = assignEntryToTransactions({
+            id: 'entry-2',
+            text: 'Echo: AT',
+            type: 'rx',
+            timestamp: new Date(baseTime.getTime() + 120),
+        }, first.transactions);
+        const third = assignEntryToTransactions({
+            id: 'entry-3',
+            text: 'READY',
+            type: 'rx',
+            timestamp: new Date(baseTime.getTime() + 900),
+        }, second.transactions);
+
+        expect(first.entry.transactionId).toBe(first.transactions[0].id);
+        expect(second.entry.transactionId).toBe(first.transactions[0].id);
+        expect(second.transactions).toHaveLength(1);
+        expect(second.transactions[0]).toEqual(expect.objectContaining({
+            counts: expect.objectContaining({ tx: 1, rx: 1 }),
+            requestEntryId: 'entry-1',
+        }));
+        expect(third.transactions).toHaveLength(1);
+        expect(third.transactions[0]).toEqual(expect.objectContaining({
+            counts: expect.objectContaining({ tx: 1, rx: 2 }),
+            firstEntryId: 'entry-1',
+            lastEntryId: 'entry-3',
+            type: 'request-response',
+        }));
+    });
+
     test('TerminalComponent tracks search state and navigates between matches', () => {
         const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
@@ -318,6 +357,26 @@ describe('terminal search UI behavior', () => {
         expect(terminal.entries[0].triggerMatches).toEqual([]);
     });
 
+    test('TerminalComponent tracks transactions and emits transaction updates', () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const transactionStates = [];
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+            onTransactionsChange: (transactions) => transactionStates.push(transactions),
+        });
+
+        terminal.appendTransmitted('AT');
+        terminal.appendData('Echo: AT\n', 'rx');
+
+        expect(terminal.getTransactions()).toHaveLength(1);
+        expect(terminal.getTransactions()[0]).toEqual(expect.objectContaining({
+            counts: expect.objectContaining({ tx: 1, rx: 1 }),
+        }));
+        expect(transactionStates.at(-1)).toHaveLength(1);
+        expect(terminal.entries[0].transactionId).toBe(terminal.entries[1].transactionId);
+    });
+
     test('TabComponent updates search count and restores filter state', () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const searchCount = new FakeElement('span');
@@ -362,6 +421,7 @@ describe('terminal search UI behavior', () => {
             setFilters: jest.fn(),
             setTriggerRules: jest.fn(),
             getTriggerRules: jest.fn(() => []),
+            getTransactions: jest.fn(() => []),
         };
 
         tab.updateSearchState();

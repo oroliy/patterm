@@ -7,20 +7,24 @@ import {
     normalizeTerminalEntryText
 } from '../../../shared/js/terminal/terminalEntries.js';
 import { findMatchingTriggerRules, normalizeTriggerRules } from '../../../shared/js/terminal/triggerRules.js';
+import { assignEntryToTransactions } from '../../../shared/js/terminal/transactions.js';
 
 export class TerminalComponent {
     constructor(container, options = {}) {
         this.container = container;
         this.terminal = container;
         this.onSearchStateChange = options.onSearchStateChange || null;
+        this.onTransactionsChange = options.onTransactionsChange || null;
         this.autoScroll = options.autoScroll ?? true;
         this.showTimestamps = options.showTimestamps ?? true;
+        this.transactionWindowMs = options.transactionWindowMs ?? 1000;
         this.lastLogLine = null;
         this.lineCount = 0;
         this.maxLines = options.maxLines ?? MAX_TERMINAL_LINES;
         this.dataBuffers = new Map();
         this.entries = [];
         this.visibleEntries = [];
+        this.transactions = [];
         this.triggerRules = normalizeTriggerRules(options.triggerRules);
         this.filters = {
             search: '',
@@ -69,20 +73,27 @@ export class TerminalComponent {
             type,
             timestamp: new Date()
         });
-        entry.triggerMatches = findMatchingTriggerRules(entry, this.triggerRules);
+        const transactionResult = assignEntryToTransactions(entry, this.transactions, {
+            windowMs: this.transactionWindowMs
+        });
+        const nextEntry = transactionResult.entry;
+        this.transactions = transactionResult.transactions;
+        nextEntry.triggerMatches = findMatchingTriggerRules(nextEntry, this.triggerRules);
 
-        this.entries.push(entry);
+        this.entries.push(nextEntry);
         if (this.entries.length > this.maxLines) {
             this.entries.splice(0, this.entries.length - this.maxLines);
         }
 
         if (this.hasActiveFilters()) {
             this.renderEntries();
-            return entry;
+            this.notifyTransactionsChange();
+            return nextEntry;
         }
 
-        this.appendEntry(entry, hasNewline, false);
-        return entry;
+        this.appendEntry(nextEntry, hasNewline, false);
+        this.notifyTransactionsChange();
+        return nextEntry;
     }
 
     appendEntry(entry, hasNewline = true, isCurrentMatch = false) {
@@ -232,12 +243,14 @@ export class TerminalComponent {
         this.dataBuffers.clear();
         this.entries = [];
         this.visibleEntries = [];
+        this.transactions = [];
         this.currentMatchIndex = 0;
         this.lastRenderMeta = {
             totalMatches: 0,
             currentMatch: 0
         };
         this.notifySearchStateChange();
+        this.notifyTransactionsChange();
     }
 
     getContent() {
@@ -352,6 +365,14 @@ export class TerminalComponent {
         return this.triggerRules.map((rule) => ({ ...rule }));
     }
 
+    getTransactions() {
+        return this.transactions.map((transaction) => ({
+            ...transaction,
+            counts: { ...transaction.counts },
+            entryIds: [...transaction.entryIds],
+        }));
+    }
+
     getFilters() {
         return { ...this.filters };
     }
@@ -442,5 +463,9 @@ export class TerminalComponent {
 
     notifySearchStateChange() {
         this.onSearchStateChange?.(this.getSearchState());
+    }
+
+    notifyTransactionsChange() {
+        this.onTransactionsChange?.(this.getTransactions());
     }
 }

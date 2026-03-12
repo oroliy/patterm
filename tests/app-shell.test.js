@@ -475,13 +475,14 @@ describe('AppShell behavior', () => {
         expect(shell.tabManager.closeTab).not.toHaveBeenCalled();
     });
 
-    test('workflow definitions, runner lifecycle, and command palette workflow action are wired through', async () => {
+    test('workflow definitions, runner lifecycle, and command palette workspace actions are wired through', async () => {
         const { AppShell } = require('../src/shared/js/app/AppShell.js');
         const shell = new AppShell();
         const component = {
             updateWorkflowRuntime: jest.fn(),
             renderWorkflows: jest.fn(),
             renderWorkflowRuntime: jest.fn(),
+            toggleTransactionPanel: jest.fn(),
             toggleWorkflowPanel: jest.fn(),
             terminal: {
                 appendData: jest.fn(() => [{ id: 'entry-1', text: 'Echo: AT', type: 'rx' }]),
@@ -518,6 +519,8 @@ describe('AppShell behavior', () => {
         expect(component.renderWorkflows).toHaveBeenCalled();
 
         shell.registerCommandPaletteCommands();
+        shell.commandPaletteCommands.find((command) => command.id === 'toggle-transactions').run();
+        expect(component.toggleTransactionPanel).toHaveBeenCalledWith(true);
         shell.commandPaletteCommands.find((command) => command.id === 'toggle-workflows').run();
         expect(component.toggleWorkflowPanel).toHaveBeenCalledWith(true);
 

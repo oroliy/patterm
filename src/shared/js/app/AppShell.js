@@ -516,6 +516,16 @@ export class AppShell {
                 run: () => this.openGlobalSearch()
             },
             {
+                id: 'toggle-transactions',
+                label: 'Open Transactions',
+                keywords: ['transactions', 'blocks', 'session', 'history'],
+                run: () => {
+                    const activeTab = this.tabManager.getActiveTab();
+                    const component = activeTab ? this.tabComponents.get(activeTab.id) : null;
+                    component?.toggleTransactionPanel(true);
+                }
+            },
+            {
                 id: 'toggle-workflows',
                 label: 'Open Workflows',
                 keywords: ['workflow', 'macro', 'automation', 'steps'],

@@ -316,4 +316,29 @@ test.describe('Patterm Web - Connection UI', () => {
         await expect(activeTab.locator('.terminal-display')).toContainText('> AT');
         await expect(activeTab.locator('.terminal-display')).toContainText('Echo: AT');
     });
+
+    test('groups terminal traffic into transactions and jumps back to the source entry', async ({ page }) => {
+        await page.goto('https://localhost:5173/');
+        await page.waitForLoadState('networkidle');
+
+        await page.click('#new-tab-btn');
+        await page.click('#select-port-btn');
+        await page.click('#connect-btn');
+
+        const activeTab = page.locator('.tab-content').filter({ has: page.locator('.input-field') }).first();
+        await activeTab.locator('.input-field').fill('AT');
+        await activeTab.locator('.send-btn').click();
+        await activeTab.locator('.input-field').fill('ATI');
+        await activeTab.locator('.send-btn').click();
+
+        await activeTab.locator('.terminal-transaction-btn').click();
+        await expect(activeTab.locator('.terminal-transaction-panel')).toBeVisible();
+        const transactionItems = activeTab.locator('.terminal-transaction-item');
+        expect(await transactionItems.count()).toBeGreaterThanOrEqual(2);
+        const atTransaction = transactionItems.filter({ hasText: '> AT' }).first();
+        await expect(atTransaction).toContainText('> AT');
+
+        await atTransaction.locator('.terminal-transaction-jump-btn').click();
+        await expect(activeTab.locator('.terminal-search-current')).toContainText('> AT');
+    });
 });

@@ -241,6 +241,9 @@ describe('TabComponent', () => {
         const workflowPanel = new FakeElement();
         const workflowStatus = new FakeElement();
         const workflowCurrentStep = new FakeElement();
+        const transactionList = new FakeElement();
+        const transactionEmpty = new FakeElement();
+        const transactionPanel = new FakeElement();
         const rxBytes = new FakeElement();
         const txBytes = new FakeElement();
         const duration = new FakeElement();
@@ -280,6 +283,18 @@ describe('TabComponent', () => {
                 completedStepIds: ['step-1'],
                 error: null,
             },
+            transactions: [{
+                id: 'transaction-1',
+                type: 'request-response',
+                summary: '> AT',
+                firstEntryId: 'entry-1',
+                counts: {
+                    tx: 1,
+                    rx: 1,
+                    error: 0,
+                    info: 0,
+                },
+            }],
         });
 
         tab.element = {
@@ -305,6 +320,9 @@ describe('TabComponent', () => {
                 if (selector === '.terminal-workflow-panel') return workflowPanel;
                 if (selector === '.terminal-workflow-status') return workflowStatus;
                 if (selector === '.terminal-workflow-current-step') return workflowCurrentStep;
+                if (selector === '.terminal-transaction-list') return transactionList;
+                if (selector === '.terminal-transaction-empty') return transactionEmpty;
+                if (selector === '.terminal-transaction-panel') return transactionPanel;
                 return null;
             },
             querySelectorAll(selector) {
@@ -336,6 +354,8 @@ describe('TabComponent', () => {
             setFilters: jest.fn(),
             getTriggerRules: jest.fn(() => [{ id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' }]),
             setTriggerRules: jest.fn(() => [{ id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' }]),
+            getTransactions: jest.fn(() => tab.tabState.transactions),
+            focusEntry: jest.fn(),
         };
 
         tab.updateStatusBar();
@@ -363,6 +383,8 @@ describe('TabComponent', () => {
         expect(errorButton.classList.contains('active')).toBe(true);
         expect(allButton.classList.contains('active')).toBe(false);
         expect(tab.terminal.setFilters).toHaveBeenCalledWith({ search: 'boom', type: 'error' });
+        expect(transactionList.children).toHaveLength(1);
+        expect(transactionEmpty.style.display).toBe('none');
         expect(workflowList.children).toHaveLength(1);
         expect(workflowEmpty.style.display).toBe('none');
         expect(workflowStatus.textContent).toBe('Running');
@@ -434,6 +456,25 @@ describe('TabComponent', () => {
         tab.toggleWorkflowPanel(false);
         expect(workflowPanel.hidden).toBe(true);
 
+        tab.updateTransactions([{
+            id: 'transaction-2',
+            type: 'passive',
+            summary: 'READY',
+            firstEntryId: 'entry-3',
+            counts: {
+                tx: 0,
+                rx: 1,
+                error: 0,
+                info: 0,
+            },
+        }]);
+        expect(transactionList.children).toHaveLength(1);
+
+        tab.toggleTransactionPanel(true);
+        expect(transactionPanel.hidden).toBe(false);
+        tab.toggleTransactionPanel(false);
+        expect(transactionPanel.hidden).toBe(true);
+
         tab.destroy();
         expect(tab.element.remove).toHaveBeenCalled();
         expect(tab.tabElement.remove).toHaveBeenCalled();
@@ -451,6 +492,8 @@ describe('TabComponent', () => {
         const nextButton = new FakeElement();
         const allButton = new FakeElement();
         const txButton = new FakeElement();
+        const transactionButton = new FakeElement();
+        const transactionCloseButton = new FakeElement();
         const workflowButton = new FakeElement();
         const workflowCloseButton = new FakeElement();
         const workflowAddButton = new FakeElement();
@@ -496,6 +539,8 @@ describe('TabComponent', () => {
                 if (selector === '.clear-btn') return clearBtn;
                 if (selector === '.terminal-display') return terminalDisplay;
                 if (selector === '.terminal-search-input') return searchInput;
+                if (selector === '.terminal-transaction-btn') return transactionButton;
+                if (selector === '.terminal-transaction-close-btn') return transactionCloseButton;
                 if (selector === '.terminal-workflow-btn') return workflowButton;
                 if (selector === '.terminal-workflow-close-btn') return workflowCloseButton;
                 if (selector === '.terminal-workflow-add-btn') return workflowAddButton;
@@ -512,6 +557,7 @@ describe('TabComponent', () => {
         };
         tab.getFilterState = jest.fn(() => ({ search: 'AT', type: 'tx' }));
         tab.updateSearchState = jest.fn();
+        tab.toggleTransactionPanel = jest.fn();
         tab.toggleWorkflowPanel = jest.fn();
         tab.addWorkflowFromInputs = jest.fn();
         tab.toggleTriggerPanel = jest.fn();
@@ -537,6 +583,8 @@ describe('TabComponent', () => {
         prevButton.listeners.get('click')();
         nextButton.listeners.get('click')();
         txButton.listeners.get('click')();
+        transactionButton.listeners.get('click')();
+        transactionCloseButton.listeners.get('click')();
         workflowButton.listeners.get('click')();
         workflowCloseButton.listeners.get('click')();
         workflowAddButton.listeners.get('click')();
@@ -555,6 +603,8 @@ describe('TabComponent', () => {
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(-1);
         expect(tab.terminal.navigateSearchResults).toHaveBeenCalledWith(1);
         expect(onFiltersChange).toHaveBeenCalledWith('tab-1', { search: 'AT', type: 'tx' });
+        expect(tab.toggleTransactionPanel).toHaveBeenCalledWith();
+        expect(tab.toggleTransactionPanel).toHaveBeenCalledWith(false);
         expect(tab.toggleWorkflowPanel).toHaveBeenCalledWith();
         expect(tab.toggleWorkflowPanel).toHaveBeenCalledWith(false);
         expect(tab.addWorkflowFromInputs).toHaveBeenCalled();
