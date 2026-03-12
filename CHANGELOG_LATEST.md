@@ -92,6 +92,7 @@
 - **Read-Only Trigger Highlights**: Add per-tab rules to mark matching `RX`, `TX`, and `Error` lines without changing serial traffic
 - **Workflow Runner MVP**: Build a simple per-tab automation flow with run, stop, response matching, and timeout failure states
 - **Transaction Panel MVP**: Group terminal traffic into request/response or passive blocks and jump back to the source terminal entry
+- **Transaction Actions**: Star important blocks and copy or export a single transaction directly from the Blocks panel
 - **Explicit Theme Modes**: Header theme control now exposes `System`, `Dark`, and `Light` instead of cycling blindly
 - **Refreshed About Dialog**: Simplified About panel now shows current surface, theme, tab count, and active workspace features
 - **Status Bar Visual Design**: Full width, no padding gaps, transparent background
@@ -104,6 +105,7 @@
 - **Trigger Coverage**: Added Jest and Playwright coverage for rule matching, trigger persistence, and in-terminal highlighting
 - **Workflow Coverage**: Added Jest and Playwright coverage for workflow normalization, runner execution, and UI state changes
 - **Transaction Coverage**: Added Jest and Playwright coverage for grouping, block panel rendering, and jump navigation
+- **Transaction Actions Coverage**: Added unit and Web E2E coverage for star, copy, and export behavior in the Blocks panel
 - **Conditional Debug Logging**: Debug utility with localStorage/URL toggle
 - **Improved Serial Port Opening**: Better async handling with proper event ordering
 - **Enhanced Error Messages**: More descriptive errors with context

@@ -161,6 +161,10 @@ class FakeElement {
     scrollIntoView() {
         this.wasScrolledIntoView = true;
     }
+
+    click() {
+        this.clicked = true;
+    }
 }
 
 function createSelectorMatcher(selector) {
@@ -216,6 +220,11 @@ function installFakeDom() {
         getItem: jest.fn(() => null),
         setItem: jest.fn(),
         removeItem: jest.fn(),
+    };
+
+    global.URL = {
+        createObjectURL: jest.fn(() => 'blob:terminal'),
+        revokeObjectURL: jest.fn(),
     };
 }
 
@@ -375,6 +384,35 @@ describe('terminal search UI behavior', () => {
         }));
         expect(transactionStates.at(-1)).toHaveLength(1);
         expect(terminal.entries[0].transactionId).toBe(terminal.entries[1].transactionId);
+    });
+
+    test('TerminalComponent can star, copy, and export a transaction', async () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+        });
+
+        terminal.appendTransmitted('AT');
+        terminal.appendData('Echo: AT\n', 'rx');
+
+        const [transaction] = terminal.getTransactions();
+        expect(transaction.starred).toBe(false);
+
+        const updated = terminal.toggleTransactionStar(transaction.id);
+        expect(updated.starred).toBe(true);
+        expect(terminal.formatTransactionContent(transaction.id)).toContain('[TX] > AT');
+        expect(terminal.formatTransactionContent(transaction.id)).toContain('[RX] Echo: AT');
+
+        await terminal.copyTransaction(transaction.id);
+        expect(global.navigator.clipboard.writeText).toHaveBeenCalledWith(
+            expect.stringContaining('[TX] > AT')
+        );
+
+        await expect(terminal.exportTransaction(transaction.id)).resolves.toBe(true);
+        expect(global.URL.createObjectURL).toHaveBeenCalled();
+        expect(global.URL.revokeObjectURL).toHaveBeenCalled();
+        expect(global.document.body.children).toHaveLength(0);
     });
 
     test('TabComponent updates search count and restores filter state', () => {

@@ -33,7 +33,7 @@
 - Global search jumps across tabs to the exact matching terminal entry
 - Per-tab read-only trigger rules can mark matching `RX`, `TX`, or `Error` lines with highlight badges
 - Per-tab workflow runner can execute a simple `send -> wait for match` automation flow
-- Per-tab transaction panel groups `TX -> RX` traffic into request/response or passive blocks with jump-back navigation
+- Per-tab transaction panel groups `TX -> RX` traffic into request/response or passive blocks with jump-back, copy, export, and star actions
 - Header theme control supports explicit `System`, `Dark`, and `Light` selection
 
 ### Complete UART Configuration
@@ -59,7 +59,7 @@
 - Cross-tab global search with `All`, `RX`, `TX`, and `Error` scopes
 - Read-only trigger highlights with per-tab rules for `Contains` and `Regex` matching
 - Workflow MVP with per-tab definitions, timeout handling, and run/stop controls
-- Transaction panel MVP with time-window grouping and jump-to-entry navigation
+- Transaction panel MVP with time-window grouping, jump-to-entry navigation, copy/export actions, and starred blocks
 
 ### Workspace Controls
 - Header theme menu with `System`, `Dark`, and `Light` options
@@ -191,7 +191,7 @@ npm start
 6. **Create more connections** with `Ctrl/Cmd + N` for additional serial ports
 7. **Switch between tabs** to manage different connections
 8. **Enable logging** to save serial data to a file (per tab)
-9. **Open Blocks** in a tab to inspect grouped request/response traffic and jump back to the source entry
+9. **Open Blocks** in a tab to inspect grouped request/response traffic, star important blocks, and copy or export a single block
 10. **Close tab** to disconnect serial port and remove tab
 
 ---

@@ -373,6 +373,90 @@ export class TerminalComponent {
         }));
     }
 
+    getTransactionById(transactionId) {
+        if (!transactionId) {
+            return null;
+        }
+
+        return this.transactions.find((transaction) => transaction.id === transactionId) || null;
+    }
+
+    getEntriesForTransaction(transactionId) {
+        const transaction = this.getTransactionById(transactionId);
+        if (!transaction) {
+            return [];
+        }
+
+        const entryIds = new Set(transaction.entryIds);
+        return this.entries.filter((entry) => entryIds.has(entry.id));
+    }
+
+    toggleTransactionStar(transactionId) {
+        const transaction = this.getTransactionById(transactionId);
+        if (!transaction) {
+            return null;
+        }
+
+        transaction.starred = !transaction.starred;
+        this.notifyTransactionsChange();
+        return {
+            ...transaction,
+            counts: { ...transaction.counts },
+            entryIds: [...transaction.entryIds],
+        };
+    }
+
+    formatTransactionContent(transactionId) {
+        const transaction = this.getTransactionById(transactionId);
+        if (!transaction) {
+            return '';
+        }
+
+        const lines = this.getEntriesForTransaction(transactionId).map((entry) => {
+            const timestamp = new Date(entry.timestamp).toISOString();
+            return `[${timestamp}] [${String(entry.type || 'info').toUpperCase()}] ${entry.text}`;
+        });
+
+        return lines.join('\n');
+    }
+
+    copyTransaction(transactionId) {
+        const content = this.formatTransactionContent(transactionId);
+        if (!content) {
+            return Promise.reject(new Error('Transaction not found'));
+        }
+
+        return navigator.clipboard.writeText(content);
+    }
+
+    async exportTransaction(transactionId, defaultFileName = null) {
+        const transaction = this.getTransactionById(transactionId);
+        const content = this.formatTransactionContent(transactionId);
+        if (!transaction || !content) {
+            return false;
+        }
+
+        const timestamp = new Date(transaction.startedAt).toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const slug = (transaction.summary || 'transaction')
+            .replace(/^>\s*/, '')
+            .replace(/[^a-z0-9]+/gi, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 40)
+            .toLowerCase() || 'transaction';
+        const fileName = defaultFileName || `${slug}-${timestamp}.txt`;
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        return true;
+    }
+
     getFilters() {
         return { ...this.filters };
     }

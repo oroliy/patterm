@@ -30,6 +30,7 @@ export function createTransactionGroup(entry, transactionId = getNextTransaction
 
     return {
         id: transactionId,
+        starred: false,
         startedAt: entry.timestamp,
         endedAt: entry.timestamp,
         type: entry.type === 'tx' ? 'request-response' : 'passive',

@@ -1095,6 +1095,17 @@
     font-size: 12px;
 }
 
+.terminal-transaction-item-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.terminal-transaction-star-btn,
+.terminal-transaction-copy-btn,
+.terminal-transaction-export-btn,
 .terminal-transaction-jump-btn {
     background: transparent;
     border: 1px solid var(--glass-border);

@@ -337,6 +337,9 @@ test.describe('Patterm Web - Connection UI', () => {
         expect(await transactionItems.count()).toBeGreaterThanOrEqual(2);
         const atTransaction = transactionItems.filter({ hasText: '> AT' }).first();
         await expect(atTransaction).toContainText('> AT');
+        await atTransaction.locator('.terminal-transaction-star-btn').click();
+        await expect(atTransaction).toContainText('★ > AT');
+        await expect(atTransaction.locator('.terminal-transaction-star-btn')).toHaveText('Unstar');
 
         await atTransaction.locator('.terminal-transaction-jump-btn').click();
         await expect(activeTab.locator('.terminal-search-current')).toContainText('> AT');

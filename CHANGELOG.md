@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a per-tab workflow runner MVP for `send -> wait for match -> timeout` automation flows
 - Added a per-tab transaction panel MVP that groups terminal traffic into request/response and passive blocks
 - Added jump-back navigation from a transaction block to the matching terminal entry
+- Added per-transaction star, copy, and export actions in the Blocks panel
 - Added an explicit header theme selector with `System`, `Dark`, and `Light` modes
 - Refreshed the About dialog to reflect the current product surface, theme, tab count, and active capabilities
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
@@ -69,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added unit and Web E2E coverage for trigger rule matching, persistence, and UI highlighting
 - Added unit and Web E2E coverage for workflow normalization, runner state transitions, and UI execution
 - Added unit and Web E2E coverage for transaction grouping, block panel rendering, and jump navigation
+- Added unit and Web E2E coverage for transaction star, copy, and export actions
 
 ---
 

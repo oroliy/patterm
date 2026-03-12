@@ -217,7 +217,7 @@ describe('TabComponent', () => {
         expect(badge.classList.contains('active')).toBe(false);
     });
 
-    test('updateStatusBar, updatePortName, setName, filters, triggers, workflows, and destroy update the view', () => {
+    test('updateStatusBar, updatePortName, setName, filters, triggers, workflows, transactions, and destroy update the view', async () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const tabName = new FakeElement();
         const searchInput = new FakeElement();
@@ -287,6 +287,7 @@ describe('TabComponent', () => {
                 id: 'transaction-1',
                 type: 'request-response',
                 summary: '> AT',
+                starred: false,
                 firstEntryId: 'entry-1',
                 counts: {
                     tx: 1,
@@ -356,6 +357,10 @@ describe('TabComponent', () => {
             setTriggerRules: jest.fn(() => [{ id: 'trigger-1', name: 'Echo:', scope: 'rx', matchType: 'contains', highlight: 'info' }]),
             getTransactions: jest.fn(() => tab.tabState.transactions),
             focusEntry: jest.fn(),
+            copyTransaction: jest.fn(() => Promise.resolve()),
+            exportTransaction: jest.fn(() => Promise.resolve(true)),
+            toggleTransactionStar: jest.fn(() => ({ ...tab.tabState.transactions[0], starred: true })),
+            appendInfo: jest.fn(),
         };
 
         tab.updateStatusBar();
@@ -460,6 +465,7 @@ describe('TabComponent', () => {
             id: 'transaction-2',
             type: 'passive',
             summary: 'READY',
+            starred: false,
             firstEntryId: 'entry-3',
             counts: {
                 tx: 0,
@@ -469,11 +475,23 @@ describe('TabComponent', () => {
             },
         }]);
         expect(transactionList.children).toHaveLength(1);
+        expect(transactionList.children[0].children[2].children).toHaveLength(4);
 
         tab.toggleTransactionPanel(true);
         expect(transactionPanel.hidden).toBe(false);
         tab.toggleTransactionPanel(false);
         expect(transactionPanel.hidden).toBe(true);
+
+        await Promise.all([
+            tab.copyTransaction('transaction-2'),
+            tab.exportTransaction('transaction-2'),
+        ]);
+        tab.toggleTransactionStar('transaction-2');
+        expect(tab.terminal.copyTransaction).toHaveBeenCalledWith('transaction-2');
+        expect(tab.terminal.exportTransaction).toHaveBeenCalledWith('transaction-2');
+        expect(tab.terminal.toggleTransactionStar).toHaveBeenCalledWith('transaction-2');
+        expect(tab.terminal.appendInfo).toHaveBeenCalledWith('Transaction copied');
+        expect(tab.terminal.appendInfo).toHaveBeenCalledWith('Transaction exported');
 
         tab.destroy();
         expect(tab.element.remove).toHaveBeenCalled();

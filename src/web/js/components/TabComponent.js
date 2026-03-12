@@ -466,6 +466,35 @@ export class TabComponent {
         this.renderTransactions();
     }
 
+    async copyTransaction(transactionId) {
+        try {
+            await this.terminal.copyTransaction(transactionId);
+            this.terminal.appendInfo('Transaction copied');
+        } catch (error) {
+            debug.error('Failed to copy transaction:', error);
+        }
+    }
+
+    async exportTransaction(transactionId) {
+        try {
+            const exported = await this.terminal.exportTransaction(transactionId);
+            if (exported) {
+                this.terminal.appendInfo('Transaction exported');
+            }
+        } catch (error) {
+            debug.error('Failed to export transaction:', error);
+        }
+    }
+
+    toggleTransactionStar(transactionId) {
+        const transaction = this.terminal.toggleTransactionStar(transactionId);
+        if (!transaction) {
+            return;
+        }
+
+        this.updateTransactions(this.terminal.getTransactions());
+    }
+
     renderTransactions() {
         const list = this.element?.querySelector('.terminal-transaction-list');
         const emptyState = this.element?.querySelector('.terminal-transaction-empty');
@@ -483,10 +512,11 @@ export class TabComponent {
             .forEach((transaction) => {
                 const item = document.createElement('div');
                 item.className = 'terminal-transaction-item';
+                item.dataset.transactionId = transaction.id;
 
                 const summary = document.createElement('span');
                 summary.className = 'terminal-transaction-item-summary';
-                summary.textContent = transaction.summary || '(empty transaction)';
+                summary.textContent = `${transaction.starred ? '★ ' : ''}${transaction.summary || '(empty transaction)'}`;
 
                 const meta = document.createElement('span');
                 meta.className = 'terminal-transaction-item-meta';
@@ -497,6 +527,27 @@ export class TabComponent {
                     transaction.counts.error ? `ERR ${transaction.counts.error}` : null,
                 ].filter(Boolean).join(' · ');
 
+                const actions = document.createElement('div');
+                actions.className = 'terminal-transaction-item-actions';
+
+                const starButton = document.createElement('button');
+                starButton.type = 'button';
+                starButton.className = 'terminal-transaction-star-btn';
+                starButton.textContent = transaction.starred ? 'Unstar' : 'Star';
+                starButton.addEventListener('click', () => this.toggleTransactionStar(transaction.id));
+
+                const copyButton = document.createElement('button');
+                copyButton.type = 'button';
+                copyButton.className = 'terminal-transaction-copy-btn';
+                copyButton.textContent = 'Copy';
+                copyButton.addEventListener('click', () => this.copyTransaction(transaction.id));
+
+                const exportButton = document.createElement('button');
+                exportButton.type = 'button';
+                exportButton.className = 'terminal-transaction-export-btn';
+                exportButton.textContent = 'Export';
+                exportButton.addEventListener('click', () => this.exportTransaction(transaction.id));
+
                 const jumpButton = document.createElement('button');
                 jumpButton.type = 'button';
                 jumpButton.className = 'terminal-transaction-jump-btn';
@@ -505,9 +556,13 @@ export class TabComponent {
                     this.terminal.focusEntry(transaction.firstEntryId);
                 });
 
+                actions.appendChild(starButton);
+                actions.appendChild(copyButton);
+                actions.appendChild(exportButton);
+                actions.appendChild(jumpButton);
                 item.appendChild(summary);
                 item.appendChild(meta);
-                item.appendChild(jumpButton);
+                item.appendChild(actions);
                 list.appendChild(item);
             });
     }
