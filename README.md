@@ -133,14 +133,14 @@ npm run web:test     # Run Playwright E2E tests
 
 ## Download
 
-### Latest Release: v0.6.0
+### Latest Release: v0.7.0
 
-**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.6.0)**
+**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.7.0)**
 
 Choose your platform:
-- **Windows**: [Patterm-0.6.0.exe](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0.exe) or [Patterm.Setup.0.6.0.exe](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm.Setup.0.6.0.exe)
-- **macOS**: [Patterm-0.6.0.dmg](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0.dmg) (Intel) or [Patterm-0.6.0-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0-arm64.dmg) (Apple Silicon)
-- **Linux**: [Patterm-0.6.0.AppImage](https://github.com/oroliy/patterm/releases/download/v0.6.0/Patterm-0.6.0.AppImage) (Universal) or [deb packages](https://github.com/oroliy/patterm/releases/tag/v0.6.0)
+- **Windows**: [Patterm-0.7.0.exe](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.exe) or [Patterm.Setup.0.7.0.exe](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm.Setup.0.7.0.exe)
+- **macOS**: [Patterm-0.7.0.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.dmg) (Intel) or [Patterm-0.7.0-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0-arm64.dmg) (Apple Silicon)
+- **Linux**: [Patterm-0.7.0.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.AppImage) (Universal) or [deb packages](https://github.com/oroliy/patterm/releases/tag/v0.7.0)
 
 **Web Version**: Open https://patterm-web.vercel.app/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-12
+
 ### Changed
 - Added shared serial provider abstractions for Web and Electron renderer flows
 - Normalized serial config defaults through a shared helper before tab creation and connection

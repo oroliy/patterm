@@ -1,4 +1,4 @@
-# Changelog - Version 0.6.0 (February 1, 2026)
+# Changelog - Version 0.7.0 (March 12, 2026)
 
 ## Unreleased
 
