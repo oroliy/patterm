@@ -391,6 +391,12 @@ export class TerminalComponent {
         return this.entries.filter((entry) => entryIds.has(entry.id));
     }
 
+    getTransactionFailureReason(transactionId) {
+        const entries = this.getEntriesForTransaction(transactionId);
+        const failureEntry = entries.find((entry) => entry.type === 'error');
+        return failureEntry ? failureEntry.text : '';
+    }
+
     toggleTransactionStar(transactionId) {
         const transaction = this.getTransactionById(transactionId);
         if (!transaction) {
@@ -436,6 +442,22 @@ export class TerminalComponent {
         return lines.join('\n');
     }
 
+    formatTransactionsContent(transactionIds = []) {
+        return transactionIds
+            .map((transactionId) => {
+                const transaction = this.getTransactionById(transactionId);
+                if (!transaction) {
+                    return '';
+                }
+
+                const header = `=== ${transaction.summary || transaction.id} (${transaction.id}) ===`;
+                const body = this.formatTransactionContent(transactionId);
+                return body ? `${header}\n${body}` : header;
+            })
+            .filter(Boolean)
+            .join('\n\n');
+    }
+
     copyTransaction(transactionId) {
         const content = this.formatTransactionContent(transactionId);
         if (!content) {
@@ -461,6 +483,26 @@ export class TerminalComponent {
             .toLowerCase() || 'transaction';
         const fileName = defaultFileName || `${slug}-${timestamp}.txt`;
 
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        return true;
+    }
+
+    async exportTransactions(transactionIds = [], defaultFileName = null) {
+        const content = this.formatTransactionsContent(transactionIds);
+        if (!content) {
+            return false;
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const fileName = defaultFileName || `transactions-${timestamp}.txt`;
         const blob = new Blob([content], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

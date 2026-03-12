@@ -69,6 +69,7 @@ export class TabComponent {
                             <button type="button" class="terminal-transaction-filter-btn" data-transaction-filter="failed">Failed</button>
                             <button type="button" class="terminal-transaction-filter-btn" data-transaction-filter="starred">Starred</button>
                         </div>
+                        <button type="button" class="terminal-transaction-export-visible-btn">Export Visible</button>
                         <button type="button" class="terminal-transaction-close-btn" aria-label="Close transactions">×</button>
                     </div>
                     <div class="terminal-transaction-empty">No transactions yet</div>
@@ -307,6 +308,9 @@ export class TabComponent {
             });
         });
 
+        const exportVisibleButton = this.element.querySelector('.terminal-transaction-export-visible-btn');
+        exportVisibleButton?.addEventListener('click', () => this.exportVisibleTransactions());
+
         const transactionCloseButton = this.element.querySelector('.terminal-transaction-close-btn');
         transactionCloseButton?.addEventListener('click', () => this.toggleTransactionPanel(false));
 
@@ -536,6 +540,10 @@ export class TabComponent {
         this.updateTransactions(this.terminal.getTransactions());
     }
 
+    getVisibleTransactions() {
+        return this.getTransactions().filter((transaction) => this.matchesTransactionFilter(transaction));
+    }
+
     matchesTransactionFilter(transaction) {
         if (this.transactionFilter === 'failed') {
             return (transaction.counts.error || 0) > 0;
@@ -548,6 +556,24 @@ export class TabComponent {
         return true;
     }
 
+    async exportVisibleTransactions() {
+        const visibleTransactions = this.getVisibleTransactions();
+        if (visibleTransactions.length === 0) {
+            return;
+        }
+
+        try {
+            const exported = await this.terminal.exportTransactions(
+                visibleTransactions.map((transaction) => transaction.id)
+            );
+            if (exported) {
+                this.terminal.appendInfo('Visible transactions exported');
+            }
+        } catch (error) {
+            debug.error('Failed to export visible transactions:', error);
+        }
+    }
+
     renderTransactions() {
         const list = this.element?.querySelector('.terminal-transaction-list');
         const emptyState = this.element?.querySelector('.terminal-transaction-empty');
@@ -555,7 +581,7 @@ export class TabComponent {
             return;
         }
 
-        const transactions = this.getTransactions().filter((transaction) => this.matchesTransactionFilter(transaction));
+        const transactions = this.getVisibleTransactions();
         this.clearListContent(list);
         emptyState.style.display = transactions.length === 0 ? 'block' : 'none';
 
@@ -579,6 +605,12 @@ export class TabComponent {
                     `RX ${transaction.counts.rx || 0}`,
                     transaction.counts.error ? `ERR ${transaction.counts.error}` : null,
                 ].filter(Boolean).join(' · ');
+
+                const failureReason = this.terminal.getTransactionFailureReason(transaction.id);
+                const failure = document.createElement('span');
+                failure.className = 'terminal-transaction-item-failure';
+                failure.textContent = failureReason;
+                failure.hidden = !failureReason;
 
                 const actions = document.createElement('div');
                 actions.className = 'terminal-transaction-item-actions';
@@ -622,6 +654,7 @@ export class TabComponent {
                 actions.appendChild(jumpButton);
                 item.appendChild(summary);
                 item.appendChild(meta);
+                item.appendChild(failure);
                 item.appendChild(actions);
                 list.appendChild(item);
             });

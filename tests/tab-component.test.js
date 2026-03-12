@@ -250,6 +250,7 @@ describe('TabComponent', () => {
         const transactionFilterAll = new FakeElement();
         const transactionFilterFailed = new FakeElement();
         const transactionFilterStarred = new FakeElement();
+        const transactionExportVisible = new FakeElement();
         const rxBytes = new FakeElement();
         const txBytes = new FakeElement();
         const duration = new FakeElement();
@@ -348,6 +349,7 @@ describe('TabComponent', () => {
                 if (selector === '.terminal-transaction-list') return transactionList;
                 if (selector === '.terminal-transaction-empty') return transactionEmpty;
                 if (selector === '.terminal-transaction-panel') return transactionPanel;
+                if (selector === '.terminal-transaction-export-visible-btn') return transactionExportVisible;
                 return null;
             },
             querySelectorAll(selector) {
@@ -388,6 +390,8 @@ describe('TabComponent', () => {
             exportTransaction: jest.fn(() => Promise.resolve(true)),
             toggleTransactionStar: jest.fn(() => ({ ...tab.tabState.transactions[0], starred: true })),
             renameTransaction: jest.fn((id, summary) => ({ ...tab.tabState.transactions[0], id, summary })),
+            getTransactionFailureReason: jest.fn((id) => id === 'transaction-2' ? 'Error: timeout' : ''),
+            exportTransactions: jest.fn(() => Promise.resolve(true)),
             appendInfo: jest.fn(),
         };
 
@@ -418,6 +422,7 @@ describe('TabComponent', () => {
         expect(tab.terminal.setFilters).toHaveBeenCalledWith({ search: 'boom', type: 'error' });
         expect(transactionList.children).toHaveLength(2);
         expect(transactionEmpty.style.display).toBe('none');
+        expect(transactionList.children[0].children[2].textContent).toContain('Error: timeout');
         expect(workflowList.children).toHaveLength(1);
         expect(workflowEmpty.style.display).toBe('none');
         expect(workflowStatus.textContent).toBe('Running');
@@ -503,7 +508,7 @@ describe('TabComponent', () => {
             },
         }]);
         expect(transactionList.children).toHaveLength(1);
-        expect(transactionList.children[0].children[2].children).toHaveLength(5);
+        expect(transactionList.children[0].children[3].children).toHaveLength(5);
 
         tab.toggleTransactionPanel(true);
         expect(transactionPanel.hidden).toBe(false);
@@ -514,12 +519,15 @@ describe('TabComponent', () => {
             tab.copyTransaction('transaction-2'),
             tab.exportTransaction('transaction-2'),
         ]);
+        await tab.exportVisibleTransactions();
         tab.toggleTransactionStar('transaction-2');
         expect(tab.terminal.copyTransaction).toHaveBeenCalledWith('transaction-2');
         expect(tab.terminal.exportTransaction).toHaveBeenCalledWith('transaction-2');
+        expect(tab.terminal.exportTransactions).toHaveBeenCalledWith(['transaction-2']);
         expect(tab.terminal.toggleTransactionStar).toHaveBeenCalledWith('transaction-2');
         expect(tab.terminal.appendInfo).toHaveBeenCalledWith('Transaction copied');
         expect(tab.terminal.appendInfo).toHaveBeenCalledWith('Transaction exported');
+        expect(tab.terminal.appendInfo).toHaveBeenCalledWith('Visible transactions exported');
         global.window.prompt.mockReturnValueOnce('Renamed block');
         tab.renameTransaction('transaction-2');
         expect(tab.terminal.renameTransaction).toHaveBeenCalledWith('transaction-2', 'Renamed block');
@@ -571,6 +579,7 @@ describe('TabComponent', () => {
         const txButton = new FakeElement();
         const transactionButton = new FakeElement();
         const transactionFilterFailed = new FakeElement();
+        const transactionExportVisible = new FakeElement();
         const transactionCloseButton = new FakeElement();
         const workflowButton = new FakeElement();
         const workflowCloseButton = new FakeElement();
@@ -619,6 +628,7 @@ describe('TabComponent', () => {
                 if (selector === '.terminal-display') return terminalDisplay;
                 if (selector === '.terminal-search-input') return searchInput;
                 if (selector === '.terminal-transaction-btn') return transactionButton;
+                if (selector === '.terminal-transaction-export-visible-btn') return transactionExportVisible;
                 if (selector === '.terminal-transaction-close-btn') return transactionCloseButton;
                 if (selector === '.terminal-workflow-btn') return workflowButton;
                 if (selector === '.terminal-workflow-close-btn') return workflowCloseButton;
@@ -639,6 +649,7 @@ describe('TabComponent', () => {
         tab.updateSearchState = jest.fn();
         tab.toggleTransactionPanel = jest.fn();
         tab.setTransactionFilter = jest.fn();
+        tab.exportVisibleTransactions = jest.fn();
         tab.toggleWorkflowPanel = jest.fn();
         tab.addWorkflowFromInputs = jest.fn();
         tab.toggleTriggerPanel = jest.fn();
@@ -666,6 +677,7 @@ describe('TabComponent', () => {
         txButton.listeners.get('click')();
         transactionButton.listeners.get('click')();
         transactionFilterFailed.listeners.get('click')();
+        transactionExportVisible.listeners.get('click')();
         transactionCloseButton.listeners.get('click')();
         workflowButton.listeners.get('click')();
         workflowCloseButton.listeners.get('click')();
@@ -687,6 +699,7 @@ describe('TabComponent', () => {
         expect(onFiltersChange).toHaveBeenCalledWith('tab-1', { search: 'AT', type: 'tx' });
         expect(tab.toggleTransactionPanel).toHaveBeenCalledWith();
         expect(tab.setTransactionFilter).toHaveBeenCalledWith('failed');
+        expect(tab.exportVisibleTransactions).toHaveBeenCalled();
         expect(tab.toggleTransactionPanel).toHaveBeenCalledWith(false);
         expect(tab.toggleWorkflowPanel).toHaveBeenCalledWith();
         expect(tab.toggleWorkflowPanel).toHaveBeenCalledWith(false);

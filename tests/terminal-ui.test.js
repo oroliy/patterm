@@ -432,6 +432,26 @@ describe('terminal search UI behavior', () => {
         expect(terminal.getTransactions()[0].summary).toBe('Handshake');
     });
 
+    test('TerminalComponent can format failure reasons and export multiple transactions', async () => {
+        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const container = new FakeElement('div');
+        const terminal = new TerminalComponent(container, {
+            autoScroll: false,
+        });
+
+        terminal.appendTransmitted('AT');
+        terminal.appendError('Timeout waiting for READY');
+        terminal.appendTransmitted('ATI');
+        terminal.appendData('Echo: ATI\n', 'rx');
+
+        const transactions = terminal.getTransactions();
+        expect(terminal.getTransactionFailureReason(transactions[0].id)).toContain('Timeout waiting for READY');
+        expect(terminal.formatTransactionsContent(transactions.map((item) => item.id))).toContain('=== > AT');
+
+        await expect(terminal.exportTransactions(transactions.map((item) => item.id))).resolves.toBe(true);
+        expect(global.URL.createObjectURL).toHaveBeenCalled();
+    });
+
     test('TabComponent updates search count and restores filter state', () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const searchCount = new FakeElement('span');

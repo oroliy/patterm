@@ -1066,6 +1066,16 @@
     flex-wrap: wrap;
 }
 
+.terminal-transaction-export-visible-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
 .terminal-transaction-filter-btn {
     background: transparent;
     border: 1px solid var(--glass-border);
@@ -1095,7 +1105,7 @@
 
 .terminal-transaction-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
     background: rgba(255, 255, 255, 0.03);
@@ -1118,12 +1128,19 @@
     font-size: 12px;
 }
 
+.terminal-transaction-item-failure {
+    color: #ff8a80;
+    font-size: 12px;
+}
+
 .terminal-transaction-item-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: 6px;
     flex-wrap: wrap;
+    grid-column: 2 / 3;
+    grid-row: 1 / span 3;
 }
 
 .terminal-transaction-star-btn,
@@ -1448,5 +1465,11 @@
 
     .terminal-transaction-item {
         grid-template-columns: 1fr;
+    }
+
+    .terminal-transaction-item-actions {
+        grid-column: auto;
+        grid-row: auto;
+        justify-content: flex-start;
     }
 }

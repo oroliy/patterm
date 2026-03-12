@@ -33,7 +33,7 @@
 - Global search jumps across tabs to the exact matching terminal entry
 - Per-tab read-only trigger rules can mark matching `RX`, `TX`, or `Error` lines with highlight badges
 - Per-tab workflow runner can execute a simple `send -> wait for match` automation flow
-- Per-tab transaction panel groups `TX -> RX` traffic into request/response or passive blocks with jump-back, copy, export, star, rename, and failed/starred filters
+- Per-tab transaction panel groups `TX -> RX` traffic into request/response or passive blocks with jump-back, copy, export, star, rename, failed/starred filters, failure summaries, and visible-block export
 - Header theme control supports explicit `System`, `Dark`, and `Light` selection
 
 ### Complete UART Configuration
@@ -59,7 +59,7 @@
 - Cross-tab global search with `All`, `RX`, `TX`, and `Error` scopes
 - Read-only trigger highlights with per-tab rules for `Contains` and `Regex` matching
 - Workflow MVP with per-tab definitions, timeout handling, and run/stop controls
-- Transaction panel MVP with time-window grouping, jump-to-entry navigation, copy/export actions, starred blocks, rename, and `All / Failed / Starred` filters
+- Transaction panel MVP with time-window grouping, jump-to-entry navigation, copy/export actions, starred blocks, rename, `All / Failed / Starred` filters, failure summaries, and visible-block export
 
 ### Workspace Controls
 - Header theme menu with `System`, `Dark`, and `Light` options
@@ -191,7 +191,7 @@ npm start
 6. **Create more connections** with `Ctrl/Cmd + N` for additional serial ports
 7. **Switch between tabs** to manage different connections
 8. **Enable logging** to save serial data to a file (per tab)
-9. **Open Blocks** in a tab to inspect grouped request/response traffic, rename or star important blocks, filter to failed/starred blocks, and copy or export a single block
+9. **Open Blocks** in a tab to inspect grouped request/response traffic, rename or star important blocks, review failure summaries, filter to failed/starred blocks, and export one block or all visible blocks
 10. **Close tab** to disconnect serial port and remove tab
 
 ---
