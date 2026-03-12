@@ -20,10 +20,6 @@ Then in Patterm:
 ### Option 2: Python Virtual Serial Port
 
 ```bash
-# Install pty process (if needed)
-sudo apt install python3-ptyprocess
-
-# Run the virtual serial port generator
 python3 scripts/virtual-serial.py
 ```
 

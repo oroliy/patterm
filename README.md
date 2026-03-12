@@ -338,9 +338,6 @@ bash scripts/quick-virtual-serial.sh
 #### Python Virtual Serial Port
 
 ```bash
-# Install required package
-sudo apt install python3-ptyprocess
-
 # Run interactive virtual serial port
 python3 scripts/virtual-serial.py
 

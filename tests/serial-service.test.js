@@ -174,8 +174,13 @@ describe('SerialService', () => {
     });
 
     describe('close', () => {
-        test('should close successfully when port is not open', async () => {
+        test('should clear stale port references when port exists but is not open', async () => {
+            service.port = { isOpen: false };
+            service.parser = {};
+
             await expect(service.close()).resolves.toBe(true);
+            expect(service.port).toBeNull();
+            expect(service.parser).toBeNull();
         });
     });
 });
