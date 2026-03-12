@@ -72,7 +72,6 @@ test.describe('Patterm Electron Tests', () => {
             `Theme: ${targetMode === 'dark' ? 'Dark' : 'Light'} · Patterm Blue`
         );
 
-        await themeBtn.evaluate((button) => button.click());
         await expect(themeMenu).toBeVisible();
         await themeMenu.locator('[data-theme-variant="claude"]').click();
         await window.waitForTimeout(200);
