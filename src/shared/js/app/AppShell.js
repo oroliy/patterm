@@ -88,6 +88,10 @@ export class AppShell {
     registerPlatformEventHandlers() {
     }
 
+    getTabSaveHandler() {
+        return null;
+    }
+
     onTabCreated(tabState) {
         const component = new TabComponent(tabState, {
             onClose: (tabId) => this.closeTab(tabId),
@@ -99,7 +103,8 @@ export class AppShell {
             onTriggerRulesChange: (tabId, triggerRules) => this.onTabTriggerRulesChange(tabId, triggerRules),
             onWorkflowDefinitionsChange: (tabId, workflows) => this.onTabWorkflowDefinitionsChange(tabId, workflows),
             onWorkflowRun: (tabId, workflowId) => this.startWorkflow(tabId, workflowId),
-            onWorkflowStop: (tabId) => this.stopWorkflow(tabId)
+            onWorkflowStop: (tabId) => this.stopWorkflow(tabId),
+            saveContent: this.getTabSaveHandler(tabState.id),
         });
 
         component.create();

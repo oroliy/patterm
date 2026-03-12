@@ -1,61 +1,43 @@
 const createBaseShell = () => class AppShell {
     constructor() {
         this.tabManager = {
+            createTab: jest.fn(() => ({ id: 'tab-1' })),
+            connectTab: jest.fn(() => Promise.resolve()),
+            closeTab: jest.fn(),
             getTab: jest.fn(() => ({ connected: false })),
             disconnectTab: jest.fn(() => Promise.resolve()),
             reconnectTab: jest.fn(() => Promise.resolve()),
         };
         this.tabComponents = new Map();
-        this.commandPaletteCommands = [];
     }
 
     async init() {
         return undefined;
     }
 
-    registerCommandPaletteCommands() {
-        this.commandPaletteCommands = [
-            { id: 'search-current-tab' },
-            { id: 'search-all-tabs' },
-            { id: 'toggle-transactions' },
-            { id: 'toggle-workflows' },
-            { id: 'clear-active-terminal' },
-            { id: 'close-active-tab' },
-            { id: 'new-connection' },
-        ];
-    }
+    clearTerminal() {}
 
-    closeTab() {}
-
-    switchTab() {}
+    copyTabContent() {}
 };
 
 describe('electron renderer app', () => {
     beforeEach(() => {
         jest.resetModules();
+        const ipcRenderer = {
+            on: jest.fn(),
+            invoke: jest.fn(() => Promise.resolve()),
+        };
+        const fs = {
+            promises: {
+                writeFile: jest.fn(() => Promise.resolve()),
+            },
+        };
 
         global.document = {
             createElement: jest.fn(() => ({
                 className: '',
-                dataset: {},
-                style: {},
                 innerHTML: '',
-                textContent: '',
-                querySelector: jest.fn((selector) => {
-                    if (selector === '.tab-close-btn') {
-                        return { addEventListener: jest.fn() };
-                    }
-                    if (selector === '.tab-name' || selector === '.tab-status') {
-                        return { textContent: '', classList: { toggle: jest.fn() } };
-                    }
-                    return null;
-                }),
-                addEventListener: jest.fn(),
-                remove: jest.fn(),
-                classList: { toggle: jest.fn() },
-            })),
-            getElementById: jest.fn(() => ({
-                appendChild: jest.fn(),
+                style: {},
             })),
             body: {
                 appendChild: jest.fn(),
@@ -63,12 +45,17 @@ describe('electron renderer app', () => {
         };
 
         global.window = {
-            require: jest.fn(() => ({
-                ipcRenderer: {
-                    on: jest.fn(),
-                    invoke: jest.fn(() => Promise.resolve()),
-                },
-            })),
+            require: jest.fn((name) => {
+                if (name === 'electron') {
+                    return { ipcRenderer };
+                }
+
+                if (name === 'fs') {
+                    return fs;
+                }
+
+                throw new Error(`Unexpected module: ${name}`);
+            }),
         };
 
         jest.doMock('../src/shared/js/app/AppShell.js', () => ({
@@ -85,37 +72,42 @@ describe('electron renderer app', () => {
         }));
     });
 
-    test('filters out shared-surface-only command palette entries on Electron', () => {
+    test('injects a native save handler for shared terminal exports', async () => {
         const { PattermElectronApp } = require('../src/renderer/main.js');
         const app = new PattermElectronApp();
+        const ipcRenderer = window.require('electron').ipcRenderer;
+        const fs = window.require('fs');
+        ipcRenderer.invoke.mockResolvedValueOnce('/tmp/export.txt');
 
-        app.registerCommandPaletteCommands();
+        const save = app.getTabSaveHandler('tab-1');
+        await expect(save('content', 'export.txt')).resolves.toBe(true);
 
-        expect(app.commandPaletteCommands.map((command) => command.id)).toEqual([
-            'close-active-tab',
-            'new-connection',
-        ]);
+        expect(ipcRenderer.invoke).toHaveBeenCalledWith('dialog:saveFile', expect.objectContaining({
+            defaultPath: 'export.txt',
+        }));
+        expect(fs.promises.writeFile).toHaveBeenCalledWith('/tmp/export.txt', 'content', 'utf8');
     });
 
-    test('uses a lightweight desktop tab shell and limits tab context menu actions', () => {
+    test('keeps desktop tab context actions on the shared shell', async () => {
         const { PattermElectronApp } = require('../src/renderer/main.js');
         const app = new PattermElectronApp();
-        app.switchTab = jest.fn();
-        app.updateEmptyState = jest.fn();
-        app.persistSession = jest.fn();
+        app.clearTerminal = jest.fn();
+        app.copyTabContent = jest.fn();
+        app.toggleConnection = jest.fn();
 
-        app.onTabCreated({
-            id: 'tab-1',
-            connected: false,
-            name: 'Main',
-        });
-
-        const component = app.tabComponents.get('tab-1');
-        expect(component).toBeDefined();
-        expect(component.terminal).toBeUndefined();
-        expect(document.getElementById).toHaveBeenCalledWith('tabs-container');
-        expect(app.getTabContextMenuItems('tab-1')).toEqual([
-            expect.objectContaining({ label: 'Disconnect/Reconnect' }),
+        const items = app.getTabContextMenuItems('tab-1');
+        expect(items.map((item) => item.label)).toEqual([
+            'Clear Screen',
+            'Copy All Text',
+            'Disconnect/Reconnect',
         ]);
+
+        await items[0].action();
+        await items[1].action();
+        await items[2].action();
+
+        expect(app.clearTerminal).toHaveBeenCalledWith('tab-1');
+        expect(app.copyTabContent).toHaveBeenCalledWith('tab-1');
+        expect(app.toggleConnection).toHaveBeenCalledWith('tab-1');
     });
 });

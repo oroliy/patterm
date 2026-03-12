@@ -49,8 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the local self-signed Vite certificate during server readiness checks
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
-- Fixed the Electron renderer shell to stop mounting hidden shared tab content behind BrowserViews
-- Fixed terminal export APIs to use an injected save handler when available instead of forcing browser-style downloads
+- Fixed Electron terminal exports to use an injected native save handler instead of forcing browser-style downloads
 - Replaced the Cloudflare Pages deploy GitHub Action wrapper with a direct `wrangler` CLI call so
   the `Deploy Web PWA` job no longer fails during third-party action download
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit

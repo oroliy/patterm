@@ -209,6 +209,7 @@ export class TabComponent {
             autoScroll: this.tabState.autoScroll,
             showTimestamps: true,
             triggerRules: this.tabState.triggerRules,
+            saveContent: this.options.saveContent,
             onSearchStateChange: () => this.updateSearchState(),
             onTransactionsChange: (transactions) => this.updateTransactions(transactions)
         });

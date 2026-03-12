@@ -90,6 +90,13 @@ class PattermApp extends AppShell {
         ];
     }
 
+    getTabSaveHandler() {
+        return async (content, fileName) => {
+            const logManager = new LogManager();
+            return logManager.saveTabContent(content, fileName);
+        };
+    }
+
     async saveTabOutput(tabId) {
         const component = this.tabComponents.get(tabId);
         if (!component) {
