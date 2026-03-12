@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the local self-signed Vite certificate during server readiness checks
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
+- Replaced the Cloudflare Pages deploy GitHub Action wrapper with a direct `wrangler` CLI call so
+  the `Deploy Web PWA` job no longer fails during third-party action download
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit
 - Bumped the `tar` override to `7.5.10` to clear the remaining Dependabot tar advisories
 - Removed the vulnerable `@tootallnate/once@2` chain by upgrading the packaging toolchain
