@@ -594,7 +594,7 @@ describe('AppShell behavior', () => {
         expect(shell.globalSearch.style.display).toBe('none');
     });
 
-    test('theme menu supports explicit system selection and about dialog renders current summary', () => {
+    test('theme menu supports explicit system selection and about dialog renders current summary', async () => {
         const { AppShell } = require('../src/shared/js/app/AppShell.js');
         const shell = new AppShell();
         const themeIcon = new FakeElement();
@@ -634,9 +634,17 @@ describe('AppShell behavior', () => {
         expect(themeLabel.textContent).toBe('System');
 
         shell.tabManager.getAllTabs.mockReturnValue([{ id: 'tab-1' }, { id: 'tab-2' }]);
-        shell.showAbout();
+        shell.getAboutBuildInfo = jest.fn(() => Promise.resolve({
+            version: '0.6.0',
+            commitId: '09b4000',
+        }));
+        await shell.showAbout();
         expect(document.body.children.length).toBeGreaterThan(0);
         expect(document.body.children.at(-1).innerHTML).toContain('Cross-tab global search');
         expect(document.body.children.at(-1).innerHTML).toContain('Tabs');
+        expect(document.body.children.at(-1).innerHTML).toContain('Version');
+        expect(document.body.children.at(-1).innerHTML).toContain('0.6.0');
+        expect(document.body.children.at(-1).innerHTML).toContain('Commit');
+        expect(document.body.children.at(-1).innerHTML).toContain('09b4000');
     });
 });

@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added failure summaries and visible-block export in the Blocks panel
 - Added an explicit header theme selector with `System`, `Dark`, and `Light` modes
 - Refreshed the About dialog to reflect the current product surface, theme, tab count, and active capabilities
+- Added version and commit ID metadata to the shared About dialog on both Web and Electron
 - Upgraded `electron-builder` to `26.8.1` to pick up the current proxy-agent dependency chain
 
 ### Fixed
@@ -50,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed terminal rendering so transmitted text and binary serial payloads both appear correctly in the shared main-window terminal
 - Fixed terminal filtering to operate on stored entries instead of brittle DOM text scraping
 - Fixed Electron terminal exports to use an injected native save handler instead of forcing browser-style downloads
+- Fixed shared About build metadata loading by routing Web through Vite build constants and Electron through IPC
 - Replaced the Cloudflare Pages deploy GitHub Action wrapper with a direct `wrangler` CLI call so
   the `Deploy Web PWA` job no longer fails during third-party action download
 - Fixed the CI Web E2E runner to stop the full Vite process group instead of hanging on shell exit

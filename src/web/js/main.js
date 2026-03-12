@@ -6,6 +6,11 @@ import { normalizeSerialConfig } from '../../shared/js/serial/normalizeSerialCon
 import { applyTheme } from './utils/helpers.js';
 import { debug } from './utils/debug.js';
 
+const WEB_BUILD_INFO = {
+    version: typeof __PATTERM_VERSION__ !== 'undefined' ? __PATTERM_VERSION__ : '0.6.0',
+    commitId: typeof __PATTERM_COMMIT_ID__ !== 'undefined' ? __PATTERM_COMMIT_ID__ : 'dev',
+};
+
 class PattermApp extends AppShell {
     async init() {
         if (!this.checkBrowserSupport()) {
@@ -129,8 +134,8 @@ class PattermApp extends AppShell {
         return 'Web Serial';
     }
 
-    showAbout() {
-        super.showAbout();
+    async getAboutBuildInfo() {
+        return WEB_BUILD_INFO;
     }
 
     showError(message) {

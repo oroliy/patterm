@@ -23,6 +23,8 @@ const createBaseShell = () => class AppShell {
 describe('web main app bootstrap', () => {
     beforeEach(() => {
         jest.resetModules();
+        global.__PATTERM_VERSION__ = '0.6.0';
+        global.__PATTERM_COMMIT_ID__ = '09b4000';
         global.window = {
             matchMedia: jest.fn(() => ({
                 addEventListener: jest.fn(),
@@ -107,7 +109,7 @@ describe('web main app bootstrap', () => {
         await app.saveTabOutput('tab-1');
         expect(saveTabContent).toHaveBeenCalledWith('terminal output');
 
-        app.showAbout();
+        await app.showAbout();
         app.showError('boom');
         expect(document.body.appendChild).toHaveBeenCalledTimes(2);
     });
@@ -259,5 +261,10 @@ describe('web main app bootstrap', () => {
         app.initServiceWorker();
         await registeredLoadListener();
         expect(navigator.serviceWorker.register).toHaveBeenCalledWith('/sw.js');
+
+        await expect(app.getAboutBuildInfo()).resolves.toEqual({
+            version: '0.6.0',
+            commitId: '09b4000',
+        });
     });
 });

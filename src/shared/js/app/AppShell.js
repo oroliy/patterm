@@ -910,43 +910,61 @@ export class AppShell {
         document.body.appendChild(overlay);
     }
 
-    showAbout() {
+    async showAbout() {
         const overlay = document.createElement('div');
         overlay.className = 'about-overlay';
-        overlay.innerHTML = `
-            <div class="about-dialog">
-                <h2>Patterm</h2>
-                <p class="about-summary">${this.getAboutSummary()}</p>
-                <div class="about-meta">
-                    <div class="about-meta-item">
-                        <span class="about-meta-label">Surface</span>
-                        <span class="about-meta-value">${this.getAboutSurfaceLabel()}</span>
+        const renderAbout = (buildInfo) => {
+            overlay.innerHTML = `
+                <div class="about-dialog">
+                    <h2>Patterm</h2>
+                    <p class="about-summary">${this.getAboutSummary()}</p>
+                    <div class="about-meta">
+                        <div class="about-meta-item">
+                            <span class="about-meta-label">Surface</span>
+                            <span class="about-meta-value">${this.getAboutSurfaceLabel()}</span>
+                        </div>
+                        <div class="about-meta-item">
+                            <span class="about-meta-label">Theme</span>
+                            <span class="about-meta-value">${this.getAboutThemeLabel()}</span>
+                        </div>
+                        <div class="about-meta-item">
+                            <span class="about-meta-label">Tabs</span>
+                            <span class="about-meta-value">${this.tabManager.getAllTabs().length}</span>
+                        </div>
+                        <div class="about-meta-item">
+                            <span class="about-meta-label">Version</span>
+                            <span class="about-meta-value">${buildInfo.version}</span>
+                        </div>
+                        <div class="about-meta-item">
+                            <span class="about-meta-label">Commit</span>
+                            <span class="about-meta-value">${buildInfo.commitId}</span>
+                        </div>
                     </div>
-                    <div class="about-meta-item">
-                        <span class="about-meta-label">Theme</span>
-                        <span class="about-meta-value">${this.getAboutThemeLabel()}</span>
+                    <div class="about-highlights">
+                        <span class="about-chip">Multi-tab serial sessions</span>
+                        <span class="about-chip">Per-tab search and filters</span>
+                        <span class="about-chip">Cross-tab global search</span>
+                        <span class="about-chip">Command palette</span>
+                        <span class="about-chip">Session restore</span>
+                        <span class="about-chip">Read-only trigger highlights</span>
+                        <span class="about-chip">Workflow runner MVP</span>
                     </div>
-                    <div class="about-meta-item">
-                        <span class="about-meta-label">Tabs</span>
-                        <span class="about-meta-value">${this.tabManager.getAllTabs().length}</span>
+                    <div class="about-actions">
+                        <a href="https://github.com/oroliy/patterm" target="_blank" rel="noreferrer">Project Home</a>
+                        <button class="btn btn-primary" type="button" onclick="this.closest('.about-overlay').remove()">Close</button>
                     </div>
                 </div>
-                <div class="about-highlights">
-                    <span class="about-chip">Multi-tab serial sessions</span>
-                    <span class="about-chip">Per-tab search and filters</span>
-                    <span class="about-chip">Cross-tab global search</span>
-                    <span class="about-chip">Command palette</span>
-                    <span class="about-chip">Session restore</span>
-                    <span class="about-chip">Read-only trigger highlights</span>
-                    <span class="about-chip">Workflow runner MVP</span>
-                </div>
-                <div class="about-actions">
-                    <a href="https://github.com/oroliy/patterm" target="_blank" rel="noreferrer">Project Home</a>
-                    <button class="btn btn-primary" type="button" onclick="this.closest('.about-overlay').remove()">Close</button>
-                </div>
-            </div>
-        `;
+            `;
+        };
+
+        renderAbout(this.getInitialAboutBuildInfo());
         document.body.appendChild(overlay);
+
+        try {
+            renderAbout(this.normalizeAboutBuildInfo(await this.getAboutBuildInfo()));
+        } catch (error) {
+            console.error('Failed to load about build info:', error);
+        }
     }
 
     getAboutSummary() {
@@ -959,6 +977,21 @@ export class AppShell {
 
     getAboutThemeLabel() {
         return THEME_OPTIONS.find((option) => option.value === this.theme)?.label || 'System';
+    }
+
+    getInitialAboutBuildInfo() {
+        return this.normalizeAboutBuildInfo();
+    }
+
+    async getAboutBuildInfo() {
+        return this.getInitialAboutBuildInfo();
+    }
+
+    normalizeAboutBuildInfo(buildInfo = {}) {
+        return {
+            version: buildInfo.version || 'Loading...',
+            commitId: buildInfo.commitId || 'Loading...',
+        };
     }
 
     async showConnectionDialog() {

@@ -63,7 +63,7 @@
 
 ### Workspace Controls
 - Header theme menu with `System`, `Dark`, and `Light` options
-- Refreshed About dialog with current surface, theme, tab count, and active capabilities
+- Refreshed About dialog with current surface, theme, tab count, version, commit ID, and active capabilities
 
 ### Context Menus
 - **Tab Right-Click Menu**: Quick access to:

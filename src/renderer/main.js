@@ -82,6 +82,10 @@ export class PattermElectronApp extends AppShell {
         ipcRenderer.invoke('theme:changed', theme, theme);
     }
 
+    async getAboutBuildInfo() {
+        return ipcRenderer.invoke('app:getBuildInfo');
+    }
+
     showError(message) {
         const overlay = document.createElement('div');
         overlay.className = 'error-overlay';

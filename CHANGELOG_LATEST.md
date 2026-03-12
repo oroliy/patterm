@@ -98,6 +98,7 @@
 - **Transaction Failure Summaries**: Show the first error line for failed blocks and export all currently visible blocks in one action
 - **Explicit Theme Modes**: Header theme control now exposes `System`, `Dark`, and `Light` instead of cycling blindly
 - **Refreshed About Dialog**: Simplified About panel now shows current surface, theme, tab count, and active workspace features
+- **Build Info In About**: About panel now includes the current app version and commit ID on both Web and Electron
 - **Status Bar Visual Design**: Full width, no padding gaps, transparent background
 - **Status Bar Positioning**: Fixed cut-off issue with proper CSS padding
 - **Real-time Rate Updates**: Status bar rates update immediately on data transfer

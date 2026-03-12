@@ -88,6 +88,22 @@ describe('electron renderer app', () => {
         expect(fs.promises.writeFile).toHaveBeenCalledWith('/tmp/export.txt', 'content', 'utf8');
     });
 
+    test('loads about build info through IPC', async () => {
+        const { PattermElectronApp } = require('../src/renderer/main.js');
+        const app = new PattermElectronApp();
+        const ipcRenderer = window.require('electron').ipcRenderer;
+        ipcRenderer.invoke.mockResolvedValueOnce({
+            version: '0.6.0',
+            commitId: '09b4000',
+        });
+
+        await expect(app.getAboutBuildInfo()).resolves.toEqual({
+            version: '0.6.0',
+            commitId: '09b4000',
+        });
+        expect(ipcRenderer.invoke).toHaveBeenCalledWith('app:getBuildInfo');
+    });
+
     test('keeps desktop tab context actions on the shared shell', async () => {
         const { PattermElectronApp } = require('../src/renderer/main.js');
         const app = new PattermElectronApp();
