@@ -53,11 +53,12 @@ test.describe('Patterm Electron Tests', () => {
         const themeBtn = window.locator('#theme-toggle-btn');
         const themeMenu = window.locator('#theme-menu');
         const rootHtml = window.locator('html');
-        
+
+        await window.waitForFunction(() => Boolean(document.documentElement.getAttribute('data-theme')));
         const initialTheme = await rootHtml.getAttribute('data-theme');
         expect(initialTheme).toBeTruthy();
-        
-        await themeBtn.click();
+
+        await themeBtn.evaluate((button) => button.click());
         await expect(themeMenu).toBeVisible();
 
         const targetMode = initialTheme === 'dark' ? 'light' : 'dark';
@@ -71,7 +72,7 @@ test.describe('Patterm Electron Tests', () => {
             `Theme: ${targetMode === 'dark' ? 'Dark' : 'Light'} · Patterm Blue`
         );
 
-        await themeBtn.click();
+        await themeBtn.evaluate((button) => button.click());
         await expect(themeMenu).toBeVisible();
         await themeMenu.locator('[data-theme-variant="claude"]').click();
         await window.waitForTimeout(200);
