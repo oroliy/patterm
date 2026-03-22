@@ -266,7 +266,7 @@ npm run test:electron  # Run Playwright Electron E2E tests
 npm run web:test       # Start Vite automatically and run Playwright web E2E tests
 npm run web:test:ci    # Run the CI headless web suite with the shared Playwright web server config
 npm run test:ci        # Run the local CI gate: lint + unit + web + Electron
-npm run lint           # Run linter
+npm run lint           # Run the repository lint gate for src/, tests/, and web/
 ```
 
 ### Testing
@@ -367,13 +367,18 @@ npm test -- --testNamePattern="testName"
 
 ### Linting
 
-```bash
-# Run linter
-npm run lint
+`npm run lint` now runs the same repository-wide lint gate locally and in GitHub Actions.
+It scans `src/`, `tests/`, and `web/`, parses both CommonJS and ESM entry points, and
+fails with a non-zero exit code when it finds syntax errors, undefined references, or
+unused local bindings.
 
-# Auto-fix linting issues
-npm run lint -- --fix
+```bash
+# Run the same lint command used by CI
+npm run lint
 ```
+
+The lint runner is implemented in `scripts/lint.js`, so local runs and the CI `lint` job
+use the exact same checks and file coverage.
 
 ### Building for Distribution
 

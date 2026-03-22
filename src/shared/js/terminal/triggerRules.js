@@ -61,7 +61,7 @@ function isContainsMatch(text, pattern) {
 function isRegexMatch(text, pattern, flags) {
     try {
         return new RegExp(pattern, flags || 'i').test(String(text || ''));
-    } catch (error) {
+    } catch (_error) {
         return false;
     }
 }

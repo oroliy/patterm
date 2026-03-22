@@ -1,6 +1,6 @@
 export function debounce(func, wait) {
     let timeout;
-    return function executedFunction(...args) {
+    return function (...args) {
         const later = () => {
             clearTimeout(timeout);
             func(...args);
@@ -12,7 +12,7 @@ export function debounce(func, wait) {
 
 export function throttle(func, limit) {
     let inThrottle;
-    return function executedFunction(...args) {
+    return function (...args) {
         if (!inThrottle) {
             func(...args);
             inThrottle = true;
@@ -95,7 +95,7 @@ export async function readClipboardText() {
     if (navigator.clipboard && navigator.clipboard.readText) {
         try {
             return await navigator.clipboard.readText();
-        } catch (error) {
+        } catch (_error) {
             return null;
         }
     }

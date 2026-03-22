@@ -262,7 +262,7 @@ npm run test:electron  # 运行 Electron Playwright E2E
 npm run web:test       # 自动启动 Vite 并运行 Web 端 Playwright E2E
 npm run web:test:ci    # 使用共享 Playwright Web 服务配置运行 CI 无头 Web 测试
 npm run test:ci        # 运行本地 CI 门禁：lint + 单元测试 + Web + Electron
-npm run lint           # 运行代码检查
+npm run lint           # 对 src/、tests/、web/ 执行仓库级 lint 门禁
 ```
 
 CI 现在会在构建和部署前强制通过四个阶段：
@@ -360,13 +360,17 @@ npm test -- --testNamePattern="testName"
 
 ### 代码检查
 
-```bash
-# 运行代码检查工具
-npm run lint
+`npm run lint` 现在会在本地和 GitHub Actions 中运行同一套仓库级 lint 门禁。
+它会覆盖 `src/`、`tests/`、`web/`，同时解析 CommonJS 与 ESM 文件，并在发现
+语法错误、未定义引用或未使用的局部绑定时返回非零退出码。
 
-# 自动修复代码检查问题
-npm run lint -- --fix
+```bash
+# 运行与 CI 完全一致的 lint 命令
+npm run lint
 ```
+
+该 lint 入口位于 `scripts/lint.js`，因此本地执行和 CI 的 `lint` job 使用的是
+完全相同的检查逻辑与目录覆盖范围。
 
 ### 构建分发版本
 

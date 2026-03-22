@@ -10,22 +10,22 @@ function loadFrontendModule(relativePath, cache = new Map()) {
     let source = fs.readFileSync(absolutePath, 'utf8');
     const exports = [];
 
-    source = source.replace(/import\s+\{([^}]+)\}\s+from\s+'([^']+)';/g, (match, imports, specifier) => {
+    source = source.replace(/import\s+\{([^}]+)\}\s+from\s+'([^']+)';/g, (_match, imports, specifier) => {
         const resolvedPath = path.join(path.dirname(relativePath), specifier);
         return `const { ${imports.trim()} } = __load('${resolvedPath}');`;
     });
 
-    source = source.replace(/export class (\w+)/g, (match, name) => {
+    source = source.replace(/export class (\w+)/g, (_match, name) => {
         exports.push(name);
         return `class ${name}`;
     });
 
-    source = source.replace(/export function (\w+)/g, (match, name) => {
+    source = source.replace(/export function (\w+)/g, (_match, name) => {
         exports.push(name);
         return `function ${name}`;
     });
 
-    source = source.replace(/export const (\w+)\s*=/g, (match, name) => {
+    source = source.replace(/export const (\w+)\s*=/g, (_match, name) => {
         exports.push(name);
         return `const ${name} =`;
     });

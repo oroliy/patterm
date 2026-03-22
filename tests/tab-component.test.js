@@ -261,8 +261,6 @@ describe('TabComponent', () => {
         const currentTime = new FakeElement();
         const rxRate = new FakeElement();
         const txRate = new FakeElement();
-        const element = new FakeElement();
-        const tabElement = new FakeElement();
 
         allButton.dataset.filterType = 'all';
         errorButton.dataset.filterType = 'error';

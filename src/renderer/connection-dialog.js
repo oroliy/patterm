@@ -17,7 +17,7 @@ ipcRenderer.invoke('theme:get').then(originalTheme => {
     document.documentElement.setAttribute('data-theme-variant', themeVariant || 'default');
 });
 
-ipcRenderer.on('theme:update', (event, effectiveTheme, themeVariant) => {
+ipcRenderer.on('theme:update', (_event, effectiveTheme, themeVariant) => {
     document.documentElement.setAttribute('data-theme', effectiveTheme);
     document.documentElement.setAttribute('data-theme-variant', themeVariant || 'default');
 });
@@ -44,14 +44,11 @@ async function loadPorts() {
     try {
         const ports = await ipcRenderer.invoke('serial:listPorts');
         portList.innerHTML = '';
-
-        let hasPorts = false;
         ports.forEach(port => {
             const option = document.createElement('option');
             option.value = port.path;
             option.label = `${port.path} (${port.manufacturer || 'Unknown'})`;
             portList.appendChild(option);
-            hasPorts = true;
         });
 
         // Default selection logic removed to show placeholder

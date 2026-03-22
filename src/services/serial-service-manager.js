@@ -1,5 +1,4 @@
 const SerialService = require('./serial-service');
-const path = require('path');
 
 class SerialServiceManager {
     constructor() {
@@ -190,7 +189,7 @@ class SerialServiceManager {
     }
 
     async closeAll() {
-        for (const [tabId, tabData] of this.services) {
+        for (const [, tabData] of this.services) {
             if (tabData.service && tabData.service.isOpen()) {
                 await tabData.service.close();
             }

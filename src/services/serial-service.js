@@ -1,5 +1,4 @@
 const { SerialPort } = require('serialport');
-const { ReadlineParser } = require('@serialport/parser-readline');
 const fs = require('fs');
 const path = require('path');
 

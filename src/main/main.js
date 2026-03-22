@@ -51,7 +51,7 @@ function setupIpcHandlers() {
         return serialServiceManager.listPorts();
     });
 
-    ipcMain.handle('connection:create', async (event, config, tabName) => {
+    ipcMain.handle('connection:create', async (_event, config, tabName) => {
         try {
             debugWindow.log(`connection:create called with config: ${JSON.stringify(config)}, tabName: ${tabName}`, 'info');
 
@@ -96,15 +96,15 @@ function setupIpcHandlers() {
         }
     });
 
-    ipcMain.handle('serial:close', async (event, tabId) => {
+    ipcMain.handle('serial:close', async (_event, tabId) => {
         return serialServiceManager.closeConnection(tabId);
     });
 
-    ipcMain.handle('serial:write', async (event, tabId, data) => {
+    ipcMain.handle('serial:write', async (_event, tabId, data) => {
         return serialServiceManager.write(tabId, data);
     });
 
-    ipcMain.handle('serial:disconnect', async (event, tabId) => {
+    ipcMain.handle('serial:disconnect', async (_event, tabId) => {
         const result = await serialServiceManager.closeConnection(tabId);
         const mainWindow = windowManager.getMainWindow();
         if (mainWindow) {
@@ -113,7 +113,7 @@ function setupIpcHandlers() {
         return result;
     });
 
-    ipcMain.handle('serial:reconnect', async (event, tabId) => {
+    ipcMain.handle('serial:reconnect', async (_event, tabId) => {
         const tabData = serialServiceManager.getService(tabId);
         if (!tabData || !tabData.config) {
             throw new Error('No previous connection configuration found');
@@ -126,19 +126,19 @@ function setupIpcHandlers() {
         return result;
     });
 
-    ipcMain.handle('serial:getConfig', async (event, tabId) => {
+    ipcMain.handle('serial:getConfig', async (_event, tabId) => {
         return serialServiceManager.getConfig(tabId);
     });
 
     // We can remove window:newTab, window:switchTab, etc because UI handles it natively
 
-    ipcMain.handle('log:start', async (event, tabId, filePath, mode) => {
+    ipcMain.handle('log:start', async (_event, tabId, filePath, mode) => {
         const tabData = serialServiceManager.getService(tabId);
         if (!tabData) throw new Error('Service not found for tab');
         return tabData.service.startLogging(filePath, mode);
     });
 
-    ipcMain.handle('log:stop', async (event, tabId) => {
+    ipcMain.handle('log:stop', async (_event, tabId) => {
         const tabData = serialServiceManager.getService(tabId);
         if (!tabData) throw new Error('Service not found for tab');
         return tabData.service.stopLogging();
@@ -155,7 +155,7 @@ function setupIpcHandlers() {
         };
     });
 
-    ipcMain.handle('dialog:saveContent', async (event, options) => {
+    ipcMain.handle('dialog:saveContent', async (_event, options) => {
         const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), {
             defaultPath: options.defaultPath,
             filters: options.filters,
@@ -174,11 +174,11 @@ function setupIpcHandlers() {
         debugWindow.flush();
     });
 
-    ipcMain.handle('debug:log', async (event, message, level) => {
+    ipcMain.handle('debug:log', async (_event, message, level) => {
         debugWindow.log(message, level);
     });
 
-    ipcMain.handle('theme:changed', async (event, originalTheme, effectiveTheme, themeVariant) => {
+    ipcMain.handle('theme:changed', async (_event, originalTheme, effectiveTheme, themeVariant) => {
         currentTheme = originalTheme;
         currentThemeVariant = themeVariant || currentThemeVariant;
         nativeTheme.themeSource = originalTheme;
@@ -244,19 +244,19 @@ function setupMenu() {
                     submenu: [
                         {
                             label: 'System',
-                            click: (item, focusedWindow) => {
+                            click: (_item, focusedWindow) => {
                                 if (focusedWindow) focusedWindow.webContents.send('theme:set', 'system');
                             }
                         },
                         {
                             label: 'Light',
-                            click: (item, focusedWindow) => {
+                            click: (_item, focusedWindow) => {
                                 if (focusedWindow) focusedWindow.webContents.send('theme:set', 'light');
                             }
                         },
                         {
                             label: 'Dark',
-                            click: (item, focusedWindow) => {
+                            click: (_item, focusedWindow) => {
                                 if (focusedWindow) focusedWindow.webContents.send('theme:set', 'dark');
                             }
                         }
