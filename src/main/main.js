@@ -43,8 +43,6 @@ function createWindow() {
         debugWindow.close();
     });
 
-    setupIpcHandlers();
-    setupMenu();
 }
 
 function setupIpcHandlers() {
@@ -288,7 +286,11 @@ function setupMenu() {
     Menu.setApplicationMenu(menu);
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    setupIpcHandlers();
+    setupMenu();
+    createWindow();
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Port already open" errors on reconnection by robustly releasing Web Serial locks
 - IPC serialization issues for Node.js Buffer objects
 - Missing terminal updates for data chunks without newlines
+- Electron now registers main-process IPC handlers once during app startup so macOS window reactivation does not duplicate handler setup
 
 ## [0.7.1] - 2026-03-22
 
