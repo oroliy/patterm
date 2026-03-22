@@ -133,14 +133,14 @@ npm run web:test     # Run Playwright E2E tests
 
 ## Download
 
-### Latest Release: v0.7.0
+### Latest Release: v0.7.1
 
-**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.7.0)**
+**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.7.1)**
 
 Choose your platform:
-- **Windows**: [Patterm-0.7.0.exe](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.exe) or [Patterm.Setup.0.7.0.exe](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm.Setup.0.7.0.exe)
-- **macOS**: [Patterm-0.7.0.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.dmg) (Intel) or [Patterm-0.7.0-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0-arm64.dmg) (Apple Silicon)
-- **Linux**: [Patterm-0.7.0.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.AppImage) (Universal) or [deb packages](https://github.com/oroliy/patterm/releases/tag/v0.7.0)
+- **Windows**: [Patterm-0.7.1-x64-setup.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-setup.exe) or [Patterm-0.7.1-x64-portable.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-portable.exe)
+- **macOS**: [Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg) (Intel) or [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg) (Apple Silicon)
+- **Linux**: [Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage) (x64), [Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage) (ARM64), [Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb) (x64), or [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb) (ARM64)
 
 **Web Version**: Open https://patterm-web.vercel.app/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
 
