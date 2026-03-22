@@ -107,6 +107,7 @@ A Progressive Web App version is also available, featuring:
 - **Installable** as desktop app from browser
 - Same feature set as desktop version (multi-tab, all UART configs, logging)
 - Shared serial provider contract across Web and Electron renderer flows
+- Hardened Electron desktop windows with preload-only APIs, `contextIsolation: true`, and native save handling in the main process
 - **HTTPS required** for Web Serial API (localhost exempt)
 
 **Web Development Commands:**

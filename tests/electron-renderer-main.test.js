@@ -23,15 +23,6 @@ const createBaseShell = () => class AppShell {
 describe('electron renderer app', () => {
     beforeEach(() => {
         jest.resetModules();
-        const ipcRenderer = {
-            on: jest.fn(),
-            invoke: jest.fn(() => Promise.resolve()),
-        };
-        const fs = {
-            promises: {
-                writeFile: jest.fn(() => Promise.resolve()),
-            },
-        };
 
         global.document = {
             createElement: jest.fn(() => ({
@@ -45,17 +36,13 @@ describe('electron renderer app', () => {
         };
 
         global.window = {
-            require: jest.fn((name) => {
-                if (name === 'electron') {
-                    return { ipcRenderer };
-                }
-
-                if (name === 'fs') {
-                    return fs;
-                }
-
-                throw new Error(`Unexpected module: ${name}`);
-            }),
+            electronAPI: {
+                onNewConnection: jest.fn(),
+                onThemeSet: jest.fn(),
+                saveOutput: jest.fn(() => Promise.resolve(true)),
+                getBuildInfo: jest.fn(() => Promise.resolve()),
+                notifyThemeChanged: jest.fn(() => Promise.resolve(true)),
+            },
         };
 
         jest.doMock('../src/shared/js/app/AppShell.js', () => ({
@@ -75,24 +62,19 @@ describe('electron renderer app', () => {
     test('injects a native save handler for shared terminal exports', async () => {
         const { PattermElectronApp } = require('../src/renderer/main.js');
         const app = new PattermElectronApp();
-        const ipcRenderer = window.require('electron').ipcRenderer;
-        const fs = window.require('fs');
-        ipcRenderer.invoke.mockResolvedValueOnce('/tmp/export.txt');
+        const { electronAPI } = window;
 
         const save = app.getTabSaveHandler('tab-1');
         await expect(save('content', 'export.txt')).resolves.toBe(true);
 
-        expect(ipcRenderer.invoke).toHaveBeenCalledWith('dialog:saveFile', expect.objectContaining({
-            defaultPath: 'export.txt',
-        }));
-        expect(fs.promises.writeFile).toHaveBeenCalledWith('/tmp/export.txt', 'content', 'utf8');
+        expect(electronAPI.saveOutput).toHaveBeenCalledWith('content', 'export.txt');
     });
 
     test('loads about build info through IPC', async () => {
         const { PattermElectronApp } = require('../src/renderer/main.js');
         const app = new PattermElectronApp();
-        const ipcRenderer = window.require('electron').ipcRenderer;
-        ipcRenderer.invoke.mockResolvedValueOnce({
+        const { electronAPI } = window;
+        electronAPI.getBuildInfo.mockResolvedValueOnce({
             version: '0.6.0',
             commitId: '09b4000',
         });
@@ -101,7 +83,7 @@ describe('electron renderer app', () => {
             version: '0.6.0',
             commitId: '09b4000',
         });
-        expect(ipcRenderer.invoke).toHaveBeenCalledWith('app:getBuildInfo');
+        expect(electronAPI.getBuildInfo).toHaveBeenCalledWith();
     });
 
     test('keeps desktop tab context actions on the shared shell', async () => {

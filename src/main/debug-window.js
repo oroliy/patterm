@@ -27,10 +27,11 @@ class DebugWindow {
             height: 600,
             title: 'Debug Console',
             webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false
+                preload: path.join(__dirname, 'debug-preload.js'),
+                nodeIntegration: false,
+                contextIsolation: true,
             },
-            show: false
+            show: false,
         });
 
         this.window.once('ready-to-show', () => {
@@ -64,7 +65,7 @@ class DebugWindow {
             this.window.webContents.send('debug:log', {
                 message,
                 level,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         } else {
             this.messages.push({ message, level, timestamp: new Date().toISOString() });
@@ -89,7 +90,7 @@ class DebugWindow {
 
     flush() {
         if (this.window && !this.window.isDestroyed() && this.messages.length > 0) {
-            this.messages.forEach(msg => {
+            this.messages.forEach((msg) => {
                 this.window.webContents.send('debug:log', msg);
             });
             this.messages = [];

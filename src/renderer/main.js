@@ -4,13 +4,12 @@ import { normalizeSerialConfig } from '../shared/js/serial/normalizeSerialConfig
 import { ElectronConnectionDialog } from './ElectronConnectionDialog.js';
 import { ElectronSerialProvider } from './services/IpcSerialProvider.js';
 
-const { ipcRenderer } = window.require('electron');
-const fs = window.require('fs');
+const electronAPI = window.electronAPI;
 
 export class PattermElectronApp extends AppShell {
     registerPlatformEventHandlers() {
-        ipcRenderer.on('menu:new-connection', () => this.showConnectionDialog());
-        ipcRenderer.on('theme:set', (event, theme) => {
+        electronAPI.onNewConnection(() => this.showConnectionDialog());
+        electronAPI.onThemeSet((theme) => {
             this.theme = theme;
             this.initTheme();
             this.updateThemeButton();
@@ -19,19 +18,8 @@ export class PattermElectronApp extends AppShell {
 
     getTabSaveHandler() {
         return async (content, fileName) => {
-            const filePath = await ipcRenderer.invoke('dialog:saveFile', {
-                defaultPath: fileName,
-                filters: [
-                    { name: 'Text Files', extensions: ['txt', 'log'] },
-                ],
-            });
-
-            if (!filePath) {
-                return false;
-            }
-
-            await fs.promises.writeFile(filePath, content, 'utf8');
-            return true;
+            const saved = await electronAPI.saveOutput(content, fileName);
+            return Boolean(saved);
         };
     }
 
@@ -67,12 +55,10 @@ export class PattermElectronApp extends AppShell {
         const tab = this.tabManager.getTab(tabId);
         if (!tab) return false;
 
-        // Try parent implementation first (handles case where service exists)
         if (await super.attemptAutoReconnect(tabId)) {
             return true;
         }
 
-        // Handle case where service is missing (e.g. session restored) using saved path
         if (tab.config.path) {
             const service = new ElectronSerialProvider();
             try {
@@ -111,7 +97,7 @@ export class PattermElectronApp extends AppShell {
         return [
             { label: 'Clear Screen', action: () => this.clearTerminal(tabId) },
             { label: 'Copy All Text', action: () => this.copyTabContent(tabId) },
-            { label: 'Disconnect/Reconnect', action: () => this.toggleConnection(tabId) }
+            { label: 'Disconnect/Reconnect', action: () => this.toggleConnection(tabId) },
         ];
     }
 
@@ -129,11 +115,15 @@ export class PattermElectronApp extends AppShell {
     }
 
     onThemeChanged(theme, effectiveTheme, themeVariant) {
-        ipcRenderer.invoke('theme:changed', theme, effectiveTheme || getEffectiveTheme(theme), themeVariant || this.themeVariant);
+        void electronAPI.notifyThemeChanged(
+            theme,
+            effectiveTheme || getEffectiveTheme(theme),
+            themeVariant || this.themeVariant,
+        );
     }
 
     async getAboutBuildInfo() {
-        return ipcRenderer.invoke('app:getBuildInfo');
+        return electronAPI.getBuildInfo();
     }
 
     showError(message) {
@@ -157,7 +147,7 @@ export class PattermElectronApp extends AppShell {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 9999
+            zIndex: 9999,
         });
 
         document.body.appendChild(overlay);
