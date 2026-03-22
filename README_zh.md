@@ -96,7 +96,7 @@ npm run web:dev      # 启动 Vite 开发服务器（HTTPS，localhost:5173）
 npm run web:build    # 构建生产版本
 npm run web:preview  # 预览生产构建
 npm run web:serve    # 使用 HTTPS 提供生产构建
-npm run web:test     # 运行 Playwright E2E 测试
+npm run web:test     # 自动启动 Vite 并运行 Playwright E2E 测试
 ```
 
 **浏览器支持**：Chrome 89+、Edge 89+、Opera 75+（需要 Web Serial API）
@@ -225,8 +225,8 @@ npm run dist:linux  # 仅 Linux
 npm test               # 运行 Jest 单元测试
 npm run test:e2e       # 使用虚拟串口启动桌面端手动 E2E
 npm run test:electron  # 运行 Electron Playwright E2E
-npm run web:test       # 运行 Web 端 Playwright E2E
-npm run web:test:ci    # 运行适用于 CI 的无头 Web 测试，覆盖真实连接对话框流程
+npm run web:test       # 自动启动 Vite 并运行 Web 端 Playwright E2E
+npm run web:test:ci    # 使用共享 Playwright Web 服务配置运行 CI 无头 Web 测试
 npm run test:ci        # 运行本地 CI 门禁：lint + 单元测试 + Web + Electron
 npm run lint           # 运行代码检查
 ```

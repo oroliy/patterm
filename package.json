@@ -27,7 +27,7 @@
     "web:preview": "cd web && vite preview",
     "web:serve": "cd web && vite preview --https",
     "web:test": "cd web && playwright test",
-    "web:test:ci": "cd web && playwright test tests/simple.spec.js tests/connection-ui.spec.js --config=playwright.config.no-server.js"
+    "web:test:ci": "cd web && playwright test tests/simple.spec.js tests/connection-ui.spec.js --config=playwright.config.ci.js"
   },
   "keywords": [
     "serial",

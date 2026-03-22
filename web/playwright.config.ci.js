@@ -8,16 +8,15 @@ import {
 
 export default defineConfig({
     testDir,
-    fullyParallel: true,
+    fullyParallel: false,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
+    retries: 0,
     workers: 1,
-    reporter: 'html',
+    reporter: 'line',
     use: {
         ...httpsUse,
-        trace: 'on-first-retry',
-        screenshot: 'only-on-failure',
-        video: 'retain-on-failure',
+        trace: 'off',
+        screenshot: 'on',
     },
     projects: [chromiumProject],
     webServer: defaultWebServer,

@@ -115,7 +115,7 @@ npm run web:dev      # Start Vite dev server (HTTPS, localhost:5173)
 npm run web:build    # Build for production
 npm run web:preview  # Preview production build
 npm run web:serve    # Serve production build with HTTPS
-npm run web:test     # Run Playwright E2E tests
+npm run web:test     # Start Vite automatically and run Playwright E2E tests
 ```
 
 **Browser Support**: Chrome 89+, Edge 89+, Opera 75+ (Web Serial API required)
@@ -262,8 +262,8 @@ npm run web:test       # Run Playwright E2E tests
 npm test               # Run Jest unit tests
 npm run test:e2e       # Quick E2E test with virtual serial port
 npm run test:electron  # Run Playwright Electron E2E tests
-npm run web:test       # Run Playwright web E2E tests
-npm run web:test:ci    # Run the CI-safe headless web suite against the real connection dialog flow
+npm run web:test       # Start Vite automatically and run Playwright web E2E tests
+npm run web:test:ci    # Run the CI headless web suite with the shared Playwright web server config
 npm run test:ci        # Run the local CI gate: lint + unit + web + Electron
 npm run lint           # Run linter
 ```

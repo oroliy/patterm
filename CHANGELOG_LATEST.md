@@ -17,6 +17,7 @@
 - **Auto-Scroll to Active**: Switching tabs now automatically scrolls the active tab into view if it's currently hidden in the scrollable bar.
 
 ### Technical Fixes
+- **Web E2E Startup Alignment**: Unified `npm run web:test` with the Playwright web server command so the root-level script now starts Vite directly inside `web/`, keeps the target URL at `https://localhost:5173`, and shares HTTPS handling across local and CI web configs.
 - **Robust Port Closure**: Refactored `WebSerialProvider` to aggressively release stream locks and ensure ports are fully closed, eliminating "Port already open" errors during reconnection.
 - **IPC Data Reliability**: 
   - Fixed decoding for Node.js `Buffer` objects crossing the Electron IPC bridge.

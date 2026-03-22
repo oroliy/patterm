@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Port already open" errors on reconnection by robustly releasing Web Serial locks
 - IPC serialization issues for Node.js Buffer objects
 - Missing terminal updates for data chunks without newlines
+- Root-level `npm run web:test` now starts the same `https://localhost:5173` Vite server command that Playwright waits on, and the local/CI configs share the same HTTPS handling
 
 ## [0.7.1] - 2026-03-22
 
