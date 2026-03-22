@@ -17,6 +17,7 @@
 - **Auto-Scroll to Active**: Switching tabs now automatically scrolls the active tab into view if it's currently hidden in the scrollable bar.
 
 ### Technical Fixes
+- **Renderer Security**: Electron desktop windows now use preload-scoped APIs with `contextIsolation: true`, and native save/export writes stay in the main process.
 - **Robust Port Closure**: Refactored `WebSerialProvider` to aggressively release stream locks and ensure ports are fully closed, eliminating "Port already open" errors during reconnection.
 - **IPC Data Reliability**: 
   - Fixed decoding for Node.js `Buffer` objects crossing the Electron IPC bridge.

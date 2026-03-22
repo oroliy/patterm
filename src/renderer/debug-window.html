@@ -140,7 +140,7 @@
     <div class="console-container" id="consoleContainer"></div>
 
     <script>
-        const { ipcRenderer } = require('electron');
+        const debugAPI = window.debugAPI;
 
         const consoleContainer = document.getElementById('consoleContainer');
         const clearBtn = document.getElementById('clearBtn');
@@ -167,11 +167,11 @@
             return div.innerHTML;
         }
 
-        ipcRenderer.on('debug:log', (event, data) => {
+        debugAPI.onLog((data) => {
             addLogEntry(data);
         });
 
-        ipcRenderer.on('debug:clear', () => {
+        debugAPI.onClear(() => {
             consoleContainer.innerHTML = '';
         });
 

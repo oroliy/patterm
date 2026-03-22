@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, Menu, dialog, nativeTheme } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const WindowManager = require('./window-manager');
 const SerialServiceManager = require('../services/serial-service-manager');
@@ -156,9 +157,18 @@ function setupIpcHandlers() {
         };
     });
 
-    ipcMain.handle('dialog:saveFile', async (event, options) => {
-        const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), options);
-        return result.filePath;
+    ipcMain.handle('dialog:saveContent', async (event, options) => {
+        const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow(), {
+            defaultPath: options.defaultPath,
+            filters: options.filters,
+        });
+
+        if (result.canceled || !result.filePath) {
+            return false;
+        }
+
+        await fs.promises.writeFile(result.filePath, options.content, 'utf8');
+        return true;
     });
 
     ipcMain.handle('debug:toggle', async () => {
