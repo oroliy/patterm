@@ -22,6 +22,7 @@
   - Fixed decoding for Node.js `Buffer` objects crossing the Electron IPC bridge.
   - Added a **50ms buffer flush timeout** to ensure partial data or data without newlines is displayed immediately instead of being stuck in the buffer.
 - **Memory Optimization**: Explicitly nullified service references after tab closure to ensure proper garbage collection.
+- **IPC Registration Timing**: Moved Electron IPC handler registration to app startup so reopening windows on macOS reuses the same `serial:*`, `theme:*`, `app:*`, and `dialog:*` handlers instead of registering duplicates.
 
 ## Technical Details
 - Refactored `AppShell.reconnectTab` with a platform-specific `attemptAutoReconnect` hook.
