@@ -135,9 +135,9 @@ npm run web:test     # 运行 Playwright E2E 测试
 **[从 GitHub Releases 下载](https://github.com/oroliy/patterm/releases/tag/v0.7.1)**
 
 请选择你的平台：
-- **Windows**：[Patterm-0.7.1.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1.exe) 或 [Patterm.Setup.0.7.1.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm.Setup.0.7.1.exe)
-- **macOS**：[Patterm-0.7.1.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1.dmg)（Intel）或 [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg)（Apple Silicon）
-- **Linux**：[Patterm-0.7.1.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1.AppImage)（通用）或 [deb 安装包](https://github.com/oroliy/patterm/releases/tag/v0.7.1)
+- **Windows**：[Patterm-0.7.1-x64-setup.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-setup.exe) 或 [Patterm-0.7.1-x64-portable.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-portable.exe)
+- **macOS**：[Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg)（Intel）或 [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg)（Apple Silicon）
+- **Linux**：[Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage)（x64）、[Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage)（ARM64）、[Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb)（x64）或 [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb)（ARM64）
 
 **Web 版本**：在 Chrome、Edge 或 Opera 中打开 https://patterm.pages.dev/（需要 HTTPS 或 localhost）
 

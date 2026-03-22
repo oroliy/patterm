@@ -138,9 +138,9 @@ npm run web:test     # Run Playwright E2E tests
 **[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.7.1)**
 
 Choose your platform:
-- **Windows**: [Patterm-0.7.1.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1.exe) or [Patterm.Setup.0.7.1.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm.Setup.0.7.1.exe)
-- **macOS**: [Patterm-0.7.1.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1.dmg) (Intel) or [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg) (Apple Silicon)
-- **Linux**: [Patterm-0.7.1.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1.AppImage) (Universal) or [deb packages](https://github.com/oroliy/patterm/releases/tag/v0.7.1)
+- **Windows**: [Patterm-0.7.1-x64-setup.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-setup.exe) or [Patterm-0.7.1-x64-portable.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-portable.exe)
+- **macOS**: [Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg) (Intel) or [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg) (Apple Silicon)
+- **Linux**: [Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage) (x64), [Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage) (ARM64), [Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb) (x64), or [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb) (ARM64)
 
 **Web Version**: Open https://patterm.pages.dev/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
 
