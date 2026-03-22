@@ -244,16 +244,25 @@ export class AppShell {
         const tab = this.tabManager.getTab(tabId);
         if (!tab) return;
 
-        if (!tab.service) {
-            this.showConnectionDialog(tabId);
-            return;
-        }
+        // Try automatic reconnection first using existing configuration
+        const success = await this.attemptAutoReconnect(tabId);
+        if (success) return;
 
-        try {
-            await this.tabManager.reconnectTab(tabId);
-        } catch (error) {
-            this.showError(`Failed to reconnect: ${error.message}`);
+        // Fallback to connection dialog if auto-reconnect failed (e.g. port not authorized or not found)
+        this.showConnectionDialog(tabId);
+    }
+
+    async attemptAutoReconnect(tabId) {
+        const tab = this.tabManager.getTab(tabId);
+        if (tab && tab.service) {
+            try {
+                await this.tabManager.reconnectTab(tabId);
+                return true;
+            } catch (error) {
+                console.warn('[AppShell] Automatic service reconnection failed:', error);
+            }
         }
+        return false;
     }
 
     switchTab(tabId) {

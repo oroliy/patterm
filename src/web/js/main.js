@@ -73,18 +73,18 @@ class PattermApp extends AppShell {
             return;
         }
 
-        const normalizedConfig = normalizeSerialConfig(config);
+        const portInfo = typeof port.getInfo === 'function' ? port.getInfo() : {};
+        const normalizedConfig = normalizeSerialConfig({
+            ...config,
+            usbVendorId: portInfo.usbVendorId,
+            usbProductId: portInfo.usbProductId
+        });
         
         let defaultTabName = `Port ${normalizedConfig.baudRate}`;
-        try {
-            const info = port.getInfo();
-            if (info.usbVendorId && info.usbProductId) {
-                const vendorId = info.usbVendorId.toString(16).toUpperCase().padStart(4, '0');
-                const productId = info.usbProductId.toString(16).toUpperCase().padStart(4, '0');
-                defaultTabName = `USB VID:PID ${vendorId}:${productId}`;
-            }
-        } catch (e) {
-            // Ignore
+        if (normalizedConfig.usbVendorId && normalizedConfig.usbProductId) {
+            const vendorId = normalizedConfig.usbVendorId.toString(16).toUpperCase().padStart(4, '0');
+            const productId = normalizedConfig.usbProductId.toString(16).toUpperCase().padStart(4, '0');
+            defaultTabName = `USB VID:PID ${vendorId}:${productId}`;
         }
 
         const tabState = this.tabManager.createTab(normalizedConfig, tabName || defaultTabName);
@@ -102,6 +102,40 @@ class PattermApp extends AppShell {
             this.tabManager.closeTab(tabState.id);
             this.showError(`Failed to connect: ${error.message}\n\n${error.stack}`);
         }
+    }
+
+    async attemptAutoReconnect(tabId) {
+        const tab = this.tabManager.getTab(tabId);
+        if (!tab) return false;
+
+        // Try parent implementation first (handles case where service exists)
+        if (await super.attemptAutoReconnect(tabId)) {
+            return true;
+        }
+
+        // Handle case where service is missing (e.g. session restored)
+        if (tab.config.usbVendorId && tab.config.usbProductId) {
+            try {
+                const ports = await navigator.serial.getPorts();
+                const port = ports.find(p => {
+                    const info = p.getInfo();
+                    return info.usbVendorId === tab.config.usbVendorId && 
+                           info.usbProductId === tab.config.usbProductId;
+                });
+
+                if (port) {
+                    const service = new WebSerialProvider();
+                    service.port = port;
+                    await service.open(tab.config);
+                    await this.tabManager.connectTab(tabId, service);
+                    return true;
+                }
+            } catch (error) {
+                debug.warn('[App] Automatic port discovery failed:', error);
+            }
+        }
+
+        return false;
     }
 
     async reconnectWithNewService(tabId, config, tabName, port) {

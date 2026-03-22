@@ -63,20 +63,28 @@ export class PattermElectronApp extends AppShell {
         }
     }
 
-    async reconnectTab(tabId) {
+    async attemptAutoReconnect(tabId) {
         const tab = this.tabManager.getTab(tabId);
-        if (tab && !tab.service) {
+        if (!tab) return false;
+
+        // Try parent implementation first (handles case where service exists)
+        if (await super.attemptAutoReconnect(tabId)) {
+            return true;
+        }
+
+        // Handle case where service is missing (e.g. session restored) using saved path
+        if (tab.config.path) {
             const service = new ElectronSerialProvider();
             try {
                 await service.open(tab.config, tab.name);
                 await this.tabManager.connectTab(tabId, service);
-                return;
+                return true;
             } catch (error) {
-                this.showError(`Failed to reconnect: ${error.message}`);
-                return;
+                console.warn('[App] Automatic path reconnection failed:', error);
             }
         }
-        await super.reconnectTab(tabId);
+
+        return false;
     }
 
     async reconnectWithNewService(tabId, config, tabName) {
