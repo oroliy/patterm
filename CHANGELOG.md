@@ -7,9 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-- Removed obsolete Electron renderer assets that no longer participate in the active shared AppShell path
-- Aligned repository documentation with the current desktop architecture, generated build metadata, and Web/Electron directory layout
+### Added
+- Reconnect button for disconnected tabs
+- Support for auto-reconnect using USB VID/PID (Web) or port path (Electron)
+- Default session names based on port information
+- Horizontal scrolling for tab bar with mouse wheel support
+- Hover tooltips for long tab names
+- Live duration and current time updates in status bar
+- 50ms buffer flush timeout for immediate terminal display of partial data
+
+### Fixed
+- "Port already open" errors on reconnection by robustly releasing Web Serial locks
+- IPC serialization issues for Node.js Buffer objects
+- Missing terminal updates for data chunks without newlines
+
+## [0.7.1] - 2026-03-22
+
+### Added
+- Dedicated "Reconnect" button for disconnected tabs
+- Automatic configuration reuse during reconnection
+- Persistent USB VID/PID metadata for Web Serial auto-discovery
+- Horizontal scrolling and ellipsis truncation for the tab bar
+- 1-second global status bar refresh for Duration and Current Time
+- 50ms terminal buffer flush for real-time responsiveness
+
+### Fixed
+- InvalidStateError (Port already open) during Web Serial reconnection
+- JSON-serialized Buffer objects not displaying correctly over Electron IPC
+- Stalled terminal output for data streams lacking newline characters
 
 ## [0.7.0] - 2026-03-12
 
