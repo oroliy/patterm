@@ -45,6 +45,12 @@
     font-family: inherit;
     font-size: 14px;
     padding: 8px;
+    min-height: 40px;
+    max-height: 180px;
+    line-height: 1.5;
+    resize: none;
+    overflow-y: auto;
+    white-space: pre-wrap;
 }
 
 .input-field:focus {

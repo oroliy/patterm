@@ -11,7 +11,7 @@
 [![Node.js](https://img.shields.io/badge/node-20+-339933?logo=node.js)](https://nodejs.org)
 [![Electron](https://img.shields.io/badge/electron-40.0.0-47848F?logo=electron)](https://www.electronjs.org)
 
-[功能特性](#功能特性) • [安装](#安装) • [使用方法](#使用方法) • [开发](#开发) • [贡献指南](#贡献指南)
+[功能特性](#功能特性) • [下载](#下载) • [安装](#安装) • [使用方法](#使用方法) • [开发](#开发) • [贡献指南](#贡献指南)
 
 </div>
 
@@ -63,6 +63,22 @@
 - 页头主题面板支持明暗模式切换和内置主题预设，其中包含参考 Claude 气质的 `Claude Canvas`
 - 重写了 About 对话框，展示当前运行端、主题、标签数量、版本号、commit ID 和当前能力摘要
 
+### 右键菜单
+- **标签页右键菜单**：可快速执行以下操作：
+  - 关闭标签页、断开连接 / 重新连接
+  - 清空屏幕、保存输出、复制全部文本
+  - 重命名标签页、显示连接设置
+- **终端右键菜单**：
+  - 清空屏幕、保存输出、复制全部文本
+
+### 状态栏
+- 连接状态与可视化指示器
+- 端口配置显示（例如 `/tmp/ttyV0 @ 115200 8N1`）
+- RX/TX 字节计数与自动缩放
+- 实时数据速率指示（B/s）
+- 连接持续时间计时器
+- 创建时间与当前时间显示
+
 ### 调试控制台
 - 应用程序事件的实时日志记录
 - 彩色日志级别（info、warn、error、debug）
@@ -112,6 +128,23 @@ npm run web:test     # 自动启动 Vite 并运行 Playwright E2E 测试
 
 ---
 
+## 下载
+
+### 最新版本：v0.7.1
+
+**[从 GitHub Releases 下载](https://github.com/oroliy/patterm/releases/tag/v0.7.1)**
+
+请选择你的平台：
+- **Windows**：[Patterm-0.7.1-x64-setup.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-setup.exe) 或 [Patterm-0.7.1-x64-portable.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-portable.exe)
+- **macOS**：[Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg)（Intel）或 [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg)（Apple Silicon）
+- **Linux**：[Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage)（x64）、[Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage)（ARM64）、[Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb)（x64）或 [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb)（ARM64）
+
+**Web 版本**：在 Chrome、Edge 或 Opera 中打开 https://patterm.pages.dev/（需要 HTTPS 或 localhost）
+
+[查看所有版本](https://github.com/oroliy/patterm/releases)
+
+---
+
 ## 安装
 
 ### 环境要求
@@ -150,7 +183,7 @@ npm start
    - 从下拉列表选择串口
    - 配置波特率、数据位、停止位、校验位
    - 点击"连接"创建标签页并打开串口
-4. **发送数据**：在标签页中的输入框输入并按 Enter 发送
+4. **发送数据**：在标签页输入框中输入内容，粘贴的大段文本会保留换行和空白格式；点击发送按钮或按 `Ctrl/Cmd + Enter` 发送
 5. **查看接收数据**：在终端窗口中显示（每个标签页独立）
 6. **创建更多连接**：使用 `Ctrl/Cmd + N` 添加其他串口
 7. **切换标签页**：管理不同的连接

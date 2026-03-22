@@ -15,6 +15,7 @@
 - **Tab Readability**: Long tab names now use ellipsis (`...`) to prevent UI clutter, with full names visible via hover tooltips.
 - **Live Status Updates**: Added a 1-second global timer to ensure that **Duration** and **Current Time** in the status bar are always up-to-date, even when no data is flowing.
 - **Auto-Scroll to Active**: Switching tabs now automatically scrolls the active tab into view if it's currently hidden in the scrollable bar.
+- **Multiline Send Box**: The send box now keeps pasted multiline formatting intact, auto-expands for larger payloads, and uses **Ctrl/Cmd + Enter** to send without stripping line breaks.
 
 ### Technical Fixes
 - **Web E2E Startup Alignment**: Unified `npm run web:test` with the Playwright web server command so the root-level script now starts Vite directly inside `web/`, keeps the target URL at `https://localhost:5173`, and shares HTTPS handling across local and CI web configs.
@@ -23,6 +24,7 @@
   - Fixed decoding for Node.js `Buffer` objects crossing the Electron IPC bridge.
   - Added a **50ms buffer flush timeout** to ensure partial data or data without newlines is displayed immediately instead of being stuck in the buffer.
 - **Memory Optimization**: Explicitly nullified service references after tab closure to ensure proper garbage collection.
+- **IPC Registration Timing**: Moved Electron IPC handler registration to app startup so reopening windows on macOS reuses the same `serial:*`, `theme:*`, `app:*`, and `dialog:*` handlers instead of registering duplicates.
 
 ## Technical Details
 - Refactored `AppShell.reconnectTab` with a platform-specific `attemptAutoReconnect` hook.

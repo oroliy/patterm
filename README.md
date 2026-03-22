@@ -133,16 +133,16 @@ npm run web:test     # Start Vite automatically and run Playwright E2E tests
 
 ## Download
 
-### Latest Release: v0.7.0
+### Latest Release: v0.7.1
 
-**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.7.0)**
+**[Download from GitHub Releases](https://github.com/oroliy/patterm/releases/tag/v0.7.1)**
 
 Choose your platform:
-- **Windows**: [Patterm-0.7.0.exe](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.exe) or [Patterm.Setup.0.7.0.exe](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm.Setup.0.7.0.exe)
-- **macOS**: [Patterm-0.7.0.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.dmg) (Intel) or [Patterm-0.7.0-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0-arm64.dmg) (Apple Silicon)
-- **Linux**: [Patterm-0.7.0.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.0/Patterm-0.7.0.AppImage) (Universal) or [deb packages](https://github.com/oroliy/patterm/releases/tag/v0.7.0)
+- **Windows**: [Patterm-0.7.1-x64-setup.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-setup.exe) or [Patterm-0.7.1-x64-portable.exe](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64-portable.exe)
+- **macOS**: [Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg) (Intel) or [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg) (Apple Silicon)
+- **Linux**: [Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage) (x64), [Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage) (ARM64), [Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb) (x64), or [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb) (ARM64)
 
-**Web Version**: Open https://patterm-web.vercel.app/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
+**Web Version**: Open https://patterm.pages.dev/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
 
 [View all releases](https://github.com/oroliy/patterm/releases)
 
@@ -186,7 +186,7 @@ npm start
    - Select serial port from dropdown
    - Configure baud rate, data bits, stop bits, parity
    - Click "Connect" to create tab and open serial port
-4. **Send data** by typing in the input field and pressing Enter (in the tab)
+4. **Send data** by typing in the input field, preserving pasted newlines/spacing, and clicking Send or pressing `Ctrl/Cmd + Enter` (in the tab)
 5. **View received data** in the terminal window (per tab)
 6. **Create more connections** with `Ctrl/Cmd + N` for additional serial ports
 7. **Switch between tabs** to manage different connections
