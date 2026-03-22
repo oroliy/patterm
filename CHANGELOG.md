@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IPC serialization issues for Node.js Buffer objects
 - Missing terminal updates for data chunks without newlines
 - Input sending no longer strips formatting from large pasted payloads
+- Electron now registers main-process IPC handlers once during app startup so macOS window reactivation does not duplicate handler setup
 
 ## [0.7.1] - 2026-03-22
 

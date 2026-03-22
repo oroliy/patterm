@@ -102,6 +102,7 @@ web/                        # Web Version Entry
 - `debug:*`: log (to debug window)
 - `theme:*`: get, getVariant, changed
 - `app:*`: version and build metadata
+- IPC handlers are registered once during `app.whenReady()` and reused across later `createWindow()` calls, including macOS `activate` window recreation
 
 **4. Debug Console**
 - Separate debug window with real-time logging
