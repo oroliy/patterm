@@ -1,11 +1,8 @@
 import { ConnectionDialog } from '../web/js/components/ConnectionDialog.js';
 
-export class ElectronConnectionDialog extends ConnectionDialog {
-    constructor(options = {}) {
-        super(options);
-        this.ipcRenderer = window.require('electron').ipcRenderer;
-    }
+const electronAPI = window.electronAPI;
 
+export class ElectronConnectionDialog extends ConnectionDialog {
     async show() {
         return new Promise((resolve) => {
             this.createDialog();
@@ -48,7 +45,7 @@ export class ElectronConnectionDialog extends ConnectionDialog {
             select.addEventListener('change', () => {
                 this.clearError();
                 this.setConnectEnabled(Boolean(select.value));
-                
+
                 const tabNameInput = this.dialog.querySelector('#tab-name');
                 if (tabNameInput && !tabNameInput.value.trim() && select.value) {
                     tabNameInput.value = select.value;
@@ -61,7 +58,7 @@ export class ElectronConnectionDialog extends ConnectionDialog {
         const config = super.getFormConfig();
         return {
             ...config,
-            path: this.dialog.querySelector('#port-select').value
+            path: this.dialog.querySelector('#port-select').value,
         };
     }
 
@@ -83,10 +80,10 @@ export class ElectronConnectionDialog extends ConnectionDialog {
 
     async loadPorts() {
         try {
-            const ports = await this.ipcRenderer.invoke('serial:listPorts');
+            const ports = await electronAPI.listSerialPorts();
             const select = this.dialog.querySelector('#port-select');
             select.innerHTML = '';
-            
+
             if (ports.length === 0) {
                 const option = document.createElement('option');
                 option.value = '';
@@ -96,7 +93,7 @@ export class ElectronConnectionDialog extends ConnectionDialog {
                 return;
             }
 
-            ports.forEach(port => {
+            ports.forEach((port) => {
                 const option = document.createElement('option');
                 option.value = port.path;
                 option.textContent = `${port.path} - ${port.manufacturer || 'Unknown'}`;
@@ -106,7 +103,7 @@ export class ElectronConnectionDialog extends ConnectionDialog {
             this.setConnectEnabled(Boolean(select.value));
             this.clearError();
         } catch (error) {
-            this.showError('Failed to load ports: ' + error.message);
+            this.showError(`Failed to load ports: ${error.message}`);
         }
     }
 }

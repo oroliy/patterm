@@ -105,6 +105,7 @@
 - **可安装**为桌面应用（从浏览器安装）
 - 功能与桌面版相同（多标签、完整 UART 配置、日志记录等）
 - Web 与 Electron 渲染层共用统一的串口提供者契约
+- Electron 桌面窗口现已改为仅通过 preload 暴露最小 API、启用 `contextIsolation: true`，并由主进程处理原生保存
 
 运行 Web 版本：
 ```bash

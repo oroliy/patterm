@@ -18,6 +18,7 @@
 - **Multiline Send Box**: The send box now keeps pasted multiline formatting intact, auto-expands for larger payloads, and uses **Ctrl/Cmd + Enter** to send without stripping line breaks.
 
 ### Technical Fixes
+- **Renderer Security**: Electron desktop windows now use preload-scoped APIs with `contextIsolation: true`, and native save/export writes stay in the main process.
 - **Robust Port Closure**: Refactored `WebSerialProvider` to aggressively release stream locks and ensure ports are fully closed, eliminating "Port already open" errors during reconnection.
 - **IPC Data Reliability**: 
   - Fixed decoding for Node.js `Buffer` objects crossing the Electron IPC bridge.

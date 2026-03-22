@@ -19,11 +19,11 @@ class WindowManager {
             minHeight: 600,
             icon: path.join(__dirname, '../../assets/icon.png'),
             webPreferences: {
-                nodeIntegration: true,
-                contextIsolation: false,
-                enableRemoteModule: true
+                preload: path.join(__dirname, 'preload.js'),
+                nodeIntegration: false,
+                contextIsolation: true,
             },
-            show: false
+            show: false,
         });
 
         this.mainWindow.once('ready-to-show', () => {

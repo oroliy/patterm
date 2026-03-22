@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - InvalidStateError (Port already open) during Web Serial reconnection
 - JSON-serialized Buffer objects not displaying correctly over Electron IPC
 - Stalled terminal output for data streams lacking newline characters
+- Hardened Electron desktop renderer windows by moving IPC and save/export access into preload bridges with `contextIsolation: true`
 
 ## [0.7.0] - 2026-03-12
 
