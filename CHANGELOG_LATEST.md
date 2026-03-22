@@ -18,6 +18,7 @@
 - **Multiline Send Box**: The send box now keeps pasted multiline formatting intact, auto-expands for larger payloads, and uses **Ctrl/Cmd + Enter** to send without stripping line breaks.
 
 ### Technical Fixes
+- **Desktop Dev Script Simplification**: `npm run dev` now launches Electron directly, and `npm run dev:renderer` explicitly reports that the desktop app loads `src/renderer/index.html` without any standalone `localhost:3000` renderer dev server.
 - **Renderer Security**: Electron desktop windows now use preload-scoped APIs with `contextIsolation: true`, and native save/export writes stay in the main process.
 - **Web E2E Startup Alignment**: Unified `npm run web:test` with the Playwright web server command so the root-level script now starts Vite directly inside `web/`, keeps the target URL at `https://localhost:5173`, and shares HTTPS handling across local and CI web configs.
 - **Robust Port Closure**: Refactored `WebSerialProvider` to aggressively release stream locks and ensure ports are fully closed, eliminating "Port already open" errors during reconnection.

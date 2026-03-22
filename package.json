@@ -7,9 +7,9 @@
   "scripts": {
     "prepare:build-meta": "node scripts/generate-build-meta.js",
     "start": "npm run prepare:build-meta && electron .",
-    "dev": "npm run prepare:build-meta && concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
-    "dev:main": "npm run prepare:build-meta && electron src/main/main.js",
-    "dev:renderer": "wait-on http://localhost:3000 && electron .",
+    "dev": "npm run prepare:build-meta && electron .",
+    "dev:main": "npm run dev",
+    "dev:renderer": "echo 'No standalone renderer dev server is required; Electron loads src/renderer/index.html directly.'",
     "build": "echo 'No build step required for vanilla JavaScript'",
     "lint": "node scripts/lint.js",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",

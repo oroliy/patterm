@@ -245,8 +245,9 @@ patterm/
 
 ```bash
 # Desktop App Development
-npm run dev            # Start development server with hot reload
-npm start              # Start Electron (no hot reload)
+npm run dev            # Start Electron desktop development mode directly
+npm run dev:renderer   # Print the renderer-loading note; no localhost:3000 server is needed
+npm start              # Start Electron with the same file-based renderer loading flow
 npm run dist           # Build distribution packages for current platform
 npm run dist:win       # Windows only
 npm run dist:mac       # macOS only
