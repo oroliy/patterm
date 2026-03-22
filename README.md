@@ -186,7 +186,7 @@ npm start
    - Select serial port from dropdown
    - Configure baud rate, data bits, stop bits, parity
    - Click "Connect" to create tab and open serial port
-4. **Send data** by typing in the input field and pressing Enter (in the tab)
+4. **Send data** by typing in the input field, preserving pasted newlines/spacing, and clicking Send or pressing `Ctrl/Cmd + Enter` (in the tab)
 5. **View received data** in the terminal window (per tab)
 6. **Create more connections** with `Ctrl/Cmd + N` for additional serial ports
 7. **Switch between tabs** to manage different connections

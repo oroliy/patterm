@@ -15,11 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hover tooltips for long tab names
 - Live duration and current time updates in status bar
 - 50ms buffer flush timeout for immediate terminal display of partial data
+- Multiline send box that preserves pasted whitespace/newlines and supports Ctrl/Cmd + Enter send
 
 ### Fixed
 - "Port already open" errors on reconnection by robustly releasing Web Serial locks
 - IPC serialization issues for Node.js Buffer objects
 - Missing terminal updates for data chunks without newlines
+- Input sending no longer strips formatting from large pasted payloads
 
 ## [0.7.1] - 2026-03-22
 

@@ -148,7 +148,7 @@ export class TabComponent {
 
                 <div class="input-bar">
                     <div class="status-dot ${this.tabState.connected ? 'connected' : ''}"></div>
-                    <input type="text" class="input-field" placeholder="Type command..." autocomplete="off" ${this.tabState.connected ? '' : 'disabled'}>
+                    <textarea class="input-field" placeholder="Type command... (Ctrl/Cmd+Enter to send)" rows="1" ${this.tabState.connected ? '' : 'disabled'}></textarea>
                     <button class="send-btn btn btn-primary" ${this.tabState.connected ? '' : 'style="display: none;"'}>➤</button>
                     <button class="reconnect-btn btn btn-primary" ${this.tabState.connected ? 'style="display: none;"' : ''}>Reconnect</button>
                     <button class="clear-btn btn">Clear</button>
@@ -265,8 +265,10 @@ export class TabComponent {
                 this.options.onReconnect?.(this.tabState.id);
             });
         }
+        inputField.addEventListener('input', () => this.syncInputFieldHeight());
         inputField.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
                 this.handleSend();
             }
         });
@@ -351,18 +353,31 @@ export class TabComponent {
 
         const workflowAddButton = this.element.querySelector('.terminal-workflow-add-btn');
         workflowAddButton?.addEventListener('click', () => this.addWorkflowFromInputs());
+
+        this.syncInputFieldHeight();
     }
 
     async handleSend() {
         const inputField = this.element.querySelector('.input-field');
-        const data = inputField.value.trim();
+        const data = inputField.value;
 
-        if (!data || !this.tabState.connected) {
+        if (!data.trim() || !this.tabState.connected) {
             return;
         }
 
         inputField.value = '';
+        this.syncInputFieldHeight();
         this.options.onSend?.(this.tabState.id, data);
+    }
+
+    syncInputFieldHeight() {
+        const inputField = this.element?.querySelector('.input-field');
+        if (!inputField) {
+            return;
+        }
+
+        inputField.style.height = 'auto';
+        inputField.style.height = `${Math.min(inputField.scrollHeight, 180)}px`;
     }
 
     updateConnectionState(connected) {
@@ -394,6 +409,8 @@ export class TabComponent {
             inputField.disabled = true;
             this.statusBarElements.portName.textContent = 'Not Connected';
         }
+
+        this.syncInputFieldHeight();
     }
 
     updateStatusBar() {
