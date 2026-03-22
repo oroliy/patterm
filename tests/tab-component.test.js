@@ -102,7 +102,7 @@ describe('TabComponent', () => {
         jest.useRealTimers();
     });
 
-    test('handleSend sends trimmed input only when connected', async () => {
+    test('handleSend preserves formatting and only sends non-empty input when connected', async () => {
         const { TabComponent } = require('../src/web/js/components/TabComponent.js');
         const inputField = new FakeElement();
         const onSend = jest.fn();
@@ -111,7 +111,7 @@ describe('TabComponent', () => {
             connected: true,
         }, { onSend });
 
-        inputField.value = '  AT+RST  ';
+        inputField.value = '  AT+RST\r\nNEXT  ';
         tab.element = {
             querySelector(selector) {
                 if (selector === '.input-field') {
@@ -122,8 +122,12 @@ describe('TabComponent', () => {
         };
 
         await tab.handleSend();
-        expect(onSend).toHaveBeenCalledWith('tab-1', 'AT+RST');
+        expect(onSend).toHaveBeenCalledWith('tab-1', '  AT+RST\r\nNEXT  ');
         expect(inputField.value).toBe('');
+
+        inputField.value = '   \n  ';
+        await tab.handleSend();
+        expect(onSend).toHaveBeenCalledTimes(1);
 
         tab.tabState.connected = false;
         inputField.value = 'AT';
@@ -667,7 +671,13 @@ describe('TabComponent', () => {
         inputField.value = 'AT';
         await sendBtn.listeners.get('click')();
         inputField.value = 'ATI';
-        inputField.listeners.get('keydown')({ key: 'Enter' });
+        inputField.value = 'ATI\nNEXT';
+        inputField.listeners.get('keydown')({
+            key: 'Enter',
+            ctrlKey: true,
+            metaKey: false,
+            preventDefault: jest.fn(),
+        });
         clearBtn.listeners.get('click')();
         terminalDisplay.listeners.get('contextmenu')({ preventDefault: jest.fn(), type: 'contextmenu' });
         searchInput.listeners.get('input')({ target: { value: 'ERR' } });
@@ -689,7 +699,7 @@ describe('TabComponent', () => {
         expect(onClose).toHaveBeenCalledWith('tab-1');
         expect(onSwitch).toHaveBeenCalledWith('tab-1');
         expect(onSend).toHaveBeenCalledWith('tab-1', 'AT');
-        expect(onSend).toHaveBeenCalledWith('tab-1', 'ATI');
+        expect(onSend).toHaveBeenCalledWith('tab-1', 'ATI\nNEXT');
         expect(onClear).toHaveBeenCalledWith('tab-1');
         expect(onContextMenu).toHaveBeenCalledWith('tab-1', expect.objectContaining({ type: 'contextmenu' }));
         expect(tab.terminal.setFilters).toHaveBeenCalledWith({ search: 'ERR' });

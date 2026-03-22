@@ -15,6 +15,7 @@
 - **Tab Readability**: Long tab names now use ellipsis (`...`) to prevent UI clutter, with full names visible via hover tooltips.
 - **Live Status Updates**: Added a 1-second global timer to ensure that **Duration** and **Current Time** in the status bar are always up-to-date, even when no data is flowing.
 - **Auto-Scroll to Active**: Switching tabs now automatically scrolls the active tab into view if it's currently hidden in the scrollable bar.
+- **Multiline Send Box**: The send box now keeps pasted multiline formatting intact, auto-expands for larger payloads, and uses **Ctrl/Cmd + Enter** to send without stripping line breaks.
 
 ### Technical Fixes
 - **Robust Port Closure**: Refactored `WebSerialProvider` to aggressively release stream locks and ensure ports are fully closed, eliminating "Port already open" errors during reconnection.
