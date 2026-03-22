@@ -11,13 +11,13 @@ describe('web services', () => {
         jest.resetModules();
         global.navigator = {};
         global.window = {};
-        global.CustomEvent = class CustomEvent {
+        global.CustomEvent = class {
             constructor(type, options = {}) {
                 this.type = type;
                 this.detail = options.detail;
             }
         };
-        global.Event = class Event {};
+        global.Event = class {};
         global.TextEncoder = TextEncoder;
         global.TextDecoderStream = class {
             constructor() {

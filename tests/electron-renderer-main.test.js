@@ -1,4 +1,4 @@
-const createBaseShell = () => class AppShell {
+const createBaseShell = () => class {
     constructor() {
         this.tabManager = {
             createTab: jest.fn(() => ({ id: 'tab-1' })),

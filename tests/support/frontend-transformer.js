@@ -3,12 +3,12 @@ const exportNames = [];
 function transformImports(source) {
     let transformed = source.replace(
         /import\s+\{([^}]+)\}\s+from\s+'([^']+)';/g,
-        (match, imports, specifier) => `const { ${imports.trim()} } = require('${specifier}');`
+        (_match, imports, specifier) => `const { ${imports.trim()} } = require('${specifier}');`
     );
 
     transformed = transformed.replace(
         /export\s+\{([^}]+)\}\s+from\s+'([^']+)';/g,
-        (match, exportsList, specifier) => {
+        (_match, exportsList, specifier) => {
             const names = exportsList.split(',').map((item) => item.trim()).filter(Boolean);
             names.forEach((name) => exportNames.push(name));
             return `const { ${exportsList.trim()} } = require('${specifier}');`;
@@ -19,22 +19,22 @@ function transformImports(source) {
 }
 
 function transformExports(source) {
-    let transformed = source.replace(/export async function (\w+)/g, (match, name) => {
+    let transformed = source.replace(/export async function (\w+)/g, (_match, name) => {
         exportNames.push(name);
         return `async function ${name}`;
     });
 
-    transformed = transformed.replace(/export function (\w+)/g, (match, name) => {
+    transformed = transformed.replace(/export function (\w+)/g, (_match, name) => {
         exportNames.push(name);
         return `function ${name}`;
     });
 
-    transformed = transformed.replace(/export class (\w+)/g, (match, name) => {
+    transformed = transformed.replace(/export class (\w+)/g, (_match, name) => {
         exportNames.push(name);
         return `class ${name}`;
     });
 
-    transformed = transformed.replace(/export const (\w+)\s*=/g, (match, name) => {
+    transformed = transformed.replace(/export const (\w+)\s*=/g, (_match, name) => {
         exportNames.push(name);
         return `const ${name} =`;
     });

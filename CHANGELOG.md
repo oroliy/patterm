@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Repository-wide JavaScript lint gate for `src/`, `tests/`, and `web/`, with mixed CommonJS/ESM parsing and non-zero exits on lint failures
 - Reconnect button for disconnected tabs
 - Support for auto-reconnect using USB VID/PID (Web) or port path (Electron)
 - Default session names based on port information
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiline send box that preserves pasted whitespace/newlines and supports Ctrl/Cmd + Enter send
 
 ### Fixed
+- GitHub Actions `lint` job now runs the same command as local development without silently ignoring failures
 - "Port already open" errors on reconnection by robustly releasing Web Serial locks
 - IPC serialization issues for Node.js Buffer objects
 - Missing terminal updates for data chunks without newlines

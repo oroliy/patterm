@@ -11,7 +11,7 @@
     "dev:main": "npm run prepare:build-meta && electron src/main/main.js",
     "dev:renderer": "wait-on http://localhost:3000 && electron .",
     "build": "echo 'No build step required for vanilla JavaScript'",
-    "lint": "echo 'Lint check passed (no linter configured)'",
+    "lint": "node scripts/lint.js",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "test:electron": "npm run prepare:build-meta && playwright test --config=playwright.electron.config.js",
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --watch",

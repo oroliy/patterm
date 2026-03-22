@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 function subscribe(channel, listener, mapArgs = (...args) => args) {
-    const wrappedListener = (event, ...args) => {
+    const wrappedListener = (_event, ...args) => {
         listener(...mapArgs(...args));
     };
 

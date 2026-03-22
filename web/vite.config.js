@@ -13,7 +13,7 @@ function getCommitId() {
             encoding: 'utf8',
             stdio: ['ignore', 'pipe', 'ignore'],
         }).trim();
-    } catch (error) {
+    } catch (_error) {
         return 'unknown';
     }
 }

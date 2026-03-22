@@ -85,7 +85,7 @@ export function normalizeTerminalEntryText(value) {
         if ('buffer' in value && 'byteLength' in value && 'byteOffset' in value) {
             try {
                 return new TextDecoder().decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
-            } catch (e) {
+            } catch (_error) {
                 // Ignore and fall through
             }
         }
@@ -94,7 +94,7 @@ export function normalizeTerminalEntryText(value) {
     if (Array.isArray(value)) {
         try {
             return new TextDecoder().decode(new Uint8Array(value));
-        } catch (e) {
+        } catch (_error) {
             // Ignore and fall through
         }
     }

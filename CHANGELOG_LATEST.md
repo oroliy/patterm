@@ -27,6 +27,11 @@
 - **Memory Optimization**: Explicitly nullified service references after tab closure to ensure proper garbage collection.
 - **IPC Registration Timing**: Moved Electron IPC handler registration to app startup so reopening windows on macOS reuses the same `serial:*`, `theme:*`, `app:*`, and `dialog:*` handlers instead of registering duplicates.
 
+### Tooling & Quality
+- **Real Lint Gate**: Added a repository-wide JavaScript lint runner for `src/`, `tests/`, and `web/` that understands both CommonJS and ESM files.
+- **Consistent CI Enforcement**: GitHub Actions now runs the exact same `npm run lint` command used locally and fails the `lint` job when issues are found.
+- **Documentation Sync**: Updated both `README.md` and `README_zh.md` so lint usage and scope are documented consistently.
+
 ## Technical Details
 - Refactored `AppShell.reconnectTab` with a platform-specific `attemptAutoReconnect` hook.
 - Standardized `WebSerialProvider.disconnect` to safely handle `WritableStreamDefaultWriter.releaseLock`.

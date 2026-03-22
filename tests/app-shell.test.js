@@ -7,12 +7,12 @@ jest.mock('../src/web/js/services/TabManager.js', () => {
         closeTab: jest.fn(),
         clearTerminal: jest.fn(),
         updateFilterState: jest.fn(),
-        updateTriggerRules: jest.fn((tabId, rules) => rules),
-        updateWorkflows: jest.fn((tabId, workflows) => workflows.map((workflow, index) => ({
+        updateTriggerRules: jest.fn((_tabId, rules) => rules),
+        updateWorkflows: jest.fn((_tabId, workflows) => workflows.map((workflow, index) => ({
             id: workflow.id || `workflow-${index}`,
             ...workflow,
         }))),
-        updateWorkflowRuntime: jest.fn((tabId, runtime) => runtime),
+        updateWorkflowRuntime: jest.fn((_tabId, runtime) => runtime),
         getTab: jest.fn(() => null),
         getTabConfig: jest.fn(() => null),
         onDataSent: jest.fn(),
@@ -513,7 +513,7 @@ describe('AppShell behavior', () => {
         shell.tabComponents.set('tab-1', component);
         shell.tabManager.getTab.mockReturnValue(tab);
         shell.tabManager.getActiveTab.mockReturnValue({ id: 'tab-1' });
-        shell.tabManager.updateWorkflows.mockImplementation((tabId, workflows) => workflows.map((workflow) => ({
+        shell.tabManager.updateWorkflows.mockImplementation((_tabId, workflows) => workflows.map((workflow) => ({
             id: workflow.id || 'workflow-2',
             ...workflow,
         })));
