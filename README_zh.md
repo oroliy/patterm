@@ -237,10 +237,13 @@ patterm/
 ### 开发命令
 
 ```bash
-# 启动开发服务器（带热重载）
+# 启动桌面端开发模式（直接启动 Electron）
 npm run dev
 
-# 启动 Electron（无热重载）
+# 输出说明：当前桌面端不需要单独的 renderer dev server
+npm run dev:renderer
+
+# 以与当前桌面开发相同的文件加载方式启动 Electron
 npm start
 
 # 构建应用

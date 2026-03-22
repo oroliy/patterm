@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Simplified desktop development scripts so `npm run dev` launches Electron directly, and `dev:renderer` now states that no standalone `localhost:3000` renderer server is required because Electron loads `src/renderer/index.html` directly
+
 ### Added
 - Reconnect button for disconnected tabs
 - Support for auto-reconnect using USB VID/PID (Web) or port path (Electron)
