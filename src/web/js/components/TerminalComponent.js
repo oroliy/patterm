@@ -23,6 +23,7 @@ export class TerminalComponent {
         this.lineCount = 0;
         this.maxLines = options.maxLines ?? MAX_TERMINAL_LINES;
         this.dataBuffers = new Map();
+        this.flushTimeoutIds = new Map();
         this.entries = [];
         this.visibleEntries = [];
         this.transactions = [];
@@ -55,7 +56,14 @@ export class TerminalComponent {
         const currentBuffer = this.dataBuffers.get(type) || '';
         const combinedText = currentBuffer + text;
         const parts = combinedText.split('\n');
-        this.dataBuffers.set(type, parts.pop() || '');
+        
+        if (this.flushTimeoutIds.has(type)) {
+            clearTimeout(this.flushTimeoutIds.get(type));
+            this.flushTimeoutIds.delete(type);
+        }
+
+        const lastPart = parts.pop() || '';
+        this.dataBuffers.set(type, lastPart);
         const appendedEntries = [];
 
         parts.forEach((part) => {
@@ -64,6 +72,21 @@ export class TerminalComponent {
                 appendedEntries.push(entry);
             }
         });
+
+        if (lastPart) {
+            const timeoutId = setTimeout(() => {
+                const buffer = this.dataBuffers.get(type);
+                if (buffer) {
+                    const entry = this.appendLine(buffer, type, false);
+                    if (entry) {
+                        this.notifyTransactionsChange();
+                    }
+                    this.dataBuffers.set(type, '');
+                }
+                this.flushTimeoutIds.delete(type);
+            }, 50);
+            this.flushTimeoutIds.set(type, timeoutId);
+        }
 
         return appendedEntries;
     }

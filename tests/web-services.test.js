@@ -2,6 +2,7 @@ jest.mock('../src/web/js/utils/debug.js', () => ({
     debug: {
         log: jest.fn(),
         error: jest.fn(),
+        warn: jest.fn(),
     },
 }));
 
@@ -134,9 +135,7 @@ describe('web services', () => {
             write: jest.fn(async () => {
                 throw new Error('raw failed');
             }),
-            close: jest.fn(async () => {
-                throw new Error('close failed');
-            }),
+            releaseLock: jest.fn(),
         };
         const reader = {
             cancel: jest.fn(async () => {
@@ -161,7 +160,7 @@ describe('web services', () => {
 
         await provider.disconnect();
         expect(reader.cancel).toHaveBeenCalled();
-        expect(writer.close).toHaveBeenCalled();
+        expect(writer.releaseLock).toHaveBeenCalled();
         expect(provider.port.close).toHaveBeenCalled();
 
         const reconnecting = new WebSerialProvider();

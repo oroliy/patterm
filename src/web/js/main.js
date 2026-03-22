@@ -52,12 +52,16 @@ class PattermApp extends AppShell {
         this.initServiceWorker();
     }
 
-    async showConnectionDialog() {
+    async showConnectionDialog(tabId = null) {
         const dialog = new ConnectionDialog();
         const result = await dialog.show();
 
         if (result.confirmed) {
-            await this.createConnection(result.config, result.tabName, result.port);
+            if (tabId) {
+                await this.reconnectWithNewService(tabId, result.config, result.tabName, result.port);
+            } else {
+                await this.createConnection(result.config, result.tabName, result.port);
+            }
         }
     }
 
@@ -70,7 +74,20 @@ class PattermApp extends AppShell {
         }
 
         const normalizedConfig = normalizeSerialConfig(config);
-        const tabState = this.tabManager.createTab(normalizedConfig, tabName || `Port ${normalizedConfig.baudRate}`);
+        
+        let defaultTabName = `Port ${normalizedConfig.baudRate}`;
+        try {
+            const info = port.getInfo();
+            if (info.usbVendorId && info.usbProductId) {
+                const vendorId = info.usbVendorId.toString(16).toUpperCase().padStart(4, '0');
+                const productId = info.usbProductId.toString(16).toUpperCase().padStart(4, '0');
+                defaultTabName = `USB VID:PID ${vendorId}:${productId}`;
+            }
+        } catch (e) {
+            // Ignore
+        }
+
+        const tabState = this.tabManager.createTab(normalizedConfig, tabName || defaultTabName);
         const service = new WebSerialProvider();
         service.port = port;
 
@@ -84,6 +101,27 @@ class PattermApp extends AppShell {
             debug.error('[App] Connection failed:', error);
             this.tabManager.closeTab(tabState.id);
             this.showError(`Failed to connect: ${error.message}\n\n${error.stack}`);
+        }
+    }
+
+    async reconnectWithNewService(tabId, config, tabName, port) {
+        const tab = this.tabManager.getTab(tabId);
+        if (!tab || !port) return;
+
+        const normalizedConfig = normalizeSerialConfig(config);
+        const service = new WebSerialProvider();
+        service.port = port;
+
+        try {
+            await service.open(normalizedConfig);
+            if (tabName) {
+                tab.name = tabName;
+                this.tabComponents.get(tabId)?.setName(tabName);
+            }
+            tab.config = normalizedConfig;
+            await this.tabManager.connectTab(tabId, service);
+        } catch (error) {
+            this.showError(`Failed to reconnect: ${error.message}`);
         }
     }
 

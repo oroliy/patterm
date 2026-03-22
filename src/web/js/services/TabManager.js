@@ -159,6 +159,7 @@ export class TabManager {
 
         if (tab.service && tab.connected) {
             await tab.service.disconnect();
+            tab.service = null;
         }
 
         if (tab.element) {

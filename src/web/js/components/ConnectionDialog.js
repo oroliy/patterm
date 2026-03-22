@@ -203,6 +203,11 @@ export class ConnectionDialog {
             infoSpan.textContent = infoText;
             infoSpan.classList.add('port-selected');
 
+            const tabNameInput = this.dialog.querySelector('#tab-name');
+            if (tabNameInput && !tabNameInput.value.trim()) {
+                tabNameInput.value = this.getDefaultTabNameFromInfo(info);
+            }
+
             this.setConnectEnabled(true);
 
             this.clearError();
@@ -220,6 +225,15 @@ export class ConnectionDialog {
             return `Selected: USB VID:PID ${vendorId}:${productId}`;
         }
         return 'Port selected';
+    }
+
+    getDefaultTabNameFromInfo(info) {
+        if (info.usbVendorId && info.usbProductId) {
+            const vendorId = info.usbVendorId.toString(16).toUpperCase().padStart(4, '0');
+            const productId = info.usbProductId.toString(16).toUpperCase().padStart(4, '0');
+            return `USB VID:PID ${vendorId}:${productId}`;
+        }
+        return 'Serial Port';
     }
 
     async handleConnect() {

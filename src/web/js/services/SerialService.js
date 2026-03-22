@@ -44,6 +44,11 @@ export class WebSerialProvider extends BaseSerialProvider {
             throw new Error('No port selected. Call requestPort() first.');
         }
 
+        if (this.port.readable || this.port.writable) {
+            debug.warn('[WebSerialProvider] Port already open or has active streams, attempting to disconnect first.');
+            await this.disconnect();
+        }
+
         const normalizedConfig = normalizeSerialConfig(config);
         const options = {
             baudRate: normalizedConfig.baudRate,
@@ -171,28 +176,37 @@ export class WebSerialProvider extends BaseSerialProvider {
 
         if (this.reader) {
             try {
-                await this.reader.cancel();
-                debug.log('[WebSerialProvider] Reader cancelled');
+                debug.log('[WebSerialProvider] Cancelling reader');
+                await this.reader.cancel().catch((e) => debug.error('[WebSerialProvider] Error cancelling reader:', e));
+                this.reader.releaseLock();
             } catch (error) {
-                debug.error('[WebSerialProvider] Error cancelling reader:', error);
+                debug.error('[WebSerialProvider] Error releasing reader lock:', error);
             }
             this.reader = null;
         }
 
         if (this.writer) {
             try {
-                await this.writer.close();
-                debug.log('[WebSerialProvider] Writer closed');
+                debug.log('[WebSerialProvider] Releasing writer lock');
+                // Web Serial API's WritableStreamDefaultWriter does not have close(), 
+                // just releaseLock().
+                if (typeof this.writer.releaseLock === 'function') {
+                    this.writer.releaseLock();
+                }
             } catch (error) {
-                debug.error('[WebSerialProvider] Error closing writer:', error);
+                debug.error('[WebSerialProvider] Error releasing writer lock:', error);
             }
             this.writer = null;
         }
 
         if (this.port) {
             try {
-                await this.port.close();
-                debug.log('[WebSerialProvider] Port closed');
+                if (this.port.readable || this.port.writable) {
+                    debug.log('[WebSerialProvider] Closing port');
+                    await this.port.close();
+                } else {
+                    debug.log('[WebSerialProvider] Port already closed');
+                }
             } catch (error) {
                 debug.error('[WebSerialProvider] Error closing port:', error);
             }

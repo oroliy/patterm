@@ -340,6 +340,13 @@ body {
     display: flex;
     gap: 2px;
     min-height: 40px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; /* Firefox */
+}
+
+.tabs-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .tab {
@@ -355,8 +362,17 @@ body {
     align-items: center;
     gap: 8px;
     min-width: 140px;
-    max-width: 220px;
+    max-width: 240px;
+    flex-shrink: 0;
     position: relative;
+    user-select: none;
+}
+
+.tab-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tab:hover {

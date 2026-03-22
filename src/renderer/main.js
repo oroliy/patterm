@@ -35,12 +35,16 @@ export class PattermElectronApp extends AppShell {
         };
     }
 
-    async showConnectionDialog() {
+    async showConnectionDialog(tabId = null) {
         const dialog = new ElectronConnectionDialog();
         const result = await dialog.show();
 
         if (result.confirmed) {
-            await this.createConnection(result.config, result.tabName);
+            if (tabId) {
+                await this.reconnectWithNewService(tabId, result.config, result.tabName);
+            } else {
+                await this.createConnection(result.config, result.tabName);
+            }
         }
     }
 
@@ -50,12 +54,48 @@ export class PattermElectronApp extends AppShell {
         const service = new ElectronSerialProvider();
 
         try {
-            await service.open(normalizedConfig, tabName);
+            await service.open(normalizedConfig, tabName || tabState.name);
             await this.tabManager.connectTab(tabState.id, service);
         } catch (error) {
             console.error('[App] Connection failed:', error);
             this.tabManager.closeTab(tabState.id);
             this.showError(`Failed to connect: ${error.message}`);
+        }
+    }
+
+    async reconnectTab(tabId) {
+        const tab = this.tabManager.getTab(tabId);
+        if (tab && !tab.service) {
+            const service = new ElectronSerialProvider();
+            try {
+                await service.open(tab.config, tab.name);
+                await this.tabManager.connectTab(tabId, service);
+                return;
+            } catch (error) {
+                this.showError(`Failed to reconnect: ${error.message}`);
+                return;
+            }
+        }
+        await super.reconnectTab(tabId);
+    }
+
+    async reconnectWithNewService(tabId, config, tabName) {
+        const tab = this.tabManager.getTab(tabId);
+        if (!tab) return;
+
+        const normalizedConfig = normalizeSerialConfig(config);
+        const service = new ElectronSerialProvider();
+
+        try {
+            await service.open(normalizedConfig, tabName || tab.name);
+            if (tabName) {
+                tab.name = tabName;
+                this.tabComponents.get(tabId)?.setName(tabName);
+            }
+            tab.config = normalizedConfig;
+            await this.tabManager.connectTab(tabId, service);
+        } catch (error) {
+            this.showError(`Failed to reconnect: ${error.message}`);
         }
     }
 

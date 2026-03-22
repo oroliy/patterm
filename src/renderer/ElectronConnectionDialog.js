@@ -48,6 +48,11 @@ export class ElectronConnectionDialog extends ConnectionDialog {
             select.addEventListener('change', () => {
                 this.clearError();
                 this.setConnectEnabled(Boolean(select.value));
+                
+                const tabNameInput = this.dialog.querySelector('#tab-name');
+                if (tabNameInput && !tabNameInput.value.trim() && select.value) {
+                    tabNameInput.value = select.value;
+                }
             });
         }
     }

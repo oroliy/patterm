@@ -78,6 +78,8 @@ export class AppShell {
         globalEvents.on('tab:connected', () => this.persistSession());
         globalEvents.on('tab:disconnected', () => this.persistSession());
 
+        this.statusUpdateInterval = setInterval(() => this.updateAllStatusBars(), 1000);
+
         document.addEventListener('click', () => {
             this.hideContextMenu();
             this.hideThemeMenu();
@@ -105,6 +107,7 @@ export class AppShell {
             onWorkflowDefinitionsChange: (tabId, workflows) => this.onTabWorkflowDefinitionsChange(tabId, workflows),
             onWorkflowRun: (tabId, workflowId) => this.startWorkflow(tabId, workflowId),
             onWorkflowStop: (tabId) => this.stopWorkflow(tabId),
+            onReconnect: (tabId) => this.reconnectTab(tabId),
             saveContent: this.getTabSaveHandler(tabState.id),
         });
 
@@ -150,6 +153,9 @@ export class AppShell {
     onTabSwitched({ tabId }) {
         this.tabComponents.forEach((component, id) => {
             component.setActive(id === tabId);
+            if (id === tabId && component.tabElement) {
+                component.tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
         });
     }
 
@@ -175,6 +181,15 @@ export class AppShell {
         if (component) {
             component.updateRates(rxRate, txRate);
         }
+    }
+
+    updateAllStatusBars() {
+        const activeTabId = this.tabManager.getActiveTab()?.id;
+        this.tabComponents.forEach((component, id) => {
+            if (component.tabState.connected || id === activeTabId) {
+                component.updateStatusBar();
+            }
+        });
     }
 
     onTabFiltersChange(tabId, filterState) {
@@ -223,6 +238,22 @@ export class AppShell {
 
     closeTab(tabId) {
         this.tabManager.closeTab(tabId);
+    }
+
+    async reconnectTab(tabId) {
+        const tab = this.tabManager.getTab(tabId);
+        if (!tab) return;
+
+        if (!tab.service) {
+            this.showConnectionDialog(tabId);
+            return;
+        }
+
+        try {
+            await this.tabManager.reconnectTab(tabId);
+        } catch (error) {
+            this.showError(`Failed to reconnect: ${error.message}`);
+        }
     }
 
     switchTab(tabId) {

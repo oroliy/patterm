@@ -74,13 +74,14 @@ describe('TabManager', () => {
         const first = manager.createTab({ baudRate: 115200 }, 'First');
         const second = manager.createTab({ baudRate: 9600 }, 'Second');
 
-        first.service = { disconnect: jest.fn(() => Promise.resolve()) };
+        const service = { disconnect: jest.fn(() => Promise.resolve()) };
+        first.service = service;
         first.connected = true;
         manager.activeTabId = first.id;
 
         await manager.closeTab(first.id);
 
-        expect(first.service.disconnect).toHaveBeenCalled();
+        expect(service.disconnect).toHaveBeenCalled();
         expect(manager.activeTabId).toBe(second.id);
         expect(globalEvents.emit).toHaveBeenCalledWith('tab:closed', { tabId: first.id });
     });

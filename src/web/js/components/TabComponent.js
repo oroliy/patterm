@@ -27,11 +27,23 @@ export class TabComponent {
         this.tabElement = document.createElement('div');
         this.tabElement.className = 'tab';
         this.tabElement.dataset.tabId = this.tabState.id;
+        this.tabElement.title = this.tabState.name;
         this.tabElement.innerHTML = `
             <span class="tab-status ${this.tabState.connected ? 'connected' : ''}"></span>
             <span class="tab-name">${this.escapeHtml(this.tabState.name)}</span>
             <button class="tab-close-btn" aria-label="Close tab">×</button>
         `;
+        
+        // Horizontal scroll with mouse wheel
+        this.tabElement.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                const container = this.tabElement.parentElement;
+                if (container) {
+                    e.preventDefault();
+                    container.scrollLeft += e.deltaY;
+                }
+            }
+        });
     }
 
     createTabContent() {
@@ -137,7 +149,8 @@ export class TabComponent {
                 <div class="input-bar">
                     <div class="status-dot ${this.tabState.connected ? 'connected' : ''}"></div>
                     <input type="text" class="input-field" placeholder="Type command..." autocomplete="off" ${this.tabState.connected ? '' : 'disabled'}>
-                    <button class="send-btn btn btn-primary" ${this.tabState.connected ? '' : 'disabled'}>➤</button>
+                    <button class="send-btn btn btn-primary" ${this.tabState.connected ? '' : 'style="display: none;"'}>➤</button>
+                    <button class="reconnect-btn btn btn-primary" ${this.tabState.connected ? 'style="display: none;"' : ''}>Reconnect</button>
                     <button class="clear-btn btn">Clear</button>
                 </div>
 
@@ -243,9 +256,15 @@ export class TabComponent {
         });
 
         const sendBtn = this.element.querySelector('.send-btn');
+        const reconnectBtn = this.element.querySelector('.reconnect-btn');
         const inputField = this.element.querySelector('.input-field');
 
         sendBtn.addEventListener('click', () => this.handleSend());
+        if (reconnectBtn) {
+            reconnectBtn.addEventListener('click', () => {
+                this.options.onReconnect?.(this.tabState.id);
+            });
+        }
         inputField.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 this.handleSend();
@@ -353,6 +372,7 @@ export class TabComponent {
         const inputStatus = this.element.querySelector('.input-bar .status-dot');
         const indicator = this.statusBarElements.indicator;
         const sendBtn = this.element.querySelector('.send-btn');
+        const reconnectBtn = this.element.querySelector('.reconnect-btn');
         const inputField = this.element.querySelector('.input-field');
 
         if (connected) {
@@ -360,6 +380,8 @@ export class TabComponent {
             inputStatus?.classList.add('connected');
             indicator?.classList.add('connected');
             sendBtn.disabled = false;
+            sendBtn.style.display = '';
+            if (reconnectBtn) reconnectBtn.style.display = 'none';
             inputField.disabled = false;
             this.statusBarElements.portName.textContent = 'Connected';
         } else {
@@ -367,6 +389,8 @@ export class TabComponent {
             inputStatus?.classList.remove('connected');
             indicator?.classList.remove('connected');
             sendBtn.disabled = true;
+            sendBtn.style.display = 'none';
+            if (reconnectBtn) reconnectBtn.style.display = '';
             inputField.disabled = true;
             this.statusBarElements.portName.textContent = 'Not Connected';
         }
@@ -410,6 +434,9 @@ export class TabComponent {
         const nameEl = this.tabElement.querySelector('.tab-name');
         if (nameEl) {
             nameEl.textContent = name;
+        }
+        if (this.tabElement) {
+            this.tabElement.title = name;
         }
     }
 

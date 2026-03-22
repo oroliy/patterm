@@ -77,6 +77,28 @@ export function normalizeTerminalEntryText(value) {
         );
     }
 
+    if (value && typeof value === 'object') {
+        if (value.type === 'Buffer' && Array.isArray(value.data)) {
+            return new TextDecoder().decode(new Uint8Array(value.data));
+        }
+        
+        if ('buffer' in value && 'byteLength' in value && 'byteOffset' in value) {
+            try {
+                return new TextDecoder().decode(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+            } catch (e) {
+                // Ignore and fall through
+            }
+        }
+    }
+
+    if (Array.isArray(value)) {
+        try {
+            return new TextDecoder().decode(new Uint8Array(value));
+        } catch (e) {
+            // Ignore and fall through
+        }
+    }
+
     if (value == null) {
         return '';
     }
