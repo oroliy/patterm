@@ -21,3 +21,4 @@ test-results/
 playwright-report/
 test-layout.html
 test-tab-layout.html
+test-electron.js
