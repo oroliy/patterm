@@ -143,7 +143,7 @@ Choose your platform:
 - **macOS**: [Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg) (Intel) or [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg) (Apple Silicon)
 - **Linux**: [Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage) (x64), [Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage) (ARM64), [Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb) (x64), or [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb) (ARM64)
 
-**Web Version**: Open https://patterm.pages.dev/ in Chrome, Edge, or Opera (requires HTTPS or localhost)
+**Web Version**: Open https://patterm.pages.dev/ or your GitHub Pages URL in Chrome, Edge, or Opera (requires HTTPS or localhost)
 
 [View all releases](https://github.com/oroliy/patterm/releases)
 
@@ -286,7 +286,24 @@ Jest now also instruments shared/Web frontend modules through the local transfor
 The current Jest coverage suite also exercises Web bootstrap flow plus Electron window helpers,
 so `npm run test:coverage` now passes the repository's global 50% coverage gate locally.
 
-Tag-based releases (`v*`) now wait for the Cloudflare Pages deploy job, then publish desktop artifacts to GitHub Releases. Pushes to `master` still deploy the Web PWA when Cloudflare secrets are configured.
+Tag-based releases (`v*`) now wait for the Cloudflare Pages deploy job, then publish desktop artifacts to GitHub Releases. Pushes to `master` can deploy the Web PWA through Cloudflare Pages when the Cloudflare secrets are configured, or through GitHub Pages via `.github/workflows/web-pwa-gh-pages.yml`.
+
+### GitHub Pages Deployment
+
+The repository also includes a GitHub Pages workflow for the Web PWA:
+
+```bash
+.github/workflows/web-pwa-gh-pages.yml
+```
+
+To enable it:
+
+1. Open **GitHub -> Settings -> Pages**
+2. Set **Source** to **GitHub Actions**
+3. Keep the default Pages environment name `github-pages`
+4. Push to `master` or run the **Deploy Web PWA to GitHub Pages** workflow manually
+
+The Web PWA now uses deployment-relative manifest and service worker URLs, so repository-scoped Pages URLs such as `https://<owner>.github.io/patterm/` work correctly.
 
 #### Quick E2E Test (Recommended)
 

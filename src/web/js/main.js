@@ -225,7 +225,7 @@ class PattermApp extends AppShell {
     initServiceWorker() {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register(new URL('./sw.js', window.location.href).pathname)
                     .then(() => debug.log('[SW] Registered'))
                     .catch((error) => debug.error('[SW] Registration failed:', error));
             });
