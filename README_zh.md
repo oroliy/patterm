@@ -140,7 +140,7 @@ npm run web:test     # 自动启动 Vite 并运行 Playwright E2E 测试
 - **macOS**：[Patterm-0.7.1-x64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.dmg)（Intel）或 [Patterm-0.7.1-arm64.dmg](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.dmg)（Apple Silicon）
 - **Linux**：[Patterm-0.7.1-x64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.AppImage)（x64）、[Patterm-0.7.1-arm64.AppImage](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.AppImage)（ARM64）、[Patterm-0.7.1-x64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-x64.deb)（x64）或 [Patterm-0.7.1-arm64.deb](https://github.com/oroliy/patterm/releases/download/v0.7.1/Patterm-0.7.1-arm64.deb)（ARM64）
 
-**Web 版本**：在 Chrome、Edge 或 Opera 中打开 https://patterm.pages.dev/ 或你的 GitHub Pages 地址（需要 HTTPS 或 localhost）
+**Web 版本**：在 Chrome、Edge 或 Opera 中打开 https://patterm.pages.dev/ 或 https://oroliy.github.io/patterm/（需要 HTTPS 或 localhost）
 
 [查看所有版本](https://github.com/oroliy/patterm/releases)
 
@@ -276,24 +276,16 @@ CI 现在会在构建和部署前强制通过四个阶段：
 
 Web CI 测试现在会断言真实 UI 流程：打开连接对话框、通过 `navigator.serial.requestPort()` 选择受控 mock 串口、建立连接、发送数据，并验证 TX/RX 内容确实显示在主终端区域。临时排障脚本不再进入 CI 路径。
 
-基于 Tag 的发布（`v*`）现在会先等待 Cloudflare Pages 部署完成，再向 GitHub Releases 发布桌面端构建产物。推送到 `master` 时，Web PWA 可以通过已配置 Secrets 的 Cloudflare Pages 自动部署，也可以通过 `.github/workflows/web-pwa-gh-pages.yml` 部署到 GitHub Pages。
+基于 Tag 的发布（`v*`）现在会先等待 Cloudflare Pages 部署完成，再向 GitHub Releases 发布桌面端构建产物。推送到 `master` 时，Web PWA 可以通过 Cloudflare Pages 或 GitHub Pages 部署。
 
 ### GitHub Pages 部署
 
-仓库现在也包含 Web PWA 的 GitHub Pages 工作流：
-
-```bash
-.github/workflows/web-pwa-gh-pages.yml
-```
-
-启用步骤：
+在线地址：https://oroliy.github.io/patterm/
 
 1. 打开 **GitHub -> Settings -> Pages**
 2. 将 **Source** 设置为 **GitHub Actions**
-3. 保持默认 Pages 环境名 `github-pages`
-4. 推送到 `master`，或手动运行 **Deploy Web PWA to GitHub Pages** 工作流
-
-Web PWA 现在会使用相对部署路径的 manifest 和 service worker URL，因此 `https://<owner>.github.io/patterm/` 这类仓库子路径地址可以正常工作。
+3. 推送到 `master`，或手动运行 **Deploy Web PWA to GitHub Pages** 工作流
+4. 打开 `https://oroliy.github.io/patterm/`
 
 Jest 现在也会通过本地转换器 `tests/support/frontend-transformer.js` 为共享/Web 前端模块做插桩，
 因此覆盖率报告会纳入 `AppShell`、`TabComponent`、`TerminalComponent`、`terminalEntries` 等 UI 模块。
