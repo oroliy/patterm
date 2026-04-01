@@ -1,71 +1,76 @@
 const CACHE_NAME = 'patterm-web-v0.1.0';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/css/styles.css',
-    '/js/main.js',
-    '/js/services/SerialService.js',
-    '/js/services/TabManager.js',
-    '/js/services/LogManager.js',
-    '/js/services/EventManager.js',
-    '/js/components/ConnectionDialog.js',
-    '/js/components/TabComponent.js',
-    '/js/components/TerminalComponent.js',
-    '/js/utils/constants.js',
-    '/js/utils/helpers.js',
-    '/manifest.json'
+const APP_SHELL_PATHS = [
+    './',
+    './index.html',
+    './manifest.json',
+    './icons/icon-192.png',
+    './icons/icon-512.png',
 ];
+
+function resolveAppUrl(path) {
+    return new URL(path, self.location.href).toString();
+}
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('[SW] Opening cache');
-                return cache.addAll(urlsToCache);
-            })
+            .then((cache) => cache.addAll(APP_SHELL_PATHS.map((path) => resolveAppUrl(path))))
             .then(() => self.skipWaiting())
     );
 });
 
 self.addEventListener('activate', (event) => {
-    const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
         caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        if (cacheWhitelist.indexOf(cacheName) === -1) {
-                            console.log('[SW] Deleting old cache:', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
+            .then((cacheNames) => Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                    return undefined;
+                })
+            ))
             .then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    if (request.method !== 'GET') {
+        return;
+    }
+
+    const requestUrl = new URL(request.url);
+    if (requestUrl.origin !== self.location.origin) {
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request)
+        caches.match(request)
             .then((response) => {
                 if (response) {
                     return response;
                 }
-                return fetch(event.request).then((response) => {
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
+
+                return fetch(request).then((networkResponse) => {
+                    if (!networkResponse || !networkResponse.ok) {
+                        return networkResponse;
                     }
-                    const responseToCache = response.clone();
+
+                    const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME)
                         .then((cache) => {
-                            cache.put(event.request, responseToCache);
+                            cache.put(request, responseToCache);
                         });
-                    return response;
+
+                    return networkResponse;
                 });
             })
-            .catch(() => {
-                return caches.match('/index.html');
+            .catch((error) => {
+                if (request.mode === 'navigate') {
+                    return caches.match(resolveAppUrl('./index.html'));
+                }
+                throw error;
             })
     );
 });

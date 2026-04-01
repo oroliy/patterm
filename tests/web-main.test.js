@@ -177,6 +177,9 @@ describe('web main app bootstrap', () => {
             matchMedia: jest.fn(() => ({
                 addEventListener: mediaListener,
             })),
+            location: {
+                href: 'https://example.github.io/patterm/',
+            },
             addEventListener: jest.fn((type, listener) => {
                 if (type === 'load') {
                     registeredLoadListener = listener;
@@ -260,7 +263,7 @@ describe('web main app bootstrap', () => {
 
         app.initServiceWorker();
         await registeredLoadListener();
-        expect(navigator.serviceWorker.register).toHaveBeenCalledWith('/sw.js');
+        expect(navigator.serviceWorker.register).toHaveBeenCalledWith('/patterm/sw.js');
 
         await expect(app.getAboutBuildInfo()).resolves.toEqual({
             version: '0.6.0',

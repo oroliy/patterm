@@ -25,9 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "Port already open" errors on reconnection by robustly releasing Web Serial locks
 - IPC serialization issues for Node.js Buffer objects
 - Missing terminal updates for data chunks without newlines
+- GitHub Pages Web PWA deploys now use deployment-relative manifest, icon, shortcut, and service worker URLs so repository-scoped Pages paths keep install/offline behavior working
 - Root-level `npm run web:test` now starts the same `https://localhost:5173` Vite server command that Playwright waits on, and the local/CI configs share the same HTTPS handling
 - Input sending no longer strips formatting from large pasted payloads
 - Electron now registers main-process IPC handlers once during app startup so macOS window reactivation does not duplicate handler setup
+
+### Tests
+- Added regression coverage for GitHub Pages Web PWA path handling in `tests/web-main.test.js` and `tests/web-pwa-paths.test.js`
 
 ## [0.7.1] - 2026-03-22
 

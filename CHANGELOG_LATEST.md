@@ -1,5 +1,10 @@
 # Changelog - Version 0.7.1 (March 22, 2026)
 
+## Upcoming
+
+### Web Deployment
+- **GitHub Pages Compatibility**: The Web PWA now uses deployment-relative manifest, icon, shortcut, and service worker URLs so installs and offline behavior work correctly from repository-scoped GitHub Pages URLs such as `https://<owner>.github.io/patterm/`.
+
 ## Features & Enhancements
 
 ### Tab Management & Reconnection
