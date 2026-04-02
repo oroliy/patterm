@@ -1,4 +1,0 @@
-interface:
-  display_name: "Patterm Review"
-  short_description: "Risk-focused review workflow for Patterm"
-  default_prompt: "Use $patterm-review to review changes in this repository with a risk-first, test-aware workflow."
