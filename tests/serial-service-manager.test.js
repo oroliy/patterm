@@ -1,4 +1,4 @@
-const SerialServiceManager = require('../src/services/serial-service-manager');
+const SerialServiceManager = require('../apps/desktop/services/serial-service-manager');
 
 describe('SerialServiceManager', () => {
     let manager;

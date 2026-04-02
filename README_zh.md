@@ -200,33 +200,21 @@ npm start
 
 ```
 patterm/
-├── src/
-│   ├── main/           # Electron 主进程
-│   │   ├── main.js     # 应用入口点
-│   │   └── window-manager.js  # 主窗口生命周期辅助器
-│   ├── renderer/       # Electron 渲染层壳层
-│   │   ├── index.html  # 主窗口 HTML
-│   │   ├── main.js     # 桌面端渲染入口
-│   │   ├── connection-dialog.js    # Electron 连接对话框桥接
-│   │   ├── ElectronConnectionDialog.js  # 基于共享 UI 的桌面端对话框封装
-│   │   ├── services/   # 基于 IPC 的 Electron 串口提供者
-│   │   ├── debug-window.html  # 调试控制台 UI
-│   │   └── styles.css  # 桌面端壳层样式
-│   ├── services/       # 业务逻辑
-│   │   ├── serial-service.js  # 单个串口处理
-│   │   └── serial-service-manager.js  # 多连接管理
-│   ├── shared/         # 双端共享代码
-│   │   ├── css/        # 公共样式变量与基础样式
-│   │   └── js/         # 公共工具、应用壳层与串口提供者抽象
-│   ├── generated/      # 构建时生成的元数据
-│   └── web/            # Web 端源码（PWA）
-│       ├── js/         # Web 端入口与组件
-│       └── css/        # Web 端样式
-├── web/                # Web 端入口与构建配置
-│   ├── index.html      # Web 页面入口
-│   ├── vite.config.js  # Vite 配置
-│   ├── public/         # PWA 静态资源
-│   └── tests/          # Playwright E2E
+├── apps/
+│   ├── desktop/
+│   │   ├── main/       # Electron 主进程入口、IPC 与窗口管理
+│   │   ├── renderer/   # 桌面端渲染壳层与 Electron 专属桥接
+│   │   └── services/   # 主进程使用的桌面串口服务
+│   └── web/
+│       ├── src/        # Web 应用入口与浏览器专属服务
+│       ├── public/     # PWA 静态资源（图标、manifest、service worker）
+│       ├── tests/      # Playwright Web E2E
+│       ├── index.html
+│       └── vite.config.js
+├── shared/
+│   ├── css/            # 桌面端与 Web 共享样式
+│   └── js/             # 共享应用壳层、UI 组件、工具与终端逻辑
+├── generated/          # 构建时生成的元数据
 ├── tests/              # Jest 测试套件
 ├── .github/workflows/  # CI/CD 配置
 ├── package.json
@@ -265,7 +253,7 @@ npm run test:electron  # 运行 Electron Playwright E2E
 npm run web:test       # 自动启动 Vite 并运行 Web 端 Playwright E2E
 npm run web:test:ci    # 使用共享 Playwright Web 服务配置运行 CI 无头 Web 测试
 npm run test:ci        # 运行本地 CI 门禁：lint + 单元测试 + Web + Electron
-npm run lint           # 对 src/、tests/、web/ 执行仓库级 lint 门禁
+npm run lint           # 对 apps/、shared/、tests/ 执行仓库级 lint 门禁
 ```
 
 CI 现在会在构建和部署前强制通过四个阶段：
@@ -373,7 +361,7 @@ npm test -- --testNamePattern="testName"
 ### 代码检查
 
 `npm run lint` 现在会在本地和 GitHub Actions 中运行同一套仓库级 lint 门禁。
-它会覆盖 `src/`、`tests/`、`web/`，同时解析 CommonJS 与 ESM 文件，并在发现
+它会覆盖 `apps/`、`shared/`、`tests/`，同时解析 CommonJS 与 ESM 文件，并在发现
 语法错误、未定义引用或未使用的局部绑定时返回非零退出码。
 
 ```bash

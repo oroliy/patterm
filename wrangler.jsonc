@@ -2,7 +2,7 @@
   "name": "patterm",
   "compatibility_date": "2026-02-01",
   "assets": {
-    "directory": "./web/dist"
+    "directory": "./apps/web/dist"
   },
   "observability": {
     "enabled": false,

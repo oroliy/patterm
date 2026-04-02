@@ -5,7 +5,7 @@ const parser = require('@babel/parser');
 const traverse = require('@babel/traverse').default;
 
 const ROOT = process.cwd();
-const TARGETS = ['src', 'tests', 'web'];
+const TARGETS = ['apps', 'shared', 'tests'];
 const IGNORED_SEGMENTS = new Set(['node_modules', 'dist', '.git']);
 const EXTENSIONS = new Set(['.js', '.mjs']);
 const BUILTIN_GLOBALS = new Set([
@@ -109,12 +109,19 @@ function listFiles(dirPath, files = []) {
 
 function getAllowedGlobals(filePath) {
     const allowed = new Set([...BUILTIN_GLOBALS, ...NODE_GLOBALS]);
-    if (filePath.startsWith(path.join(ROOT, 'web')) || filePath.includes(`${path.sep}src${path.sep}web${path.sep}`) || filePath.includes(`${path.sep}src${path.sep}renderer${path.sep}`) || filePath.includes(`${path.sep}src${path.sep}shared${path.sep}`)) {
+    if (
+        filePath.includes(`${path.sep}apps${path.sep}web${path.sep}`) ||
+        filePath.includes(`${path.sep}apps${path.sep}desktop${path.sep}renderer${path.sep}`) ||
+        filePath.includes(`${path.sep}shared${path.sep}`)
+    ) {
         for (const name of BROWSER_GLOBALS) {
             allowed.add(name);
         }
     }
-    if (filePath.includes(`${path.sep}tests${path.sep}`) || filePath.includes(`${path.sep}web${path.sep}tests${path.sep}`)) {
+    if (
+        filePath.includes(`${path.sep}tests${path.sep}`) ||
+        filePath.includes(`${path.sep}apps${path.sep}web${path.sep}tests${path.sep}`)
+    ) {
         for (const name of JEST_GLOBALS) {
             allowed.add(name);
         }
@@ -243,4 +250,4 @@ if (issues.length > 0) {
     process.exit(1);
 }
 
-console.log(`Lint passed for ${files.length} file(s) in src/, tests/, and web/.`);
+console.log(`Lint passed for ${files.length} file(s) in apps/, shared/, and tests/.`);

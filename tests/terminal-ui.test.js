@@ -236,7 +236,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('terminalEntries returns all match ranges for case-insensitive searches', () => {
-        const { findTerminalEntryMatchRanges } = require('../src/shared/js/terminal/terminalEntries.js');
+        const { findTerminalEntryMatchRanges } = require('../shared/js/terminal/terminalEntries.js');
 
         expect(findTerminalEntryMatchRanges('Echo: AT Echo: ATI', 'echo')).toEqual([
             { start: 0, end: 4 },
@@ -248,7 +248,7 @@ describe('terminal search UI behavior', () => {
         const {
             normalizeTriggerRules,
             findMatchingTriggerRules,
-        } = require('../src/shared/js/terminal/triggerRules.js');
+        } = require('../shared/js/terminal/triggerRules.js');
 
         const rules = normalizeTriggerRules([
             { pattern: 'error', scope: 'error', highlight: 'danger' },
@@ -266,7 +266,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('transactions group request-response entries within the transaction window', () => {
-        const { assignEntryToTransactions } = require('../src/shared/js/terminal/transactions.js');
+        const { assignEntryToTransactions } = require('../shared/js/terminal/transactions.js');
         const baseTime = new Date('2026-03-12T02:00:00.000Z');
 
         const first = assignEntryToTransactions({
@@ -305,7 +305,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent tracks search state and navigates between matches', () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const states = [];
         const terminal = new TerminalComponent(container, {
@@ -329,7 +329,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent can focus a specific entry by id', () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const terminal = new TerminalComponent(container, {
             autoScroll: false,
@@ -345,7 +345,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent applies trigger badges and highlight classes', () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const terminal = new TerminalComponent(container, {
             autoScroll: false,
@@ -368,7 +368,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent tracks transactions and emits transaction updates', () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const transactionStates = [];
         const terminal = new TerminalComponent(container, {
@@ -388,7 +388,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent can star, copy, and export a transaction', async () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const terminal = new TerminalComponent(container, {
             autoScroll: false,
@@ -417,7 +417,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent can rename a transaction summary', () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const terminal = new TerminalComponent(container, {
             autoScroll: false,
@@ -433,7 +433,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent can format failure reasons and export multiple transactions', async () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const terminal = new TerminalComponent(container, {
             autoScroll: false,
@@ -453,7 +453,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TerminalComponent delegates saving to the injected save handler when provided', async () => {
-        const { TerminalComponent } = require('../src/web/js/components/TerminalComponent.js');
+        const { TerminalComponent } = require('../shared/js/components/TerminalComponent.js');
         const container = new FakeElement('div');
         const saveContent = jest.fn(() => Promise.resolve(true));
         const terminal = new TerminalComponent(container, {
@@ -469,7 +469,7 @@ describe('terminal search UI behavior', () => {
     });
 
     test('TabComponent updates search count and restores filter state', () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const searchCount = new FakeElement('span');
         const prevButton = new FakeElement('button');
         const nextButton = new FakeElement('button');

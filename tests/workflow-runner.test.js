@@ -12,7 +12,7 @@ describe('Workflow runner', () => {
         const {
             normalizeWorkflowDefinitions,
             WorkflowRunner,
-        } = require('../src/shared/js/workflows/workflows.js');
+        } = require('../shared/js/workflows/workflows.js');
 
         const workflows = normalizeWorkflowDefinitions([{
             name: 'Handshake',
@@ -44,7 +44,7 @@ describe('Workflow runner', () => {
     });
 
     test('fails on timeout and supports manual stop', async () => {
-        const { WorkflowRunner } = require('../src/shared/js/workflows/workflows.js');
+        const { WorkflowRunner } = require('../shared/js/workflows/workflows.js');
         const runner = new WorkflowRunner({
             name: 'Timeout test',
             steps: [

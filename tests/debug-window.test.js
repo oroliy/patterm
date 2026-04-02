@@ -31,7 +31,7 @@ describe('DebugWindow', () => {
             loadFile,
         });
 
-        const DebugWindow = require('../src/main/debug-window');
+        const DebugWindow = require('../apps/desktop/main/debug-window');
         const debugWindow = new DebugWindow();
 
         debugWindow.open();
@@ -57,7 +57,7 @@ describe('DebugWindow', () => {
             webContents: { send },
         });
 
-        const DebugWindow = require('../src/main/debug-window');
+        const DebugWindow = require('../apps/desktop/main/debug-window');
         const debugWindow = new DebugWindow();
 
         debugWindow.log('queued');

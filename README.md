@@ -203,42 +203,27 @@ npm start
 
 ```
 patterm/
-├── src/
-│   ├── main/           # Electron main process
-│   │   ├── main.js     # Application entry point
-│   │   └── window-manager.js  # Main window lifecycle helper
-│   ├── renderer/       # Electron renderer shell
-│   │   ├── index.html  # Main window HTML
-│   │   ├── main.js     # Desktop renderer bootstrap
-│   │   ├── connection-dialog.js  # Electron connection dialog bridge
-│   │   ├── ElectronConnectionDialog.js  # Desktop dialog wrapper over shared UI
-│   │   ├── services/   # Electron IPC-backed serial provider
-│   │   ├── debug-window.html  # Debug console UI
-│   │   └── styles.css  # Desktop shell styles
-│   ├── services/       # Business logic
-│   │   ├── serial-service.js  # Single serial port operations
-│   │   └── serial-service-manager.js  # Multi-connection management
-│   ├── shared/         # Shared code (desktop + web)
-│   │   ├── css/        # Common CSS variables and reset
-│   │   └── js/         # Shared utilities, app shell, and serial abstractions
-│   ├── generated/      # Generated build metadata
-│   └── web/            # Web version source (PWA)
-│       ├── js/         # Web app entry and components
-│       │   ├── components/  # UI components (ConnectionDialog, Tab, Terminal)
-│       │   ├── services/  # Web Serial API services
-│       │   └── utils/     # Utility modules
-│       └── css/        # Web-specific styles
-├── web/                # Web version entry and build config
-│   ├── index.html     # Web app HTML
-│   ├── vite.config.js  # Vite build configuration
-│   ├── public/        # Static assets
-│   └── tests/         # Playwright E2E tests
-├── scripts/           # Utility scripts
-├── tests/             # Jest test suites
+├── apps/
+│   ├── desktop/
+│   │   ├── main/       # Electron main process entry, IPC, and windows
+│   │   ├── renderer/   # Desktop renderer shell and Electron-only bridges
+│   │   └── services/   # Desktop serial services used by the main process
+│   └── web/
+│       ├── src/        # Web app entry and browser-only services
+│       ├── public/     # PWA assets (icons, manifest, service worker)
+│       ├── tests/      # Playwright Web E2E tests
+│       ├── index.html
+│       └── vite.config.js
+├── shared/
+│   ├── css/            # Shared styles used by desktop and web
+│   └── js/             # Shared app shell, UI components, helpers, terminal logic
+├── generated/          # Generated build metadata
+├── scripts/            # Utility scripts
+├── tests/              # Jest test suites
 ├── .github/workflows/  # CI/CD configuration
 ├── package.json
-├── AGENTS.md          # Development guidelines
-└── CLAUDE.md          # AI agent guidance
+├── AGENTS.md           # Development guidelines
+└── CLAUDE.md           # AI agent guidance
 ```
 
 ### Development Commands
@@ -267,7 +252,7 @@ npm run test:electron  # Run Playwright Electron E2E tests
 npm run web:test       # Start Vite automatically and run Playwright web E2E tests
 npm run web:test:ci    # Run the CI headless web suite with the shared Playwright web server config
 npm run test:ci        # Run the local CI gate: lint + unit + web + Electron
-npm run lint           # Run the repository lint gate for src/, tests/, and web/
+npm run lint           # Run the repository lint gate for apps/, shared/, and tests/
 ```
 
 ### Testing
@@ -378,7 +363,7 @@ npm test -- --testNamePattern="testName"
 ### Linting
 
 `npm run lint` now runs the same repository-wide lint gate locally and in GitHub Actions.
-It scans `src/`, `tests/`, and `web/`, parses both CommonJS and ESM entry points, and
+It scans `apps/`, `shared/`, and `tests/`, parses both CommonJS and ESM entry points, and
 fails with a non-zero exit code when it finds syntax errors, undefined references, or
 unused local bindings.
 

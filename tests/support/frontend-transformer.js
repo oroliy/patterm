@@ -46,7 +46,10 @@ module.exports = {
     process(sourceText, sourcePath) {
         exportNames.length = 0;
 
-        if (!sourcePath.includes('/src/')) {
+        if (
+            !sourcePath.includes('/apps/') &&
+            !sourcePath.includes('/shared/')
+        ) {
             return { code: sourceText };
         }
 

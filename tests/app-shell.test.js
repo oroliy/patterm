@@ -1,4 +1,4 @@
-jest.mock('../src/web/js/services/TabManager.js', () => {
+jest.mock('../shared/js/services/TabManager.js', () => {
     const createManager = () => ({
         getActiveTab: jest.fn(() => ({ id: 'tab-1' })),
         getAllTabs: jest.fn(() => []),
@@ -23,7 +23,7 @@ jest.mock('../src/web/js/services/TabManager.js', () => {
     };
 });
 
-jest.mock('../src/web/js/components/TabComponent.js', () => ({
+jest.mock('../shared/js/components/TabComponent.js', () => ({
     TabComponent: jest.fn(() => ({
         create: jest.fn().mockReturnThis(),
         destroy: jest.fn(),
@@ -52,13 +52,13 @@ jest.mock('../src/web/js/components/TabComponent.js', () => ({
     })),
 }));
 
-jest.mock('../src/web/js/services/EventManager.js', () => ({
+jest.mock('../shared/js/services/EventManager.js', () => ({
     globalEvents: {
         on: jest.fn(),
     },
 }));
 
-jest.mock('../src/web/js/utils/helpers.js', () => ({
+jest.mock('../shared/js/helpers.js', () => ({
     applyTheme: jest.fn(),
     getEffectiveTheme: jest.fn((theme) => theme === 'system' ? 'dark' : theme),
     saveToLocalStorage: jest.fn(),
@@ -153,9 +153,9 @@ describe('AppShell behavior', () => {
     });
 
     test('toggleTheme cycles theme, applies it, and persists session', () => {
-        const { applyTheme, saveToLocalStorage } = require('../src/web/js/utils/helpers.js');
-        const { STORAGE_KEYS } = require('../src/web/js/utils/constants.js');
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { applyTheme, saveToLocalStorage } = require('../shared/js/helpers.js');
+        const { STORAGE_KEYS } = require('../shared/js/constants.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         shell.persistSession = jest.fn();
 
@@ -168,7 +168,7 @@ describe('AppShell behavior', () => {
     });
 
     test('filterCommands narrows palette results and resets selection', () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         shell.commandPaletteList = new FakeElement();
         shell.registerCommandPaletteCommands();
@@ -185,8 +185,8 @@ describe('AppShell behavior', () => {
     });
 
     test('serializeSession and restoreSession round-trip tab metadata', () => {
-        const helpers = require('../src/web/js/utils/helpers.js');
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const helpers = require('../shared/js/helpers.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const createdTime = new Date('2026-03-11T10:00:00.000Z');
 
@@ -263,7 +263,7 @@ describe('AppShell behavior', () => {
 
     test('updateEmptyState toggles empty view based on tab count', () => {
         const elements = installFakeDocument();
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
 
         shell.tabComponents.clear();
@@ -278,7 +278,7 @@ describe('AppShell behavior', () => {
     });
 
     test('handleGlobalKeydown routes command palette shortcuts', () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         shell.toggleCommandPalette = jest.fn();
         shell.closeCommandPalette = jest.fn();
@@ -304,8 +304,8 @@ describe('AppShell behavior', () => {
     });
 
     test('onTabCreated mounts component and persists session', () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         shell.persistSession = jest.fn();
         shell.switchTab = jest.fn();
@@ -328,7 +328,7 @@ describe('AppShell behavior', () => {
     });
 
     test('focusActiveTabSearch and executeCommand delegate to active component', () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const component = { focusSearch: jest.fn() };
 
@@ -344,7 +344,7 @@ describe('AppShell behavior', () => {
     });
 
     test('command palette open, close, navigation, and empty state rendering work', () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         shell.initContextMenu();
 
@@ -366,9 +366,9 @@ describe('AppShell behavior', () => {
     });
 
     test('context menu, copy, errors, and session persistence branches are covered', async () => {
-        const helpers = require('../src/web/js/utils/helpers.js');
-        const { STORAGE_KEYS } = require('../src/web/js/utils/constants.js');
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const helpers = require('../shared/js/helpers.js');
+        const { STORAGE_KEYS } = require('../shared/js/constants.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const event = { pageX: 10, pageY: 20 };
         const action = jest.fn();
@@ -414,7 +414,7 @@ describe('AppShell behavior', () => {
     });
 
     test('command callbacks and tab event handlers cover inactive branches', async () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const component = {
             updateConnectionState: jest.fn(),
@@ -480,7 +480,7 @@ describe('AppShell behavior', () => {
     });
 
     test('workflow definitions, runner lifecycle, and command palette workspace actions are wired through', async () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const component = {
             updateWorkflowRuntime: jest.fn(),
@@ -545,7 +545,7 @@ describe('AppShell behavior', () => {
     });
 
     test('global search finds entries across tabs and jumps to the selected result', () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const component = {
             focusSearchResult: jest.fn(),
@@ -599,7 +599,7 @@ describe('AppShell behavior', () => {
     });
 
     test('theme menu supports explicit system selection and about dialog renders current summary', async () => {
-        const { AppShell } = require('../src/shared/js/app/AppShell.js');
+        const { AppShell } = require('../shared/js/app/AppShell.js');
         const shell = new AppShell();
         const themeIcon = new FakeElement();
         const themeLabel = new FakeElement();

@@ -45,22 +45,22 @@ describe('electron renderer app', () => {
             },
         };
 
-        jest.doMock('../src/shared/js/app/AppShell.js', () => ({
+        jest.doMock('../shared/js/app/AppShell.js', () => ({
             AppShell: createBaseShell(),
         }));
-        jest.doMock('../src/shared/js/serial/normalizeSerialConfig.js', () => ({
+        jest.doMock('../shared/js/serial/normalizeSerialConfig.js', () => ({
             normalizeSerialConfig: jest.fn((config) => config),
         }));
-        jest.doMock('../src/renderer/ElectronConnectionDialog.js', () => ({
+        jest.doMock('../apps/desktop/renderer/ElectronConnectionDialog.js', () => ({
             ElectronConnectionDialog: jest.fn(),
         }));
-        jest.doMock('../src/renderer/services/IpcSerialProvider.js', () => ({
+        jest.doMock('../apps/desktop/renderer/services/IpcSerialProvider.js', () => ({
             ElectronSerialProvider: jest.fn(),
         }));
     });
 
     test('injects a native save handler for shared terminal exports', async () => {
-        const { PattermElectronApp } = require('../src/renderer/main.js');
+        const { PattermElectronApp } = require('../apps/desktop/renderer/main.js');
         const app = new PattermElectronApp();
         const { electronAPI } = window;
 
@@ -71,7 +71,7 @@ describe('electron renderer app', () => {
     });
 
     test('loads about build info through IPC', async () => {
-        const { PattermElectronApp } = require('../src/renderer/main.js');
+        const { PattermElectronApp } = require('../apps/desktop/renderer/main.js');
         const app = new PattermElectronApp();
         const { electronAPI } = window;
         electronAPI.getBuildInfo.mockResolvedValueOnce({
@@ -87,7 +87,7 @@ describe('electron renderer app', () => {
     });
 
     test('keeps desktop tab context actions on the shared shell', async () => {
-        const { PattermElectronApp } = require('../src/renderer/main.js');
+        const { PattermElectronApp } = require('../apps/desktop/renderer/main.js');
         const app = new PattermElectronApp();
         app.clearTerminal = jest.fn();
         app.copyTabContent = jest.fn();

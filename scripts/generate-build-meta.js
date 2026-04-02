@@ -4,7 +4,7 @@ const { execFileSync } = require('child_process');
 
 const rootDir = path.join(__dirname, '..');
 const packageJsonPath = path.join(rootDir, 'package.json');
-const outputPath = path.join(rootDir, 'src/generated/build-meta.json');
+const outputPath = path.join(rootDir, 'generated/build-meta.json');
 
 function getCommitId() {
     if (process.env.PATTERM_COMMIT_ID) {
