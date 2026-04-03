@@ -1,4 +1,0 @@
-interface:
-  display_name: "Patterm Workflow"
-  short_description: "Repository workflow for Patterm tasks"
-  default_prompt: "Use $patterm-workflow to work on this repository with its required docs, tests, and CI workflow."

@@ -2,7 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const SerialService = require('../src/services/serial-service');
+const SerialService = require('../apps/desktop/services/serial-service');
 
 describe('SerialService', () => {
     let service;

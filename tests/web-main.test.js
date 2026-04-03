@@ -47,24 +47,24 @@ describe('web main app bootstrap', () => {
         const open = jest.fn(() => Promise.resolve());
         const saveTabContent = jest.fn(() => Promise.resolve());
 
-        jest.doMock('../src/shared/js/app/AppShell.js', () => ({
+        jest.doMock('../shared/js/app/AppShell.js', () => ({
             AppShell: createBaseShell(),
         }));
-        jest.doMock('../src/web/js/services/SerialService.js', () => ({
+        jest.doMock('../apps/web/src/services/SerialService.js', () => ({
             WebSerialProvider: jest.fn().mockImplementation(() => ({
                 open,
                 port: null,
             })),
         }));
-        jest.doMock('../src/web/js/services/LogManager.js', () => ({
+        jest.doMock('../apps/web/src/services/LogManager.js', () => ({
             LogManager: jest.fn().mockImplementation(() => ({
                 saveTabContent,
             })),
         }));
-        jest.doMock('../src/web/js/components/ConnectionDialog.js', () => ({
+        jest.doMock('../shared/js/components/ConnectionDialog.js', () => ({
             ConnectionDialog: jest.fn(),
         }));
-        jest.doMock('../src/shared/js/serial/normalizeSerialConfig.js', () => ({
+        jest.doMock('../shared/js/serial/normalizeSerialConfig.js', () => ({
             normalizeSerialConfig: jest.fn((config) => ({
                 baudRate: config.baudRate,
                 dataBits: 8,
@@ -73,23 +73,23 @@ describe('web main app bootstrap', () => {
                 flowControl: 'none',
             })),
         }));
-        jest.doMock('../src/web/js/utils/helpers.js', () => ({
+        jest.doMock('../shared/js/helpers.js', () => ({
             applyTheme: jest.fn(),
         }));
-        jest.doMock('../src/web/js/utils/debug.js', () => ({
+        jest.doMock('../shared/js/debug.js', () => ({
             debug: {
                 log: jest.fn(),
                 error: jest.fn(),
             },
         }));
 
-        const { WebSerialProvider } = require('../src/web/js/services/SerialService.js');
+        const { WebSerialProvider } = require('../apps/web/src/services/SerialService.js');
         WebSerialProvider.isSupported = jest.fn(() => true);
         navigator.serviceWorker = {
             register: jest.fn(() => Promise.resolve()),
         };
 
-        require('../src/web/js/main.js');
+        require('../apps/web/src/main.js');
         const app = window.app;
 
         await app.createConnection({ baudRate: 115200 }, 'Main', { id: 'port-1' });
@@ -120,35 +120,35 @@ describe('web main app bootstrap', () => {
             error: jest.fn(),
         };
 
-        jest.doMock('../src/shared/js/app/AppShell.js', () => ({
+        jest.doMock('../shared/js/app/AppShell.js', () => ({
             AppShell: createBaseShell(),
         }));
-        jest.doMock('../src/web/js/services/SerialService.js', () => ({
+        jest.doMock('../apps/web/src/services/SerialService.js', () => ({
             WebSerialProvider: jest.fn().mockImplementation(() => ({
                 open: jest.fn(() => Promise.reject(new Error('Open failed'))),
                 port: null,
             })),
         }));
-        jest.doMock('../src/web/js/services/LogManager.js', () => ({
+        jest.doMock('../apps/web/src/services/LogManager.js', () => ({
             LogManager: jest.fn(),
         }));
-        jest.doMock('../src/web/js/components/ConnectionDialog.js', () => ({
+        jest.doMock('../shared/js/components/ConnectionDialog.js', () => ({
             ConnectionDialog: jest.fn().mockImplementation(() => ({
                 show: jest.fn(() => Promise.resolve({ confirmed: false })),
             })),
         }));
-        jest.doMock('../src/shared/js/serial/normalizeSerialConfig.js', () => ({
+        jest.doMock('../shared/js/serial/normalizeSerialConfig.js', () => ({
             normalizeSerialConfig: jest.fn((config) => config),
         }));
-        jest.doMock('../src/web/js/utils/helpers.js', () => ({
+        jest.doMock('../shared/js/helpers.js', () => ({
             applyTheme: jest.fn(),
         }));
-        jest.doMock('../src/web/js/utils/debug.js', () => ({ debug }));
+        jest.doMock('../shared/js/debug.js', () => ({ debug }));
 
-        const { WebSerialProvider } = require('../src/web/js/services/SerialService.js');
+        const { WebSerialProvider } = require('../apps/web/src/services/SerialService.js');
         WebSerialProvider.isSupported = jest.fn(() => false);
 
-        require('../src/web/js/main.js');
+        require('../apps/web/src/main.js');
         const app = window.app;
         expect(document.body.appendChild).toHaveBeenCalled();
 
@@ -201,24 +201,24 @@ describe('web main app bootstrap', () => {
             },
         };
 
-        jest.doMock('../src/shared/js/app/AppShell.js', () => ({
+        jest.doMock('../shared/js/app/AppShell.js', () => ({
             AppShell: createBaseShell(),
         }));
-        jest.doMock('../src/web/js/services/SerialService.js', () => ({
+        jest.doMock('../apps/web/src/services/SerialService.js', () => ({
             WebSerialProvider: jest.fn().mockImplementation(() => ({
                 open: jest.fn(() => Promise.resolve()),
                 port: null,
             })),
         }));
-        jest.doMock('../src/web/js/services/LogManager.js', () => ({
+        jest.doMock('../apps/web/src/services/LogManager.js', () => ({
             LogManager: jest.fn(),
         }));
-        jest.doMock('../src/web/js/components/ConnectionDialog.js', () => ({
+        jest.doMock('../shared/js/components/ConnectionDialog.js', () => ({
             ConnectionDialog: jest.fn().mockImplementation(() => ({
                 show: jest.fn(() => Promise.resolve(dialogResult)),
             })),
         }));
-        jest.doMock('../src/shared/js/serial/normalizeSerialConfig.js', () => ({
+        jest.doMock('../shared/js/serial/normalizeSerialConfig.js', () => ({
             normalizeSerialConfig: jest.fn((config) => ({
                 ...config,
                 dataBits: 8,
@@ -227,15 +227,15 @@ describe('web main app bootstrap', () => {
                 flowControl: 'none',
             })),
         }));
-        jest.doMock('../src/web/js/utils/helpers.js', () => ({
+        jest.doMock('../shared/js/helpers.js', () => ({
             applyTheme,
         }));
-        jest.doMock('../src/web/js/utils/debug.js', () => ({ debug }));
+        jest.doMock('../shared/js/debug.js', () => ({ debug }));
 
-        const { WebSerialProvider } = require('../src/web/js/services/SerialService.js');
+        const { WebSerialProvider } = require('../apps/web/src/services/SerialService.js');
         WebSerialProvider.isSupported = jest.fn(() => true);
 
-        require('../src/web/js/main.js');
+        require('../apps/web/src/main.js');
         const app = window.app;
         app.createConnection = jest.fn(() => Promise.resolve());
         app.theme = 'system';

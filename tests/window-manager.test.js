@@ -24,7 +24,7 @@ describe('WindowManager', () => {
         };
         mockBrowserWindow.mockReturnValue(window);
 
-        const WindowManager = require('../src/main/window-manager');
+        const WindowManager = require('../apps/desktop/main/window-manager');
         const manager = new WindowManager();
 
         expect(manager.createMainWindow()).toBe(window);
@@ -43,7 +43,7 @@ describe('WindowManager', () => {
 
         mockBrowserWindow.mockReturnValue(window);
 
-        const WindowManager = require('../src/main/window-manager');
+        const WindowManager = require('../apps/desktop/main/window-manager');
         const manager = new WindowManager({
             log: jest.fn(),
         });

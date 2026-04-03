@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patterm - Serial Terminal</title>
+    <link rel="stylesheet" href="../../../shared/css/styles.css">
+    <style>
+        /* Electron specific overrides if needed */
+        .app-header {
+            -webkit-app-region: drag; /* Make header draggable in frameless mode if needed */
+        }
+        .btn, .tabs-container, .context-menu {
+            -webkit-app-region: no-drag;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <img src="../../../assets/icon.png" alt="Patterm" width="32" height="32" onerror="this.style.display='none'">
+                    <span class="app-name">Patterm</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="tabs-container" id="tabs-container"></div>
+                <button id="new-tab-btn" class="btn btn-icon" title="New Connection" aria-label="New Connection">
+                    <span>+</span>
+                </button>
+            </div>
+
+            <div class="header-right">
+                <button id="command-palette-btn" class="btn btn-icon" title="Command Palette" aria-label="Command Palette">
+                    <span>⌘</span>
+                </button>
+                <button id="theme-toggle-btn" class="btn btn-icon btn-theme" title="Theme: System" aria-label="Theme: System">
+                    <span class="theme-icon">🌓</span>
+                    <span class="theme-label">System</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div id="tabs-content" class="tabs-content"></div>
+            <div id="empty-state" class="empty-state">
+                <div class="empty-state-content">
+                    <div class="empty-icon">⚡</div>
+                    <h2>No Connections</h2>
+                    <p>Click the <strong>+ New Connection</strong> button to start.</p>
+                    <button id="empty-new-connection-btn" class="btn btn-primary" style="margin-top: 20px;">
+                        <span class="btn-icon">+</span>
+                        New Connection
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="context-menu" class="context-menu" style="display: none;">
+        <div class="context-menu-items"></div>
+    </div>
+
+    <div id="theme-menu" class="theme-menu" style="display: none;">
+        <div class="theme-menu-section">
+            <div class="theme-menu-heading">Appearance</div>
+            <div class="theme-mode-row">
+                <button type="button" class="theme-menu-item active" data-theme-value="system">System</button>
+                <button type="button" class="theme-menu-item" data-theme-value="dark">Dark</button>
+                <button type="button" class="theme-menu-item" data-theme-value="light">Light</button>
+            </div>
+        </div>
+        <div class="theme-menu-section">
+            <div class="theme-menu-heading">Themes</div>
+            <div class="theme-preset-grid">
+                <button type="button" class="theme-preset active" data-theme-variant="default">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#3b82f6;"></span>
+                        <span style="--swatch:#10b981;"></span>
+                        <span style="--swatch:#0f172a;"></span>
+                    </span>
+                    <span class="theme-preset-name">Patterm Blue</span>
+                    <span class="theme-preset-note">Cool glass / electric accent</span>
+                </button>
+                <button type="button" class="theme-preset" data-theme-variant="claude">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#c46a36;"></span>
+                        <span style="--swatch:#e9dcc6;"></span>
+                        <span style="--swatch:#2f241d;"></span>
+                    </span>
+                    <span class="theme-preset-name">Claude Canvas</span>
+                    <span class="theme-preset-note">Warm paper / terracotta / ink</span>
+                </button>
+                <button type="button" class="theme-preset" data-theme-variant="forest">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#1f7a5a;"></span>
+                        <span style="--swatch:#d4b483;"></span>
+                        <span style="--swatch:#11261f;"></span>
+                    </span>
+                    <span class="theme-preset-name">Verdant Lab</span>
+                    <span class="theme-preset-note">Moss glass / copper utility</span>
+                </button>
+                <button type="button" class="theme-preset" data-theme-variant="signal">
+                    <span class="theme-preset-swatches">
+                        <span style="--swatch:#7dff9b;"></span>
+                        <span style="--swatch:#f4b860;"></span>
+                        <span style="--swatch:#09120d;"></span>
+                    </span>
+                    <span class="theme-preset-name">Signal Grid</span>
+                    <span class="theme-preset-note">Phosphor green / amber / steel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="command-palette" class="command-palette-overlay" style="display: none;">
+        <div class="command-palette-dialog" role="dialog" aria-modal="true" aria-label="Command Palette">
+            <div class="command-palette-input-wrap">
+                <input id="command-palette-input" class="command-palette-input" type="search" placeholder="Type a command">
+            </div>
+            <div id="command-palette-list" class="command-palette-list"></div>
+        </div>
+    </div>
+
+    <div id="global-search" class="global-search-overlay" style="display: none;">
+        <div class="global-search-dialog" role="dialog" aria-modal="true" aria-label="Search All Tabs">
+            <div class="global-search-input-wrap">
+                <input id="global-search-input" class="global-search-input" type="search" placeholder="Search across all tabs">
+            </div>
+            <div class="global-search-filter-group" role="group" aria-label="Global search filters">
+                <button type="button" class="global-search-filter-btn active" data-filter-type="all">All</button>
+                <button type="button" class="global-search-filter-btn" data-filter-type="rx">RX</button>
+                <button type="button" class="global-search-filter-btn" data-filter-type="tx">TX</button>
+                <button type="button" class="global-search-filter-btn" data-filter-type="error">Error</button>
+            </div>
+            <div id="global-search-list" class="global-search-list"></div>
+        </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>

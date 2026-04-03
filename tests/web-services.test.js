@@ -1,4 +1,4 @@
-jest.mock('../src/web/js/utils/debug.js', () => ({
+jest.mock('../shared/js/debug.js', () => ({
     debug: {
         log: jest.fn(),
         error: jest.fn(),
@@ -56,7 +56,7 @@ describe('web services', () => {
         const {
             WebSerialProvider,
             listAvailablePorts,
-        } = require('../src/web/js/services/SerialService.js');
+        } = require('../apps/web/src/services/SerialService.js');
         const provider = new WebSerialProvider();
         provider.startReading = jest.fn();
 
@@ -99,11 +99,11 @@ describe('web services', () => {
     });
 
     test('WebSerialProvider covers unsupported, error, reconnect, and disconnect branches', async () => {
-        const { debug } = require('../src/web/js/utils/debug.js');
+        const { debug } = require('../shared/js/debug.js');
         const {
             WebSerialProvider,
             listAvailablePorts,
-        } = require('../src/web/js/services/SerialService.js');
+        } = require('../apps/web/src/services/SerialService.js');
 
         await expect(new WebSerialProvider().requestPort()).rejects.toThrow('Web Serial API is not supported');
         await expect(new WebSerialProvider().getPortInfo()).rejects.toThrow('No port selected');
@@ -175,7 +175,7 @@ describe('web services', () => {
     });
 
     test('EventManager supports on/off/once semantics', () => {
-        const { EventManager } = require('../src/web/js/services/EventManager.js');
+        const { EventManager } = require('../shared/js/services/EventManager.js');
         const manager = new EventManager();
         const values = [];
         const callback = (value) => values.push(value);
@@ -204,7 +204,7 @@ describe('web services', () => {
 
         window.showSaveFilePicker = jest.fn(async () => fileHandle);
 
-        const { LogManager } = require('../src/web/js/services/LogManager.js');
+        const { LogManager } = require('../apps/web/src/services/LogManager.js');
         const manager = new LogManager();
 
         expect(await manager.startLogging('session.log')).toBe(true);
@@ -224,8 +224,8 @@ describe('web services', () => {
     });
 
     test('LogManager and EventManager cover failure branches', async () => {
-        const { EventManager } = require('../src/web/js/services/EventManager.js');
-        const { LogManager } = require('../src/web/js/services/LogManager.js');
+        const { EventManager } = require('../shared/js/services/EventManager.js');
+        const { LogManager } = require('../apps/web/src/services/LogManager.js');
 
         const manager = new EventManager();
         expect(manager.off('missing', () => {})).toBeUndefined();

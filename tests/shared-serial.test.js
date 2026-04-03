@@ -38,7 +38,7 @@ function loadFrontendModule(relativePath, cache = new Map()) {
 
 describe('shared serial abstractions', () => {
     test('BaseSerialProvider stores config and state safely', () => {
-        const { BaseSerialProvider } = loadFrontendModule('src/shared/js/serial/BaseSerialProvider.js');
+        const { BaseSerialProvider } = loadFrontendModule('shared/js/serial/BaseSerialProvider.js');
         const provider = new BaseSerialProvider();
 
         provider.setConfig({ baudRate: 9600, parity: 'even' });
@@ -55,7 +55,7 @@ describe('shared serial abstractions', () => {
     });
 
     test('BaseSerialProvider manages event listeners', () => {
-        const { BaseSerialProvider } = loadFrontendModule('src/shared/js/serial/BaseSerialProvider.js');
+        const { BaseSerialProvider } = loadFrontendModule('shared/js/serial/BaseSerialProvider.js');
         const provider = new BaseSerialProvider();
         const received = [];
         const callback = (payload) => received.push(payload);
@@ -69,7 +69,7 @@ describe('shared serial abstractions', () => {
     });
 
     test('normalizeSerialConfig merges defaults with overrides', () => {
-        const { normalizeSerialConfig } = loadFrontendModule('src/shared/js/serial/normalizeSerialConfig.js');
+        const { normalizeSerialConfig } = loadFrontendModule('shared/js/serial/normalizeSerialConfig.js');
 
         expect(normalizeSerialConfig({ baudRate: 57600, parity: 'odd' })).toEqual({
             baudRate: 57600,

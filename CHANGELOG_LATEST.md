@@ -23,9 +23,10 @@
 - **Multiline Send Box**: The send box now keeps pasted multiline formatting intact, auto-expands for larger payloads, and uses **Ctrl/Cmd + Enter** to send without stripping line breaks.
 
 ### Technical Fixes
-- **Desktop Dev Script Simplification**: `npm run dev` now launches Electron directly, and `npm run dev:renderer` explicitly reports that the desktop app loads `src/renderer/index.html` without any standalone `localhost:3000` renderer dev server.
+- **Repository Layout Cleanup**: The codebase now uses `apps/desktop`, `apps/web`, `shared`, and `generated` so Electron, Web, and shared logic are separated cleanly.
+- **Desktop Dev Script Simplification**: `npm run dev` now launches Electron directly, and `npm run dev:renderer` explicitly reports that the desktop app loads `apps/desktop/renderer/index.html` without any standalone `localhost:3000` renderer dev server.
 - **Renderer Security**: Electron desktop windows now use preload-scoped APIs with `contextIsolation: true`, and native save/export writes stay in the main process.
-- **Web E2E Startup Alignment**: Unified `npm run web:test` with the Playwright web server command so the root-level script now starts Vite directly inside `web/`, keeps the target URL at `https://localhost:5173`, and shares HTTPS handling across local and CI web configs.
+- **Web E2E Startup Alignment**: Unified `npm run web:test` with the Playwright web server command so the root-level script now starts Vite directly inside `apps/web/`, keeps the target URL at `https://localhost:5173`, and shares HTTPS handling across local and CI web configs.
 - **Robust Port Closure**: Refactored `WebSerialProvider` to aggressively release stream locks and ensure ports are fully closed, eliminating "Port already open" errors during reconnection.
 - **IPC Data Reliability**: 
   - Fixed decoding for Node.js `Buffer` objects crossing the Electron IPC bridge.
@@ -34,7 +35,7 @@
 - **IPC Registration Timing**: Moved Electron IPC handler registration to app startup so reopening windows on macOS reuses the same `serial:*`, `theme:*`, `app:*`, and `dialog:*` handlers instead of registering duplicates.
 
 ### Tooling & Quality
-- **Real Lint Gate**: Added a repository-wide JavaScript lint runner for `src/`, `tests/`, and `web/` that understands both CommonJS and ESM files.
+- **Real Lint Gate**: Added a repository-wide JavaScript lint runner for `apps/`, `shared/`, and `tests/` that understands both CommonJS and ESM files.
 - **Consistent CI Enforcement**: GitHub Actions now runs the exact same `npm run lint` command used locally and fails the `lint` job when issues are found.
 - **Documentation Sync**: Updated both `README.md` and `README_zh.md` so lint usage and scope are documented consistently.
 

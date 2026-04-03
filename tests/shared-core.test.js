@@ -50,7 +50,7 @@ describe('shared core modules', () => {
     });
 
     test('BaseSerialProvider manages config state and events', () => {
-        const { BaseSerialProvider } = require('../src/shared/js/serial/BaseSerialProvider.js');
+        const { BaseSerialProvider } = require('../shared/js/serial/BaseSerialProvider.js');
         const provider = new BaseSerialProvider();
         const values = [];
         const callback = (value) => values.push(value);
@@ -71,8 +71,8 @@ describe('shared core modules', () => {
     });
 
     test('normalizeSerialConfig and formatters handle serial metadata', () => {
-        const { normalizeSerialConfig } = require('../src/shared/js/serial/normalizeSerialConfig.js');
-        const formatters = require('../src/shared/js/formatters.js');
+        const { normalizeSerialConfig } = require('../shared/js/serial/normalizeSerialConfig.js');
+        const formatters = require('../shared/js/formatters.js');
         const config = normalizeSerialConfig({ baudRate: 57600, parity: 'odd' });
         const defaults = normalizeSerialConfig();
 
@@ -98,8 +98,8 @@ describe('shared core modules', () => {
     });
 
     test('theme helpers and shared utils cover browser utility paths', async () => {
-        const theme = require('../src/shared/js/theme.js');
-        const utils = require('../src/shared/js/utils.js');
+        const theme = require('../shared/js/theme.js');
+        const utils = require('../shared/js/utils.js');
 
         expect(theme.getEffectiveTheme('system')).toBe('dark');
         theme.applyTheme('system', 'claude');
@@ -139,7 +139,7 @@ describe('shared core modules', () => {
     test('shared utils cover debounce, throttle, storage fallbacks, and DOM helpers', async () => {
         jest.useFakeTimers();
 
-        const utils = require('../src/shared/js/utils.js');
+        const utils = require('../shared/js/utils.js');
         const debounced = jest.fn();
         const throttled = jest.fn();
         const fallbackElement = {

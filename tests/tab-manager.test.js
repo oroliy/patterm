@@ -1,10 +1,10 @@
-jest.mock('../src/web/js/services/EventManager.js', () => ({
+jest.mock('../shared/js/services/EventManager.js', () => ({
     globalEvents: {
         emit: jest.fn(),
     },
 }));
 
-jest.mock('../src/web/js/utils/debug.js', () => ({
+jest.mock('../shared/js/debug.js', () => ({
     debug: {
         log: jest.fn(),
         error: jest.fn(),
@@ -17,8 +17,8 @@ describe('TabManager', () => {
     });
 
     test('createTab preserves filter state and trigger rules, and advances counter from restored ids', () => {
-        const { globalEvents } = require('../src/web/js/services/EventManager.js');
-        const { TabManager } = require('../src/web/js/services/TabManager.js');
+        const { globalEvents } = require('../shared/js/services/EventManager.js');
+        const { TabManager } = require('../shared/js/services/TabManager.js');
         const manager = new TabManager();
 
         const restored = manager.createTab({ baudRate: 115200 }, 'Restored', {
@@ -47,8 +47,8 @@ describe('TabManager', () => {
     });
 
     test('onDataReceived updates totals and emits rate updates for binary payloads', () => {
-        const { globalEvents } = require('../src/web/js/services/EventManager.js');
-        const { TabManager } = require('../src/web/js/services/TabManager.js');
+        const { globalEvents } = require('../shared/js/services/EventManager.js');
+        const { TabManager } = require('../shared/js/services/TabManager.js');
         const manager = new TabManager();
         const tab = manager.createTab({ baudRate: 115200 }, 'Main');
 
@@ -68,8 +68,8 @@ describe('TabManager', () => {
     });
 
     test('closeTab disconnects active service and switches to remaining tab', async () => {
-        const { globalEvents } = require('../src/web/js/services/EventManager.js');
-        const { TabManager } = require('../src/web/js/services/TabManager.js');
+        const { globalEvents } = require('../shared/js/services/EventManager.js');
+        const { TabManager } = require('../shared/js/services/TabManager.js');
         const manager = new TabManager();
         const first = manager.createTab({ baudRate: 115200 }, 'First');
         const second = manager.createTab({ baudRate: 9600 }, 'Second');
@@ -87,8 +87,8 @@ describe('TabManager', () => {
     });
 
     test('TabManager covers connect, reconnect, rename, filters, and byte length fallbacks', async () => {
-        const { globalEvents } = require('../src/web/js/services/EventManager.js');
-        const { TabManager } = require('../src/web/js/services/TabManager.js');
+        const { globalEvents } = require('../shared/js/services/EventManager.js');
+        const { TabManager } = require('../shared/js/services/TabManager.js');
         const manager = new TabManager();
         const tab = manager.createTab({ baudRate: 115200 }, 'Main');
         const listeners = {};
@@ -161,7 +161,7 @@ describe('TabManager', () => {
     });
 
     test('TabManager ignores missing tabs and throws on invalid reconnect targets', async () => {
-        const { TabManager } = require('../src/web/js/services/TabManager.js');
+        const { TabManager } = require('../shared/js/services/TabManager.js');
         const manager = new TabManager();
 
         expect(manager.getTab('missing')).toBeUndefined();

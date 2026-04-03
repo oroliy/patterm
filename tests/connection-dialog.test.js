@@ -31,7 +31,7 @@ class FakeElement {
     }
 }
 
-jest.mock('../src/web/js/utils/debug.js', () => ({
+jest.mock('../shared/js/debug.js', () => ({
     debug: {
         log: jest.fn(),
     },
@@ -55,7 +55,7 @@ describe('ConnectionDialog', () => {
     });
 
     test('selectPort stores selected port, updates UI, and enables connect', async () => {
-        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const { ConnectionDialog } = require('../shared/js/components/ConnectionDialog.js');
         const dialog = new ConnectionDialog();
         const infoEl = new FakeElement();
         const connectBtn = new FakeElement();
@@ -93,7 +93,7 @@ describe('ConnectionDialog', () => {
     });
 
     test('selectPort shows non-abort errors', async () => {
-        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const { ConnectionDialog } = require('../shared/js/components/ConnectionDialog.js');
         const dialog = new ConnectionDialog();
         const errorEl = new FakeElement();
 
@@ -114,7 +114,7 @@ describe('ConnectionDialog', () => {
     });
 
     test('handleConnect uses selected port and form values', async () => {
-        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const { ConnectionDialog } = require('../shared/js/components/ConnectionDialog.js');
         const port = { id: 'port-1' };
         const dialog = new ConnectionDialog({
             onConnect: jest.fn(),
@@ -151,7 +151,7 @@ describe('ConnectionDialog', () => {
     });
 
     test('dialog helpers cover missing selection, fallback port info, and hide', async () => {
-        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const { ConnectionDialog } = require('../shared/js/components/ConnectionDialog.js');
         const dialog = new ConnectionDialog({
             onCancel: jest.fn(),
         });
@@ -195,7 +195,7 @@ describe('ConnectionDialog', () => {
     });
 
     test('show wires resolve handlers and event listeners', async () => {
-        const { ConnectionDialog } = require('../src/web/js/components/ConnectionDialog.js');
+        const { ConnectionDialog } = require('../shared/js/components/ConnectionDialog.js');
         const overlay = new FakeElement();
         const dialogElement = new FakeElement();
         const closeBtn = new FakeElement();

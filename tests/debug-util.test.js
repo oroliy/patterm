@@ -16,7 +16,7 @@ describe('web debug utility', () => {
         const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
         const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-        const { setDebugEnabled, debug } = require('../src/web/js/utils/debug.js');
+        const { setDebugEnabled, debug } = require('../shared/js/debug.js');
 
         setDebugEnabled(true);
         expect(localStorage.setItem).toHaveBeenCalledWith('patterm_debug', 'true');
@@ -41,7 +41,7 @@ describe('web debug utility', () => {
 
     test('debug utility also enables logging from URL params and no-ops without window', () => {
         const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-        const { debug, setDebugEnabled } = require('../src/web/js/utils/debug.js');
+        const { debug, setDebugEnabled } = require('../shared/js/debug.js');
 
         window.location.search = '?pattermDebug=1';
         debug.log('from-url');

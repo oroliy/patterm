@@ -47,34 +47,17 @@ ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm install
 ### Multi-Process Electron Structure
 
 ```
-src/
-├── main/                    # Electron Main Process
-│   ├── main.js             # Entry point, IPC handlers (serial:*, log:*, app:*, dialog:*)
-│   ├── window-manager.js   # Main window lifecycle helper
-│   └── debug-window.js     # Debug console manager
-├── renderer/               # Desktop renderer shell
-│   ├── index.html/main.js  # Main window shell + shared AppShell bootstrap
-│   ├── connection-dialog.* # Electron connection dialog bridge
-│   ├── services/           # IPC-backed serial provider
-│   └── debug-window.html   # Debug console UI
-├── services/               # Business Logic (loaded by main process)
-│   ├── serial-service.js           # Handles single serial port operations
-│   └── serial-service-manager.js   # Manages multiple SerialService instances
-├── shared/                 # Shared AppShell, terminal, workflow, theme, and serial abstractions
-├── generated/              # Generated build metadata
-└── web/                    # Web Version Source (PWA)
-    ├── js/
-        │   ├── main.js        # Web app entry point
-        │   ├── components/    # UI components (ConnectionDialog, TabComponent, TerminalComponent)
-        │   ├── services/      # Web Serial API services (SerialService, TabManager, LogManager)
-        │   └── utils/         # Utilities (constants, helpers)
-    └── css/
-        └── styles.css
-web/                        # Web Version Entry
-    ├── index.html         # Web app HTML
-    ├── vite.config.js     # Vite build config
-    ├── public/            # Static assets (icons, manifest, service worker)
-    └── tests/             # Playwright E2E tests
+apps/
+├── desktop/
+│   ├── main/              # Electron main process, IPC handlers, and window lifecycle
+│   ├── renderer/          # Desktop renderer shell + Electron bridges
+│   └── services/          # Main-process serial services
+├── web/
+│   ├── src/               # Web app bootstrap and browser-only services
+│   ├── public/            # Static assets (icons, manifest, service worker)
+│   └── tests/             # Playwright E2E tests
+├── shared/                # Shared AppShell, UI components, workflow, theme, and serial abstractions
+└── generated/             # Generated build metadata
 ```
 
 ### Key Architectural Patterns

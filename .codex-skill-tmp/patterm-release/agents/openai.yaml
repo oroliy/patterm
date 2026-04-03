@@ -1,4 +1,0 @@
-interface:
-  display_name: "Patterm Release"
-  short_description: "Release workflow for Patterm versions"
-  default_prompt: "Use $patterm-release to prepare or review a release for this repository with version, docs, changelog, and packaging checks."

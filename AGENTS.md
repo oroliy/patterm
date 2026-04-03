@@ -107,52 +107,23 @@ npm run dist:linux    # Build for Linux
 
 ### File Organization
 ```
-src/
-├── main/           # Electron main process
-│   ├── main.js     # Application entry point
-│   ├── window-manager.js  # Main window lifecycle helper
-│   └── debug-window.js     # Debug console management
-├── renderer/       # Electron renderer shell
-│   ├── index.html  # Main window HTML
-│   ├── main.js     # Desktop renderer bootstrap
-│   ├── connection-dialog.js    # Electron connection dialog bridge
-│   ├── ElectronConnectionDialog.js  # Desktop dialog wrapper
-│   ├── services/   # IPC-backed serial provider
-│   ├── debug-window.html     # Debug console HTML
-│   └── styles.css  # Desktop shell styles
-├── services/       # Business logic for Electron
-│   ├── serial-service.js  # Single serial port handling
-│   └── serial-service-manager.js  # Multi-connection management
-├── shared/         # Shared desktop/web code
-│   ├── css/        # Shared CSS
-│   └── js/         # Shared app shell, terminal, theme, serial helpers
-├── generated/      # Generated build metadata
-└── web/            # Web version source code (PWA)
-    ├── js/
-    │   ├── main.js  # Web app entry point
-    │   ├── components/  # UI components
-    │   │   ├── ConnectionDialog.js
-    │   │   ├── TabComponent.js
-    │   │   └── TerminalComponent.js
-    │   ├── services/  # Web Serial API services
-    │   │   ├── SerialService.js
-    │   │   ├── TabManager.js
-    │   │   ├── LogManager.js
-    │   │   └── EventManager.js
-    │   └── utils/  # Utilities
-    │       ├── constants.js
-    │       └── helpers.js
-    └── css/
-        └── styles.css
-web/                # Web version entry and config
-    ├── index.html  # Web app HTML
-    ├── vite.config.js  # Vite build config
-    ├── public/     # Static assets (icons, manifest, sw.js)
-    └── tests/      # Playwright E2E tests
-scripts/            # Testing and utility scripts
+apps/
+├── desktop/
+│   ├── main/           # Electron main process
+│   ├── renderer/       # Electron renderer shell
+│   └── services/       # Electron serial services
+├── web/
+│   ├── src/            # Web app entry and browser-only services
+│   ├── public/         # PWA assets
+│   └── tests/          # Playwright E2E tests
+├── shared/
+│   ├── css/            # Shared CSS
+│   └── js/             # Shared app shell, UI, theme, serial helpers
+├── generated/          # Generated build metadata
+└── scripts/            # Testing and utility scripts
     ├── create-virtual-port.sh    # Virtual port creation
-    ├── quick-virtual-serial.sh     # Quick echo server
-    └── virtual-serial.py        # Python virtual serial
+    ├── quick-virtual-serial.sh   # Quick echo server
+    └── virtual-serial.py         # Python virtual serial
 ```
 
 ### NO Comments Policy
@@ -161,9 +132,9 @@ scripts/            # Testing and utility scripts
 - Use meaningful variable/function names instead of explaining logic
 
 ### Renderer Shell Management
-- Desktop and Web share the same renderer shell through `AppShell`
+- Desktop and Web share the same renderer shell through `shared/js/app/AppShell.js`
 - Keep Electron-specific behavior at the renderer edge through IPC-backed providers and save handlers
-- `window-manager.js` should only own main-window lifecycle concerns
+- `apps/desktop/main/window-manager.js` should only own main-window lifecycle concerns
 
 ### Serial Port Specifics
 - Always check `port.isOpen` before operations

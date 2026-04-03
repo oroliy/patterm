@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Simplified desktop development scripts so `npm run dev` launches Electron directly, and `dev:renderer` now states that no standalone `localhost:3000` renderer server is required because Electron loads `src/renderer/index.html` directly
+- Reorganized the repository around `apps/desktop`, `apps/web`, `shared`, and `generated` so desktop, web, and shared code now live behind explicit boundaries
+- Simplified desktop development scripts so `npm run dev` launches Electron directly, and `dev:renderer` now states that no standalone `localhost:3000` renderer server is required because Electron loads `apps/desktop/renderer/index.html` directly
 
 ### Added
-- Repository-wide JavaScript lint gate for `src/`, `tests/`, and `web/`, with mixed CommonJS/ESM parsing and non-zero exits on lint failures
+- Repository-wide JavaScript lint gate for `apps/`, `shared/`, and `tests/`, with mixed CommonJS and ESM parsing and non-zero exits on lint failures
 - Reconnect button for disconnected tabs
 - Support for auto-reconnect using USB VID/PID (Web) or port path (Electron)
 - Default session names based on port information

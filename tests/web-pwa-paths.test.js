@@ -3,7 +3,7 @@ const { join } = require('path');
 
 describe('web PWA asset paths', () => {
     test('manifest uses deployment-relative URLs', () => {
-        const manifestPath = join(__dirname, '..', 'web', 'public', 'manifest.json');
+        const manifestPath = join(__dirname, '..', 'apps', 'web', 'public', 'manifest.json');
         const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 
         expect(manifest.start_url).toBe('./');

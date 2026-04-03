@@ -2,10 +2,13 @@ const { test, expect, _electron: electron } = require('@playwright/test');
 const path = require('path');
 
 async function launchElectronApp() {
+    const env = { ...process.env };
+    delete env.ELECTRON_RUN_AS_NODE;
+
     return electron.launch({
-        args: ['--no-sandbox', path.join(__dirname, '../src/main/main.js')],
+        args: ['--no-sandbox', path.join(__dirname, '../apps/desktop/main/main.js')],
         env: {
-            ...process.env,
+            ...env,
             ELECTRON_DISABLE_SANDBOX: '1',
             PATTERM_E2E: '1',
             PATTERM_OPEN_DEVTOOLS: '0'

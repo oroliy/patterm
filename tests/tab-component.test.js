@@ -103,7 +103,7 @@ describe('TabComponent', () => {
     });
 
     test('handleSend preserves formatting and only sends non-empty input when connected', async () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const inputField = new FakeElement();
         const onSend = jest.fn();
         const tab = new TabComponent({
@@ -136,7 +136,7 @@ describe('TabComponent', () => {
     });
 
     test('updateConnectionState toggles controls and labels', () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const statusDot = new FakeElement();
         const inputStatus = new FakeElement();
         const indicator = new FakeElement();
@@ -175,7 +175,7 @@ describe('TabComponent', () => {
     });
 
     test('updateSearchState, focusSearch, setActive, and triggerPulse update UI state', () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const searchCount = new FakeElement();
         const prevButton = new FakeElement();
         const nextButton = new FakeElement();
@@ -225,7 +225,7 @@ describe('TabComponent', () => {
     });
 
     test('updateStatusBar, updatePortName, setName, filters, triggers, workflows, transactions, and destroy update the view', async () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const tabName = new FakeElement();
         const searchInput = new FakeElement();
         const allButton = new FakeElement();
@@ -568,7 +568,7 @@ describe('TabComponent', () => {
     });
 
     test('attachEventListeners routes close, switch, send, clear, search, nav, workflow, trigger, and context menu actions', async () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const closeBtn = new FakeElement();
         const sendBtn = new FakeElement();
         const inputField = new FakeElement();
@@ -718,7 +718,7 @@ describe('TabComponent', () => {
     });
 
     test('focusSearchResult updates local filters and targets a specific entry', () => {
-        const { TabComponent } = require('../src/web/js/components/TabComponent.js');
+        const { TabComponent } = require('../shared/js/components/TabComponent.js');
         const searchInput = new FakeElement();
         const allButton = new FakeElement();
         const rxButton = new FakeElement();

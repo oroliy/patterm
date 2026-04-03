@@ -9,11 +9,10 @@
 - **Serial Communication:** SerialPort.js (Desktop), Web Serial API (Web)
 
 ## Architecture
-- **Main Process (`src/main/`):** Handles application lifecycle, window management, and native system integrations.
-- **Renderer Process (`src/renderer/`):** Contains the UI and frontend logic for the Electron desktop application.
-- **Services (`src/services/`):** Business logic for serial port operations and multi-connection management.
-- **Shared (`src/shared/`):** Code shared between the desktop (Electron) and web (PWA) versions, including CSS, utilities, and serial abstractions.
-- **Web App (`src/web/` & `web/`):** Source code and build configuration for the standalone Progressive Web App version.
+- **Desktop App (`apps/desktop/`):** Electron main process, renderer shell, and desktop-only serial services.
+- **Web App (`apps/web/`):** Vite/PWA entrypoints, browser-only services, public assets, and Web E2E tests.
+- **Shared (`shared/`):** Code shared between the desktop and web versions, including CSS, UI components, utilities, terminal logic, and serial abstractions.
+- **Generated (`generated/`):** Build metadata created before Electron runs or packages.
 
 ## Building and Running
 
