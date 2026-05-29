@@ -44,14 +44,14 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.0",
     "electron": "^40.8.5",
     "electron-builder": "^26.8.1",
-    "jest": "^30.3.0",
-    "playwright": "^1.57.0",
+    "jest": "^30.4.2",
+    "playwright": "^1.60.0",
     "playwright-core": "^1.58.2",
-    "vite": "^8.0.3",
-    "wait-on": "^9.0.4"
+    "vite": "^8.0.14",
+    "wait-on": "^9.0.10"
   },
   "dependencies": {
     "@serialport/parser-delimiter": "^13.0.0",
